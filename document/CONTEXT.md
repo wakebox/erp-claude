@@ -13,7 +13,7 @@
 | 客戶 | 漢堡王台灣 |
 | 目的 | 整合需求預測、採購管理、庫存管理、BPM 審批流的內部 ERP 系統 |
 | 現況 | 開發中，尚未上線 |
-| 前端 | 獨立 repo（Vue 3 + Ant Design Vue），不在本 repo |
+| 前端 | `erp-kingmaker`（Vue 3 pnpm monorepo），位於 `d:\burgerking\erp-kingmaker` |
 
 ---
 
@@ -40,18 +40,21 @@
 
 ### 前端
 
-| 層級 | 技術 | 版本 |
-|---|---|---|
-| 核心框架 | Vue | 3.5.17 |
-| 路由 | Vue Router | 4.5.1 |
-| 狀態管理 | Pinia | 3.0.3 |
-| UI 元件庫 | Ant Design Vue | 4.2.6 |
-| 建置工具 | Vite | 7.1.2 |
-| 語言 | TypeScript | 5.8.3 |
-| CSS | Tailwind CSS | 3.4.17 |
-| HTTP 客戶端 | @vben/request（基於 axios） | 1.10.0 |
-| 工程形態 | pnpm Monorepo（apps/packages/internal） | — |
-| 基礎模板 | vue-vben-admin（@vben/burger-king） | — |
+> 前端 repo：`d:\burgerking\erp-kingmaker`（pnpm monorepo，burger-king app 識別為 `@vben/burger-king`）
+> 啟動：`pnpm dev:bk`　建置：`pnpm build:bk`　環境需求：Node >= 20.10.0、pnpm >= 9.12.0
+
+| 層級 | 技術 |
+|---|---|
+| 核心框架 | Vue 3 |
+| 路由 | Vue Router |
+| 狀態管理 | Pinia |
+| UI 元件庫 | Ant Design Vue |
+| 建置工具 | Vite |
+| 語言 | TypeScript |
+| CSS | Tailwind CSS |
+| HTTP 客戶端 | @vben/request（基於 axios） |
+| 工程形態 | pnpm Monorepo（apps/packages/internal） |
+| 基礎模板 | vue-vben-admin（@vben/burger-king） |
 
 ---
 
@@ -255,13 +258,15 @@ Long userId = getLoginUserId();
 ### 啟動指令
 
 ```bash
-# 編譯（跳過測試）
+# 後端（erp-spring）
+cd d:\burgerking\erp-spring
 mvn clean install -DskipTests
-
-# 啟動（使用 local profile）
 cd kingmaker-server
 mvn spring-boot:run -Dspring-boot.run.profiles=local
+# Swagger UI: http://localhost:48080/doc.html
 
-# Swagger UI
-http://localhost:48080/doc.html
+# 前端（erp-kingmaker）
+cd d:\burgerking\erp-kingmaker
+pnpm install      # 首次安裝
+pnpm dev:bk       # 啟動 burger-king app
 ```

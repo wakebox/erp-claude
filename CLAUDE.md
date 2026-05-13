@@ -8,27 +8,28 @@
 - **目的**：供漢堡王台灣內部使用的 ERP 系統，涵蓋需求預測、採購、庫存、BPM 審批流
 - **狀態**：開發中，尚未上線
 - **後端 Repo**：`erp-spring`（參考程式碼位於 `../erp-spring`，本 repo 為 AI 工作目錄 `erp-claude`）
-- **前端 Repo**：獨立 repo（Vue 3 + Ant Design Vue），不在本 repo 內
+
 
 ---
 
 ## 工作目錄說明
 
-- **AI 工作目錄**（本 repo）：`d:\tdd\erp-claude` — 文件、設定、AI 輸出都在這裡
-- **後端原始碼**（參考）：`d:\tdd\erp-spring` — 實際 Java/Spring Boot 程式碼，讀取時使用此路徑
+| 目錄 | 用途 |
+|---|---|
+| `d:\burgerking\erp-claude`（本 repo） | 文件、設定、AI 工作紀錄 |
+| `d:\burgerking\erp-spring` | **後端實際程式碼**：讀取、修改、新增 Java 檔案都在這裡 |
 
-當需要查看或修改後端程式碼，請讀取 `../erp-spring/` 下的對應路徑。
+
+> **重要**：所有程式碼異動（新增、修改、刪除 `.java`、`pom.xml`、`.yaml` 等）**一律在 `d:\burgerking\erp-spring` 下進行**，不要在 `erp-claude` 下建立程式碼檔案。
 
 ## 快速啟動
 
 ```bash
-# 環境需求
-# - JDK 17
-# - PostgreSQL 15（192.168.29.113:5432，資料庫名：bk）
-# - Redis（本地或遠端）
+# === 後端（erp-spring）===
+# 環境需求：JDK 17、PostgreSQL 15（192.168.29.113:5432，DB: bk）、Redis
 
 # 切到後端程式碼目錄
-cd d:\tdd\erp-spring
+cd d:\burgerking\erp-spring
 
 # 編譯
 mvn clean install -DskipTests
@@ -39,6 +40,8 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local
 
 # API 文件（Swagger UI）
 # http://localhost:48080/doc.html
+
+
 ```
 
 > **注意**：`application-local.yaml` 中的資料庫 IP `192.168.29.113` 是開發環境 PostgreSQL。請確認可連線，或修改為本地 DB。
@@ -47,7 +50,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local
 
 ## 架構一覽
 
-> 以下路徑皆相對於 `d:\tdd\erp-spring\`
+> 以下路徑皆相對於 `d:\burgerking\erp-spring\`
 
 ```
 kingmaker-dependencies/          # 全域依賴 BOM
