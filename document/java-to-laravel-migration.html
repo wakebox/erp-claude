@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>漢堡王 ERP：Java → Laravel OA 遷移評估與漸進式策略</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --card: #ffffff;
+    --border: #d0d7de;
+    --code-bg: #f6f8fa;
+    --accent: #0969da;
+    --red: #cf222e;
+    --red-bg: #ffebe9;
+    --yellow: #9a6700;
+    --yellow-bg: #fff8c5;
+    --green: #1a7f37;
+    --green-bg: #dafbe1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
+                 "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    line-height: 1.7;
+    color: var(--fg);
+    background: var(--bg);
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  header.cover {
+    background: linear-gradient(135deg, #0a3d62 0%, #0969da 100%);
+    color: #fff;
+    padding: 48px 32px;
+    border-radius: 12px;
+    margin-bottom: 32px;
+  }
+  header.cover h1 { margin: 0 0 12px; font-size: 28px; }
+  header.cover .subtitle { opacity: 0.9; font-size: 15px; }
+  header.cover .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 20px;
+    font-size: 13px;
+    opacity: 0.85;
+  }
+  h2 {
+    font-size: 22px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 8px;
+    margin-top: 48px;
+    scroll-margin-top: 16px;
+  }
+  h3 { font-size: 17px; margin-top: 28px; }
+  h4 { font-size: 15px; margin-top: 20px; color: var(--muted); }
+  p, li { font-size: 14.5px; }
+  code {
+    font-family: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+    font-size: 13px;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  pre {
+    background: #0d1117;
+    color: #e6edf3;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  pre code { background: transparent; padding: 0; color: inherit; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background: var(--card);
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--code-bg); font-weight: 600; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 16px 0;
+  }
+  .card.red    { border-left: 4px solid var(--red);    background: var(--red-bg); }
+  .card.yellow { border-left: 4px solid var(--yellow); background: var(--yellow-bg); }
+  .card.green  { border-left: 4px solid var(--green);  background: var(--green-bg); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .badge.red    { background: var(--red);    color: #fff; }
+  .badge.yellow { background: var(--yellow); color: #fff; }
+  .badge.green  { background: var(--green);  color: #fff; }
+  .badge.gray   { background: var(--muted);  color: #fff; }
+  nav.toc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  nav.toc h3 { margin-top: 0; }
+  nav.toc ol { padding-left: 22px; margin: 0; }
+  nav.toc li { margin: 6px 0; }
+  nav.toc a { color: var(--accent); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  .ascii {
+    font-family: "SFMono-Regular", "Consolas", monospace;
+    white-space: pre;
+    background: var(--code-bg);
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    overflow-x: auto;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat .num { font-size: 26px; font-weight: 700; color: var(--accent); }
+  .stat .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .phase {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 16px 0;
+    border-left: 5px solid var(--accent);
+  }
+  .phase .phase-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .phase h3 { margin: 0; }
+  .phase .effort {
+    background: var(--code-bg);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: #ddf4ff;
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  .callout.warn {
+    border-left-color: var(--yellow);
+    background: var(--yellow-bg);
+  }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  @media print {
+    body { background: #fff; }
+    .container { max-width: 100%; padding: 0; }
+    pre, .ascii { page-break-inside: avoid; }
+    h2 { page-break-before: auto; page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="cover">
+  <h1>漢堡王 ERP：Java &rarr; Laravel OA 遷移評估與漸進式策略</h1>
+  <div class="subtitle">
+    將 Spring Boot + PostgreSQL 的 ERP 業務模組整合進既有的 Laravel OA 系統
+  </div>
+  <div class="meta">
+    <span>版本：v1.0</span>
+    <span>日期：2026-05-15</span>
+    <span>系統：Kingmaker ERP (erp-spring)</span>
+    <span>目標：整合進 Laravel OA</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <h3>目錄</h3>
+  <ol>
+    <li><a href="#scenario">情境說明</a></li>
+    <li><a href="#scope">工程規模盤點</a></li>
+    <li><a href="#feasibility">可行性結論</a></li>
+    <li><a href="#mapping">技術替代對照</a></li>
+    <li><a href="#risks">風險分析（紅黃綠燈）</a></li>
+    <li><a href="#decisions">關鍵整合決策</a></li>
+    <li><a href="#effort">人月估算</a></li>
+    <li><a href="#strategy">漸進式遷移策略（6 階段）</a></li>
+    <li><a href="#nginx">Nginx Gateway 設定</a></li>
+    <li><a href="#next">馬上可以做的事</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================== -->
+<h2 id="scenario">1. 情境說明</h2>
+
+<table>
+  <tr><th>項目</th><th>內容</th></tr>
+  <tr><td>現況系統</td><td>Kingmaker ERP，Java 17 + Spring Boot 3.4.1 + PostgreSQL 15，基於芋道框架 fork</td></tr>
+  <tr><td>目標</td><td>整合至既有的 <strong>Laravel OA 系統</strong>（已具備使用者體系與流程引擎）</td></tr>
+  <tr><td>需移轉模組</td><td>pdm（PDM/需求預測）、whs（庫存）、pmm（採購）、bhm（基礎資料）、bpm 業務側</td></tr>
+  <tr><td>不需移轉</td><td>system（使用者/角色/權限）、infra、Flowable 引擎本體 — 沿用 OA 既有功能</td></tr>
+  <tr><td>上線狀態</td><td><strong>尚未上線</strong>，仍在開發中 — 這是降低遷移成本的關鍵優勢</td></tr>
+  <tr><td>前端</td><td>erp-kingmaker（Vue 3 + Vite + Ant Design Vue），保留並調整串接</td></tr>
+</table>
+
+<!-- ============================================== -->
+<h2 id="scope">2. 工程規模盤點</h2>
+
+<div class="stat-grid">
+  <div class="stat"><div class="num">1,777</div><div class="label">Java 檔案（全專案）</div></div>
+  <div class="stat"><div class="num">~565</div><div class="label">實際需翻譯（pdm+whs+pmm）</div></div>
+  <div class="stat"><div class="num">~80</div><div class="label">業務表（不含 act_/flw_/infra_）</div></div>
+  <div class="stat"><div class="num">56</div><div class="label">MyBatis Mapper XML</div></div>
+</div>
+
+<h3>各模組規模</h3>
+<table>
+  <tr><th>模組</th><th>Java 檔</th><th>Controller</th><th>DO</th><th>Service</th><th>處理方式</th></tr>
+  <tr><td><strong>pdm</strong></td><td>284</td><td>25</td><td>35</td><td>24</td><td>✅ 翻譯（最大宗）</td></tr>
+  <tr><td><strong>whs</strong></td><td>144</td><td>13</td><td>18</td><td>13</td><td>✅ 翻譯</td></tr>
+  <tr><td><strong>pmm</strong></td><td>137</td><td>7</td><td>22</td><td>7</td><td>✅ 翻譯</td></tr>
+  <tr><td><strong>bhm</strong></td><td>31</td><td>2</td><td>5</td><td>2</td><td>❓ 凍結中，視需求</td></tr>
+  <tr><td>bpm</td><td>214</td><td>11</td><td>8</td><td>12</td><td>❌ 幾乎全丟（換 OA 流程引擎）</td></tr>
+  <tr><td>system / infra</td><td>—</td><td>—</td><td>—</td><td>—</td><td>❌ 不轉移</td></tr>
+</table>
+
+<h3>資料表分類</h3>
+<table>
+  <tr><th>類型</th><th>命名前綴</th><th>是否需遷</th><th>說明</th></tr>
+  <tr><td>Flowable 引擎表</td><td><code>act_*</code>, <code>flw_*</code></td><td>❌ 不遷</td><td>約 35+ 張，由 OA 流程引擎接手</td></tr>
+  <tr><td>Quartz 排程表</td><td><code>qrtz_*</code></td><td>❌ 不遷</td><td>改用 Laravel Scheduler</td></tr>
+  <tr><td>系統/基礎設施</td><td><code>system_*</code>, <code>infra_*</code></td><td>❌ 不遷</td><td>由 Laravel OA 提供</td></tr>
+  <tr><td>PDM 主檔</td><td><code>a_pdm_*</code>, <code>a_product_*</code></td><td>✅ 遷</td><td>食材、產品、BOM</td></tr>
+  <tr><td>需求預測</td><td><code>crg_*</code></td><td>✅ 遷</td><td>預測單與明細</td></tr>
+  <tr><td>WHS / PMM / BHM</td><td><code>whs_*</code>, <code>pmm_*</code>, <code>bhm_*</code></td><td>✅ 遷</td><td>業務交易資料</td></tr>
+</table>
+
+<!-- ============================================== -->
+<h2 id="feasibility">3. 可行性結論</h2>
+
+<div class="card green">
+  <strong><span class="badge green">綠燈</span> 在新情境下：技術可行、工程效益合理</strong>
+  <ul>
+    <li>不需要重造 Flowable（OA 流程引擎接手）→ 原本最大的紅燈消失</li>
+    <li>不需要重造芋道 14 個 Starter（OA 已涵蓋通用基建）→ 第二大紅燈消失</li>
+    <li>實際需翻譯的 Java 檔從 1,777 縮到 ~565，工作量降到三分之一以下</li>
+    <li>PostgreSQL 用得淺（搜遍全專案幾乎無 PG-only 語法），DB 翻譯成本極低</li>
+    <li>ERP 尚未上線，沒有 production data migration 包袱</li>
+  </ul>
+</div>
+
+<div class="card yellow">
+  <strong><span class="badge yellow">注意</span> 成敗關鍵：Laravel OA 流程引擎的能力是否對齊 Flowable</strong>
+  <p>這是整個專案在「動工前」就必須驗證的事。若 OA 流程引擎缺關鍵能力（動態 approver、會簽、回退、業務 callback），可能導致策略需要重來。<strong>建議第一週做 PoC 驗證</strong>。</p>
+</div>
+
+<!-- ============================================== -->
+<h2 id="mapping">4. 技術替代對照</h2>
+
+<table>
+  <tr><th>現有（Java）</th><th>Laravel 對應</th><th>風險</th></tr>
+  <tr><td>Spring Boot 3.4.1 + Maven</td><td>Laravel 11 + Composer</td><td><span class="badge green">綠</span></td></tr>
+  <tr><td>MyBatis Plus（XML mapper）</td><td>Eloquent / Query Builder</td><td><span class="badge yellow">黃</span> 範式差異</td></tr>
+  <tr><td>MapStruct</td><td>手寫 / Spatie Data</td><td><span class="badge green">綠</span></td></tr>
+  <tr><td>Spring Security + JWT</td><td>沿用 Laravel OA auth guard</td><td><span class="badge green">綠</span></td></tr>
+  <tr><td>@PreAuthorize 權限註解</td><td>spatie/laravel-permission + Policy</td><td><span class="badge yellow">黃</span></td></tr>
+  <tr><td>資料權限 starter</td><td>Eloquent Global Scope（自寫）</td><td><span class="badge yellow">黃</span></td></tr>
+  <tr><td>Druid 連線池</td><td>PHP-FPM 預設 / Octane 連線池</td><td><span class="badge yellow">黃</span> 模型不同</td></tr>
+  <tr><td>Redisson 分散式鎖</td><td><code>Cache::lock</code></td><td><span class="badge yellow">黃</span> 功能較弱</td></tr>
+  <tr><td>Quartz 排程</td><td>Laravel Scheduler + Horizon</td><td><span class="badge green">綠</span></td></tr>
+  <tr><td>Spring Cloud OpenFeign</td><td>Guzzle / Saloon</td><td><span class="badge green">綠</span></td></tr>
+  <tr><td><strong>Flowable 7.0.1（BPMN 2.0）</strong></td><td><strong>OA 既有流程引擎</strong></td><td><span class="badge yellow">黃</span> 需驗證能力對齊</td></tr>
+  <tr><td>Knife4j / SpringDoc</td><td>Scribe / L5-Swagger</td><td><span class="badge green">綠</span></td></tr>
+  <tr><td>@Transactional</td><td><code>DB::transaction</code></td><td><span class="badge green">綠</span></td></tr>
+  <tr><td>WebSocket Starter</td><td>Laravel Reverb</td><td><span class="badge green">綠</span></td></tr>
+  <tr><td>PostgreSQL 15</td><td>MySQL 8</td><td><span class="badge green">綠</span> 用得淺</td></tr>
+  <tr><td>CommonResult&lt;T&gt;、PageResult&lt;T&gt;</td><td>自訂 Response Macro / API Resource</td><td><span class="badge green">綠</span></td></tr>
+  <tr><td>ServiceException + ErrorCode 字典</td><td>自訂 Exception + ErrorCode 表</td><td><span class="badge green">綠</span></td></tr>
+  <tr><td>BaseDO（id/creator/createTime/...）</td><td>BaseModel + SoftDeletes + observer</td><td><span class="badge green">綠</span></td></tr>
+</table>
+
+<!-- ============================================== -->
+<h2 id="risks">5. 風險分析</h2>
+
+<div class="card red">
+  <h3 style="margin-top:0"><span class="badge red">紅燈</span> 已消除</h3>
+  <p>原本獨立重寫情境下的兩個紅燈（Flowable 無替代、需重造 14 個 Starter），在「整合進 OA」情境下都消失。</p>
+</div>
+
+<div class="card yellow">
+  <h3 style="margin-top:0"><span class="badge yellow">黃燈 1</span> Laravel OA 流程引擎能力對齊（最關鍵）</h3>
+  <p>必須在動工前驗證以下能力 OA 引擎是否具備：</p>
+  <table>
+    <tr><th>能力</th><th>是否必須</th><th>用在哪</th></tr>
+    <tr><td>動態 approver（資料驅動決定下一關）</td><td>✅ 必須</td><td>採購單按金額分級審批</td></tr>
+    <tr><td>會簽（多人並行，全簽/任一簽）</td><td>⚠️ 需確認</td><td>多部門會簽</td></tr>
+    <tr><td>抄送 CC（不影響流程）</td><td>⚠️ 需確認</td><td><code>bpm_process_instance_copy</code></td></tr>
+    <tr><td>加簽 / 回退</td><td>⚠️ 需確認</td><td>退回上一關修改</td></tr>
+    <tr><td>業務 callback（流程結束更新業務單）</td><td>✅ 必須</td><td>所有 ERP 單據共用</td></tr>
+    <tr><td>流程綁定選單機制</td><td>❓ 看需求</td><td>同單據綁不同流程</td></tr>
+    <tr><td>子流程 / 跳轉 / 超時提醒</td><td>❓ 看需求</td><td>視實際使用</td></tr>
+  </table>
+</div>
+
+<div class="card yellow">
+  <h3 style="margin-top:0"><span class="badge yellow">黃燈 2</span> 使用者體系與資料權限對齊</h3>
+  <ul>
+    <li>ERP 業務資料的 <code>creator_id</code>、<code>approver_id</code>、<code>dept_id</code> 全部要對應到 Laravel OA 的 user 主檔</li>
+    <li>芋道 RBAC、部門、職位 ↔ OA 既有角色定義 — 需 mapping 表</li>
+    <li><code>@DataPermission</code>（按部門過濾資料）OA 若無對應機制，需自寫 Global Scope</li>
+  </ul>
+</div>
+
+<div class="card yellow">
+  <h3 style="margin-top:0"><span class="badge yellow">黃燈 3</span> PHP 性能模型</h3>
+  <ul>
+    <li>PHP-FPM 為 per-request 短生命週期，不利常駐運算（需求預測批次、BOM 展開）</li>
+    <li>對策：批次計算包成 Queue Job（Horizon），必要時上 Laravel Octane（Swoole / RoadRunner）</li>
+    <li>WHS 庫存併發扣減：用 <code>Cache::lock</code> 或 <code>SELECT ... FOR UPDATE</code>，務必壓測</li>
+  </ul>
+</div>
+
+<div class="card green">
+  <h3 style="margin-top:0"><span class="badge green">綠燈</span> 低風險項目</h3>
+  <ul>
+    <li>PostgreSQL → MySQL：用得淺，dump → 改 DDL → 重灌即可</li>
+    <li>REST API 契約：Vue 前端可保留，只要維持 <code>CommonResult</code> 結構</li>
+    <li>漢堡王中繼 API：FeignClient → Guzzle，2~3 天工作</li>
+    <li>JWT 認證：直接吃 Laravel OA 既有 auth guard</li>
+    <li>排程、Excel、檔案、Redis：Laravel 生態現成</li>
+  </ul>
+</div>
+
+<!-- ============================================== -->
+<h2 id="decisions">6. 關鍵整合決策</h2>
+
+<table>
+  <tr><th>決策</th><th>建議</th><th>說明</th></tr>
+  <tr>
+    <td>資料庫策略</td>
+    <td>OA 與 ERP 共用同一個 MySQL，ERP 表前綴 <code>erp_pdm_</code>、<code>erp_whs_</code>、<code>erp_pmm_</code></td>
+    <td>避免跨 DB JOIN 複雜度，前提是命名不衝突</td>
+  </tr>
+  <tr>
+    <td>流程引擎使用方式</td>
+    <td>業務單在 ERP 模組，發起審批呼叫 OA 引擎 API，結束 callback 回 ERP 更新狀態</td>
+    <td>OA 為單一流程事實來源</td>
+  </tr>
+  <tr>
+    <td>使用者 / 組織</td>
+    <td>ERP 不再有自己的 user/dept/role，全走 OA 主檔</td>
+    <td>避免雙系統使用者不同步</td>
+  </tr>
+  <tr>
+    <td>ID 策略</td>
+    <td>遷移時保留原 ID（不重編號）</td>
+    <td>過渡期跨模組引用（Java 端引用 PDM 食材）才不需 mapping</td>
+  </tr>
+  <tr>
+    <td>新功能寫哪</td>
+    <td>從遷移啟動日起，<strong>所有新功能一律寫在 Laravel</strong></td>
+    <td>Java 進入凍結維護，否則永遠追不上</td>
+  </tr>
+  <tr>
+    <td>BHM 是否轉</td>
+    <td>視業務是否解凍決定，可放到後期</td>
+    <td>純 CRUD，3~5 人天可補</td>
+  </tr>
+</table>
+
+<!-- ============================================== -->
+<h2 id="effort">7. 人月估算</h2>
+
+<table>
+  <tr><th>階段</th><th>人月</th></tr>
+  <tr><td>階段 0：地基（Gateway、ErrorCode、BaseModel、流程整合 helper、PoC）</td><td>1.5 ~ 2</td></tr>
+  <tr><td>階段 1：BHM + PDM 主檔（含漢堡王 API）</td><td>2 ~ 2.5</td></tr>
+  <tr><td>階段 2：WHS 庫存</td><td>2</td></tr>
+  <tr><td>階段 3：PMM 採購（含多階段單據與流程整合）</td><td>2.5</td></tr>
+  <tr><td>階段 4：PDM 需求預測 / BOM 展開計算</td><td>2 ~ 3</td></tr>
+  <tr><td>階段 5：拆除 Java 後端、文件更新</td><td>0.5</td></tr>
+  <tr><td>Vue 前端串接調整、整合測試、UAT</td><td>1.5 ~ 2</td></tr>
+  <tr><th>合計</th><th>約 12 ~ 14 人月</th></tr>
+</table>
+
+<div class="callout">
+  <strong>對比情境：</strong>
+  <ul style="margin: 6px 0;">
+    <li>從零獨立重寫（無 OA 可用）：14~19 人月，且含造 BPM、造芋道 Starter</li>
+    <li>整合進 OA（本方案）：12~14 人月，省 5~7 人月</li>
+    <li>只換 DB 不換語言：&lt; 1 人月</li>
+  </ul>
+</div>
+
+<!-- ============================================== -->
+<h2 id="strategy">8. 漸進式遷移策略（6 階段）</h2>
+
+<h3>核心架構</h3>
+<div class="ascii">
+   ┌─────────────┐
+   │   Vue 前端   │
+   └──────┬──────┘
+          │
+   ┌──────▼──────┐
+   │  Nginx Gw   │   ← 路由表決定每個模組打到哪邊
+   └──┬───────┬──┘
+      │       │
+   ┌──▼───┐ ┌─▼────────┐
+   │ Java │ │ Laravel  │
+   │ ERP  │ │ OA + ERP │
+   │ (PG) │ │ (MySQL)  │
+   └──────┘ └──────────┘
+</div>
+
+<h3>原則</h3>
+<ol>
+  <li><strong>Vue 不分叉</strong> — 前端代碼一份，靠 Nginx 切流量</li>
+  <li><strong>每個業務模組一次性切換</strong>，不在單一模組內做雙寫</li>
+  <li><strong>新功能一律寫在 Laravel</strong>，Java 進入凍結維護</li>
+  <li><strong>跨模組引用走 ID 一致策略</strong> — 遷移時保留原始 ID</li>
+</ol>
+
+<div class="phase">
+  <div class="phase-head">
+    <h3>階段 0：地基</h3>
+    <span class="effort">1.5 ~ 2 人月</span>
+  </div>
+  <p><strong>目的：</strong>架好「平台」，後面每個模組才能用同一套規範開發。</p>
+  <ul>
+    <li>Nginx Gateway 路由表（初始全打 Java）</li>
+    <li>用戶體系打通：ERP Java 改接受 Laravel OA 發的 JWT</li>
+    <li>基礎建設：ErrorCode、CommonResult、BaseModel、PageResult、Response Macro</li>
+    <li>業務單據 ↔ OA 流程綁定 helper（對應 <code>MenuFlowProcessInstanceHelper</code>）</li>
+    <li>DB 命名規約：<code>erp_&lt;module&gt;_&lt;entity&gt;</code></li>
+    <li><strong>流程引擎能力 PoC</strong>：用假單據走完「建立 → OA 流程 → callback 回寫狀態」</li>
+  </ul>
+  <div class="callout warn">
+    <strong>風險閘門：</strong>PoC 通過才能進階段 1。若 OA 流程引擎缺關鍵能力，整個專案的時程基礎就錯了。
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-head">
+    <h3>階段 1：BHM + PDM 主檔</h3>
+    <span class="effort">2 ~ 2.5 人月</span>
+  </div>
+  <p><strong>為什麼先做：</strong>純 CRUD、無流程、無跨模組寫操作依賴、變動最少。</p>
+  <ul>
+    <li>BHM 客戶基礎資料（若解凍）</li>
+    <li>PDM 主檔：食材、產品、BOM、配方（<strong>不含需求預測計算</strong>）</li>
+    <li>漢堡王中繼 API：Token Manager + 三條 API 翻譯成 PHP</li>
+  </ul>
+  <p><strong>遷移做法：</strong></p>
+  <ol>
+    <li>PG dump → DDL 翻譯 → MySQL（保留原始 ID）</li>
+    <li>Laravel 完成 CRUD 與 API</li>
+    <li>Nginx 切換：<code>/api/pdm/ingredient/*</code>、<code>/api/pdm/bom/*</code> → Laravel</li>
+    <li>Java 端對應 controller 標 <code>@Deprecated</code>，不再接受寫請求</li>
+    <li>未遷移的 Java 模組改用 Laravel REST API 取主檔</li>
+  </ol>
+</div>
+
+<div class="phase">
+  <div class="phase-head">
+    <h3>階段 2：WHS 庫存模組</h3>
+    <span class="effort">2 人月</span>
+  </div>
+  <p><strong>為什麼第二：</strong>庫存只依賴 PDM 食材主檔（已遷移），自身不涉複雜跨模組寫操作。</p>
+  <ul>
+    <li>倉庫、儲位主檔 CRUD</li>
+    <li>進出庫單、即時庫存查詢</li>
+    <li>盤點單（接 OA 流程）— 第一次驗證階段 0 的 helper</li>
+  </ul>
+  <div class="callout warn">
+    <strong>風險：</strong>庫存併發扣減。Java 端用 Redisson 鎖，PHP 改 <code>Cache::lock</code> 或 <code>SELECT ... FOR UPDATE</code>，務必壓測。
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-head">
+    <h3>階段 3：PMM 採購模組</h3>
+    <span class="effort">2.5 人月</span>
+  </div>
+  <p><strong>為什麼這時做：</strong>PMM 驗收單會寫 WHS 庫存，先把 WHS 搞定，PMM 就能同進程呼叫 Service。</p>
+  <ul>
+    <li>廠商主檔、報價維護（金額類審批）</li>
+    <li>請購 → 詢價 → 採購 → 驗收 四階段狀態機</li>
+    <li>用 <code>spatie/laravel-model-states</code> 建模狀態機</li>
+    <li>跨單據關聯（請購拆採購、採購分批驗收）</li>
+  </ul>
+</div>
+
+<div class="phase">
+  <div class="phase-head">
+    <h3>階段 4：PDM 計算層 / 需求預測</h3>
+    <span class="effort">2 ~ 3 人月</span>
+  </div>
+  <p><strong>為什麼最後做：</strong>計算密集，且依賴的 PDM 主檔、PMM 採購、WHS 庫存都已就位。</p>
+  <ul>
+    <li>漢堡王 API 拉銷售資料（階段 1 已完成基礎）</li>
+    <li>需求預測計算（複雜數值邏輯，建議寫測試）</li>
+    <li>BOM 展開 → 原物料需求（樹狀遞迴）</li>
+    <li>需求預測單審批 → 觸發 PMM 請購</li>
+    <li>計算包成 Queue Job（Horizon），必要時上 Octane</li>
+  </ul>
+</div>
+
+<div class="phase">
+  <div class="phase-head">
+    <h3>階段 5：拆除 Java 後端</h3>
+    <span class="effort">0.5 人月</span>
+  </div>
+  <p><strong>前提：</strong>階段 1~4 全部驗收通過、UAT 至少跑過一個完整業務週期。</p>
+  <ul>
+    <li>Nginx 路由表清空，所有 <code>/api/*</code> 指向 Laravel</li>
+    <li>Java 服務停機，保留映像檔 + DB snapshot 作為災難回退</li>
+    <li>PostgreSQL 退役，歷史資料 read-only 副本保留 6 個月</li>
+    <li>更新 CLAUDE.md、CONTEXT.md 等文件</li>
+  </ul>
+</div>
+
+<h3>時程示意</h3>
+<div class="ascii">
+月份:        M1   M2   M3   M4   M5   M6   M7   M8   M9   M10
+階段 0 (地基)     ████
+階段 1 (PDM+BHM)  ████████
+階段 2 (WHS)                ████████
+階段 3 (PMM)                       ██████████
+階段 4 (PDM 計算)                            ██████████
+階段 5 (拆 Java)                                       ██
+UAT / 壓測                  ░░   ░░   ░░   ░░░  ░░░░
+</div>
+<p>2 人團隊，總期程約 <strong>8 ~ 10 個月</strong>。</p>
+
+<!-- ============================================== -->
+<h2 id="nginx">9. Nginx Gateway 設定</h2>
+
+<h3>9.1 基礎：路徑分流（推薦從這開始）</h3>
+<pre><code># /etc/nginx/conf.d/erp-gateway.conf
+
+upstream java_erp {
+    server 127.0.0.1:48080;
+    keepalive 64;
+}
+
+upstream laravel_erp {
+    server 127.0.0.1:8080;
+    keepalive 64;
+}
+
+server {
+    listen       80;
+    server_name  erp.example.com;
+
+    client_max_body_size  50M;     # Excel 匯入用
+    proxy_http_version    1.1;
+    proxy_set_header      Host              $host;
+    proxy_set_header      X-Real-IP         $remote_addr;
+    proxy_set_header      X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header      X-Forwarded-Proto $scheme;
+    proxy_set_header      Authorization     $http_authorization;  # JWT 必傳
+    proxy_set_header      Connection        "";
+    proxy_read_timeout    120s;
+
+    # Vue 前端靜態資源
+    location / {
+        root   /var/www/erp-kingmaker/dist;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 已遷移到 Laravel 的模組（階段 1：PDM 主檔）
+    location ^~ /admin-api/pdm/ingredient/   { proxy_pass http://laravel_erp; }
+    location ^~ /admin-api/pdm/bom/          { proxy_pass http://laravel_erp; }
+    location ^~ /admin-api/bhm/              { proxy_pass http://laravel_erp; }
+
+    # 還沒遷移的 PDM 子路徑仍走 Java
+    location ^~ /admin-api/pdm/forecast/     { proxy_pass http://java_erp; }
+
+    # 預設：所有 API 走 Java ERP
+    location /admin-api/ {
+        proxy_pass http://java_erp;
+    }
+}</code></pre>
+
+<table>
+  <tr><th>指令</th><th>作用</th></tr>
+  <tr><td><code>^~</code></td><td>前綴匹配且優先於 regex，避免被後面 <code>/admin-api/</code> 攔截</td></tr>
+  <tr><td><code>proxy_set_header Authorization</code></td><td>必須，否則 JWT 會掉</td></tr>
+  <tr><td><code>proxy_http_version 1.1</code> + <code>Connection ""</code></td><td>啟用 upstream keepalive</td></tr>
+</table>
+
+<p>切換做法：增加一行 <code>location</code> 後 <code>nginx -s reload</code> 即可零停機切換。</p>
+
+<h3>9.2 進階：百分比灰度</h3>
+<pre><code># 在 http {} 區塊裡定義
+split_clients "${remote_addr}${http_user_agent}" $whs_backend {
+    10%     laravel_erp;     # 10% 打 Laravel
+    *       java_erp;        # 其餘打 Java
+}
+
+server {
+    location ^~ /admin-api/whs/ {
+        proxy_pass http://$whs_backend;
+    }
+}</code></pre>
+<div class="callout warn">
+  <strong>注意：</strong>寫操作模組（建單、改單）不建議百分比灰度，同一筆資料可能被兩邊各寫一半。比較適合唯讀查詢。
+</div>
+
+<h3>9.3 進階：指定使用者灰度（內部測試）</h3>
+<pre><code># 從 Cookie 控制
+map $cookie_erp_canary $whs_backend {
+    default   java_erp;
+    "new"     laravel_erp;
+}
+
+server {
+    location ^~ /admin-api/whs/ {
+        proxy_pass http://$whs_backend;
+    }
+}</code></pre>
+<p>QA 在瀏覽器手動設 <code>Cookie: erp_canary=new</code>，就能用同一個 URL 體驗新版。</p>
+
+<h3>9.4 推薦：map 集中管理路由</h3>
+<pre><code># 路由表
+map $uri $erp_backend {
+    default                              java_erp;
+    ~^/admin-api/pdm/ingredient/         laravel_erp;
+    ~^/admin-api/pdm/bom/                laravel_erp;
+    ~^/admin-api/bhm/                    laravel_erp;
+    ~^/admin-api/whs/                    laravel_erp;   # 階段 2 開放
+    # ~^/admin-api/pmm/                  laravel_erp;   # 階段 3 再放開
+    # ~^/admin-api/pdm/forecast/         laravel_erp;   # 階段 4 再放開
+}
+
+server {
+    location /admin-api/ {
+        proxy_pass http://$erp_backend;
+    }
+}</code></pre>
+<p><strong>好處：</strong>所有遷移狀態一目了然，PR diff 也清楚（只動 map 那段）。</p>
+
+<h3>9.5 操作與驗證</h3>
+<pre><code># 語法檢查（改完先驗）
+nginx -t
+
+# 平滑重載（零停機）
+nginx -s reload
+
+# 驗證路由
+curl -i -H "Authorization: Bearer &lt;token&gt;" \
+     http://erp.example.com/admin-api/pdm/ingredient/list
+
+# 把 upstream 寫進日誌
+log_format upstream '$remote_addr [$time_local] "$request" '
+                    '$status sent=$body_bytes_sent '
+                    'upstream=$upstream_addr ut=$upstream_response_time';
+access_log /var/log/nginx/erp.log upstream;</code></pre>
+
+<h3>9.6 踩雷清單</h3>
+<table>
+  <tr><th>問題</th><th>原因</th><th>對策</th></tr>
+  <tr><td>切換後 401 / 403</td><td><code>Authorization</code> 沒傳</td><td>顯式加 <code>proxy_set_header Authorization $http_authorization;</code></td></tr>
+  <tr><td>大檔上傳失敗</td><td>預設 <code>client_max_body_size 1M</code></td><td>調大（範例給 50M）</td></tr>
+  <tr><td>Laravel 拿到內網 IP</td><td>沒設轉發 header</td><td><code>X-Real-IP</code> + <code>X-Forwarded-For</code>，TrustProxies 加 Nginx IP</td></tr>
+  <tr><td>location 命中錯誤</td><td>沒加 <code>^~</code>，被 regex 蓋掉</td><td>一律加 <code>^~</code></td></tr>
+  <tr><td>WebSocket 502</td><td>沒升級協議</td><td>加 <code>Upgrade</code> / <code>Connection</code> header</td></tr>
+  <tr><td>cookie / CSRF 衝突</td><td>兩邊都用 cookie</td><td>API-only 用 Bearer Token；或分 cookie path</td></tr>
+  <tr><td>切換瞬間少數請求失敗</td><td>upstream 還在處理</td><td><code>reload</code> 是安全的，壓力大時排低峰；或用 <code>proxy_next_upstream</code></td></tr>
+  <tr><td>CORS header 重複</td><td>兩個 upstream 都吐</td><td>CORS 集中在 Nginx 處理，後端關掉</td></tr>
+</table>
+
+<h3>9.7 工作流建議</h3>
+<ol>
+  <li><strong>環境變數化 upstream</strong>：dev / staging / prod 同一份 config，靠 include 不同 <code>upstream.conf</code></li>
+  <li><strong>路由表進版控</strong>：<code>erp-gateway.conf</code> 進 Git，每次遷移就是一個 PR</li>
+  <li><strong>觀測性</strong>：<code>nginx-prometheus-exporter</code> + Grafana 觀察每個 location 的 RT 與錯誤率</li>
+  <li><strong>演練回退</strong>：切換 PR 同時準備好回退 PR，30 秒內能 revert + reload</li>
+</ol>
+
+<!-- ============================================== -->
+<h2 id="next">10. 馬上可以做的事</h2>
+
+<ol>
+  <li><strong>架 Nginx Gateway</strong>（半天工）並把所有流量都先指到 Java — 這是後續切換的開關</li>
+  <li><strong>跑階段 0 的流程引擎 PoC</strong> — 用一張假單據做完整 round-trip：
+    <ul>
+      <li>業務單建立 → 呼叫 OA 流程 API 起單</li>
+      <li>OA 引擎走完流程</li>
+      <li>callback 回業務單 → 更新狀態</li>
+    </ul>
+  </li>
+  <li><strong>盤點 Flowable 實際用到的能力</strong>：閱讀 <code>kingmaker-module-bpm-biz/listener</code> 19 個 listener、<code>MenuFlowProcessInstanceHelper</code>、所有 <code>runtimeService.startProcessInstanceBy*</code> 的呼叫點，列出真正在用的能力清單</li>
+  <li><strong>對 OA 流程引擎做能力盤點</strong>，把第 3 點的清單交叉比對，識別缺口</li>
+  <li><strong>凍結 Java 新功能</strong>：除非阻斷性 bug，否則所有新需求都進 Laravel 待辦</li>
+</ol>
+
+<hr>
+
+<p style="text-align: center; color: var(--muted); font-size: 12px; margin-top: 48px;">
+  漢堡王 ERP 遷移評估文件 · 由對話內容整理生成 · 2026-05-15
+</p>
+
+</div>
+</body>
+</html>
