@@ -12,12 +12,12 @@
 
 | 方法 | 端點 | 功能 | 說明 | OA實作 |
 |:----:|------|------|------|:------:|
-| GET | `/whs/stock-safe/page` | 查詢安全存量列表（分頁） | 支援 signCode、applyDept、processStatus 等篩選；createTime 為 LocalDateTime 陣列 | [ ] |
-| GET | `/whs/stock-safe/getAllProductDaySales` | 取得所有產品每日銷售量 | 必填 weightDay（加權日數），回傳食材計算結果 | [ ] |
-| GET | `/whs/stock-safe/get` | 取得安全存量設定詳情 | 必填 id | [ ] |
-| POST | `/whs/stock-safe/create` | 建立安全存量設定 | 含表頭與明細列表 | [ ] |
-| PUT | `/whs/stock-safe/update` | 更新安全存量設定 | 含表頭與明細列表 | [ ] |
-| DELETE | `/whs/stock-safe/delete` | 刪除安全存量設定 | 必填 id | [ ] |
+| GET | `/whs/stock-safe/page` | 查詢安全存量列表（分頁） | 支援 signCode、applyDept、processStatus 等篩選；createTime 為 LocalDateTime 陣列 | [x] |
+| GET | `/whs/stock-safe/getAllProductDaySales` | 取得所有產品每日銷售量 | 必填 weightDay（加權日數），回傳食材計算結果 | [x] |
+| GET | `/whs/stock-safe/get` | 取得安全存量設定詳情 | 必填 id | [x] |
+| POST | `/whs/stock-safe/create` | 建立安全存量設定 | 含表頭與明細列表 | [x] |
+| PUT | `/whs/stock-safe/update` | 更新安全存量設定 | 含表頭與明細列表 | [x] |
+| DELETE | `/whs/stock-safe/delete` | 刪除安全存量設定 | 必填 id | [x] |
 
 ---
 
@@ -91,13 +91,13 @@
 
 | 方法 | 端點 | 功能 | 說明 | OA實作 |
 |:----:|------|------|------|:------:|
-| GET | `/whs/stock-transfer/page` | 調撥列表（分頁） | 支援 signCode、area、outWarehouse、inWarehouse 等篩選 | [ ] |
-| GET | `/whs/stock-transfer/todo-page` | 待辦調撥列表 | 簽核模式 | [ ] |
-| DELETE | `/whs/stock-transfer/delete` | 刪除調撥單 | 必填 id | [ ] |
-| POST | `/whs/stock-transfer-detail/compute-area-inventory` | 計算區域庫存數量 | 必填 area、prodCode[]，可選 outWarehouse/inWarehouse | [ ] |
-| POST | `/whs/stock-transfer-detail/batch-process` | 建立調撥批次（表頭+明細） | 含 stockTransferDetailList | [ ] |
-| PUT | `/whs/stock-transfer-detail/edit-with-head` | 編輯調撥單（含明細） | | [ ] |
-| GET | `/whs/stock-transfer-detail/get-with-details` | 取得調撥單詳情 | 必填 transferId | [ ] |
+| GET | `/whs/stock-transfer/page` | 調撥列表（分頁） | 支援 signCode、area、outWarehouse、inWarehouse 等篩選 | [x] |
+| GET | `/whs/stock-transfer/todo-page` | 待辦調撥列表 | 簽核模式 | [x] |
+| DELETE | `/whs/stock-transfer/delete` | 刪除調撥單 | 必填 id | [x] |
+| POST | `/whs/stock-transfer-detail/compute-area-inventory` | 計算區域庫存數量 | 必填 area、prodCode[]，可選 outWarehouse/inWarehouse | [x] |
+| POST | `/whs/stock-transfer-detail/batch-process` | 建立調撥批次（表頭+明細） | 含 stockTransferDetailList | [x] |
+| PUT | `/whs/stock-transfer-detail/edit-with-head` | 編輯調撥單（含明細） | | [x] |
+| GET | `/whs/stock-transfer-detail/get-with-details` | 取得調撥單詳情 | 必填 transferId | [x] |
 | POST | `/whs/stock-transfer-detail/get-by-opposite-stock-type` | 取得調撥來源單據 | 用於入/出庫單選擇來源，stockReason=SW02 | [x] |
 | GET | `/whs/stock-transfer-detail/record-batch-by-sign-code` | 依單號取得調撥記錄 | 用於入庫單填充明細 | [x] |
 
@@ -109,15 +109,15 @@
 
 | 方法 | 端點 | 功能 | 說明 | OA實作 |
 |:----:|------|------|------|:------:|
-| GET | `/whs/bad-product/page` | 不良品列表（分頁） | 支援 signCode、area、warehouse、returnDate、processStatus 篩選 | [ ] |
-| GET | `/whs/bad-product/todo-page` | 待辦不良品列表 | 簽核模式 | [ ] |
-| GET | `/whs/bad-product/get` | 不良品詳情 | 必填 id，回傳 BadProductAndDetailVO（主+子） | [ ] |
-| POST | `/whs/bad-product/create` | 建立不良品單據 | 含 badProductDetails[]，支援 pictureUrl 圖片附件 | [ ] |
-| PUT | `/whs/bad-product/update` | 更新不良品單據 | | [ ] |
+| GET | `/whs/bad-product/page` | 不良品列表（分頁） | 支援 signCode、area、warehouse、returnDate、processStatus 篩選 | [x] |
+| GET | `/whs/bad-product/todo-page` | 待辦不良品列表 | 簽核模式 | [x] |
+| GET | `/whs/bad-product/get` | 不良品詳情 | 必填 id，回傳 BadProductAndDetailVO（主+子） | [x] |
+| POST | `/whs/bad-product/create` | 建立不良品單據 | 含 badProductDetails[]，支援 pictureUrl 圖片附件 | [x] |
+| PUT | `/whs/bad-product/update` | 更新不良品單據 | | [x] |
 | POST | `/whs/bad-product/get-outbound-source-list` | 取得出庫來源單據 | 必填 area/warehouse/stockReason | [x] |
 | POST | `/whs/bad-product/get-inbound-source-list` | 取得入庫來源單據 | | [x] |
 | GET | `/whs/bad-product/get-stock-record-batch-by-sign-code` | 依單號取得庫存記錄 | 必填 signCode，可選 stockType | [x] |
-| DELETE | `/whs/bad-product/delete` | 刪除不良品單據 | 必填 id | [ ] |
+| DELETE | `/whs/bad-product/delete` | 刪除不良品單據 | 必填 id | [x] |
 
 ---
 
@@ -127,14 +127,14 @@
 
 | 方法 | 端點 | 功能 | 說明 | OA實作 |
 |:----:|------|------|------|:------:|
-| GET | `/whs/daily-inventory/page` | 每日盤點列表（分頁） | 支援 signCode、area、warehouse、processStatus、日期範圍篩選 | [ ] |
-| GET | `/whs/daily-inventory/todo-page` | 待辦每日盤點列表 | 簽核模式 | [ ] |
-| GET | `/whs/daily-inventory/get` | 每日盤點詳情 | 必填 id | [ ] |
-| GET | `/whs/daily-inventory/daily-product-sales` | 取得每日產品銷量 | 必填 groupAreaId、date，可選 storeId | [ ] |
-| GET | `/whs/daily-inventory/ingredient-options` | 取得盤點食材選項 | 依 area/warehouse 篩選 | [ ] |
-| POST | `/whs/daily-inventory/create` | 建立每日盤點單 | 含 dailyInventoryDetails[] | [ ] |
-| PUT | `/whs/daily-inventory/update` | 更新每日盤點單 | | [ ] |
-| DELETE | `/whs/daily-inventory/delete` | 刪除每日盤點單 | 必填 id | [ ] |
+| GET | `/whs/daily-inventory/page` | 每日盤點列表（分頁） | 支援 signCode、area、warehouse、processStatus、日期範圍篩選 | [x] |
+| GET | `/whs/daily-inventory/todo-page` | 待辦每日盤點列表 | 簽核模式 | [x] |
+| GET | `/whs/daily-inventory/get` | 每日盤點詳情 | 必填 id | [x] |
+| GET | `/whs/daily-inventory/daily-product-sales` | 取得每日產品銷量 | 必填 groupAreaId、date，可選 storeId | [x] |
+| GET | `/whs/daily-inventory/ingredient-options` | 取得盤點食材選項 | 依 area/warehouse 篩選 | [x] |
+| POST | `/whs/daily-inventory/create` | 建立每日盤點單 | 含 dailyInventoryDetails[] | [x] |
+| PUT | `/whs/daily-inventory/update` | 更新每日盤點單 | | [x] |
+| DELETE | `/whs/daily-inventory/delete` | 刪除每日盤點單 | 必填 id | [x] |
 
 ---
 
@@ -144,13 +144,13 @@
 
 | 方法 | 端點 | 功能 | 說明 | OA實作 |
 |:----:|------|------|------|:------:|
-| GET | `/whs/check-plan/page` | 盤點計劃列表（分頁） | 支援 area、warehouse、periodicity、processStatus 篩選 | [ ] |
-| GET | `/whs/check-plan/todo-page` | 待辦盤點計劃列表 | 簽核模式 | [ ] |
-| GET | `/whs/check-plan/get` | 盤點計劃詳情 | 必填 id，含 checkPlanItems[] | [ ] |
-| POST | `/whs/check-plan/create` | 建立盤點計劃 | periodicity: 每月/每季/每年 | [ ] |
-| PUT | `/whs/check-plan/update` | 修改盤點計劃 | | [ ] |
-| DELETE | `/whs/check-plan/delete` | 刪除盤點計劃 | 必填 id | [ ] |
-| DELETE | `/whs/check-plan/deleteBatch` | 批量刪除盤點計劃 | body: {ids: number[]} | [ ] |
+| GET | `/whs/check-plan/page` | 盤點計劃列表（分頁） | 支援 area、warehouse、periodicity、processStatus 篩選 | [x] |
+| GET | `/whs/check-plan/todo-page` | 待辦盤點計劃列表 | 簽核模式 | [x] |
+| GET | `/whs/check-plan/get` | 盤點計劃詳情 | 必填 id，含 checkPlanItems[] | [x] |
+| POST | `/whs/check-plan/create` | 建立盤點計劃 | periodicity: 每月/每季/每年 | [x] |
+| PUT | `/whs/check-plan/update` | 修改盤點計劃 | | [x] |
+| DELETE | `/whs/check-plan/delete` | 刪除盤點計劃 | 必填 id | [x] |
+| DELETE | `/whs/check-plan/deleteBatch` | 批量刪除盤點計劃 | body: {ids: number[]} | [x] |
 
 ---
 
@@ -160,11 +160,11 @@
 
 | 方法 | 端點 | 功能 | 說明 | OA實作 |
 |:----:|------|------|------|:------:|
-| GET | `/whs/check-plan-detail/page` | 盤點執行列表（分頁） | | [ ] |
-| GET | `/whs/check-plan-detail/todo-page` | 待辦盤點執行列表 | 簽核模式 | [ ] |
-| GET | `/whs/check-plan-detail/get` | 盤點執行詳情 | 必填 id，含 checkTaskDetailList[] | [ ] |
-| PUT | `/whs/check-plan-detail/update` | 更新盤點執行 | 記錄實際盤點數量 | [ ] |
-| GET | `/whs/check-plan-detail/check-plan-item/list-by-plan-detail-id` | 取得盤點品項列表 | 必填 planId | [ ] |
+| GET | `/whs/check-plan-detail/page` | 盤點執行列表（分頁） | | [x] |
+| GET | `/whs/check-plan-detail/todo-page` | 待辦盤點執行列表 | 簽核模式 | [x] |
+| GET | `/whs/check-plan-detail/get` | 盤點執行詳情 | 必填 id，含 checkTaskDetailList[] | [x] |
+| PUT | `/whs/check-plan-detail/update` | 更新盤點執行 | 記錄實際盤點數量 | [x] |
+| GET | `/whs/check-plan-detail/list-items-by-plan-detail-id` | 取得盤點品項列表 | 必填 planId | [x] |
 | POST | `/whs/check-plan-detail/get-by-opposite-stock-type` | 取得盤點來源單據 | stockReason=SW03 | [x] |
 | GET | `/whs/check-plan-detail/get-stock-record-batch-by-sign-code` | 依單號取得盤點記錄 | 用於入庫填充，含 accountQuantity/checkQuantity | [x] |
 
@@ -178,4 +178,4 @@
 |:----:|------|------|------|:------:|
 | GET | `/pdm/ingredient-specs/getAllIngredientPage` | 取得全部食材規格（分頁） | | [x] |
 | GET | `/pdm/recipe/allRecipe` | 取得全部食譜列表 | | [x] |
-| POST | `/whs/stock-record-head/create-stock-in-from-demand-details` | 從需求明細建立入庫單 | | [ ] |
+| POST | `/whs/stock-record-head/create-stock-in-from-demand-details` | 從需求明細建立入庫單 | | [x] |

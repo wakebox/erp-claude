@@ -48,3 +48,9 @@ FeignClient 類：BurgerKingStoreClient
 
 
 重構 erp bk , http:10.65.163.46/stock/out api
+
+
+-----
+
+檢查  OA 程式碼 針對 ERP 模組下 - controller 是否有遵守 MVC 原則，controller 絕不處理資料庫，商業邏輯，修正不符合地方
+

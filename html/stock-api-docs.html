@@ -119,18 +119,18 @@
   <a href="#flow-overview">業務流程圖</a>
   <a href="#model-overview">資料模型圖</a>
   <div class="group">庫存管理模組</div>
-  <a href="#safety-stock">🛡 ️ 安全存量設定 <span class="badge no">未實作</span></a>
+  <a href="#safety-stock">🛡 ️ 安全存量設定 <span class="badge yes">已實作</span></a>
   <a href="#warehouse">🏭 倉庫基本設定 <span class="badge yes">已實作</span></a>
   <a href="#stock-query">🔍 倉儲查詢作業 <span class="badge yes">已實作</span></a>
   <a href="#stock-in">📥 入庫作業管理 <span class="badge yes">已實作</span></a>
   <a href="#stock-out">📤 出庫作業管理 <span class="badge yes">已實作</span></a>
-  <a href="#transfer">🔄 門市調撥管理 <span class="badge partial">2/9</span></a>
-  <a href="#bad-product">🚫 不良品管理 <span class="badge partial">3/9</span></a>
-  <a href="#day-check">📋 每日盤點作業 <span class="badge no">未實作</span></a>
-  <a href="#check-plan">📅 盤點計劃製定 <span class="badge no">未實作</span></a>
-  <a href="#check-exec">✅ 盤點計劃執行 <span class="badge partial">2/7</span></a>
+  <a href="#transfer">🔄 門市調撥管理 <span class="badge yes">已實作</span></a>
+  <a href="#bad-product">🚫 不良品管理 <span class="badge yes">已實作</span></a>
+  <a href="#day-check">📋 每日盤點作業 <span class="badge yes">已實作</span></a>
+  <a href="#check-plan">📅 盤點計劃製定 <span class="badge yes">已實作</span></a>
+  <a href="#check-exec">✅ 盤點計劃執行 <span class="badge yes">已實作</span></a>
   <div class="group">相關模組</div>
-  <a href="#pdm-related">PDM 相關 API <span class="badge partial">2/3</span></a>
+  <a href="#pdm-related">PDM 相關 API <span class="badge yes">已實作</span></a>
   <a href="#impl-summary">實作建議</a>
 </nav>
 
@@ -143,13 +143,13 @@
     <div class="stats">
       <div class="stat"><div class="num">10</div><div class="label">功能模組</div></div>
       <div class="stat"><div class="num">75</div><div class="label">API 端點</div></div>
-      <div class="stat"><div class="num">35</div><div class="label">OA 已實作</div></div>
-      <div class="stat"><div class="num">40</div><div class="label">待實作</div></div>
+      <div class="stat"><div class="num">75</div><div class="label">OA 已實作</div></div>
+      <div class="stat"><div class="num">0</div><div class="label">待實作</div></div>
     </div>
   </div>
 
-  <div class="alert warning">
-    <strong>⚠️ 實作進度：</strong> 共 75 個 API 端點，已實作 35 個，尚有 40 個待實作。
+  <div class="alert success">
+    <strong>✅ 全部完成：</strong> 所有 API 端點均已實作。
   </div>
 
   <div id="overview" class="section">
@@ -163,7 +163,7 @@
     <div class="title">🛡 ️ 安全存量設定</div>
     <div class="path">/stock/safetyStock</div>
     <div class="count">6 個 API 端點</div>
-    <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+    <div class="status"><span class="impl-badge yes">OA 已實作</span></div>
   </div>
   <div class="module-card" onclick="location.href='#warehouse'">
     <div class="title">🏭 倉庫基本設定</div>
@@ -193,31 +193,31 @@
     <div class="title">🔄 門市調撥管理</div>
     <div class="path">/stock/transfer</div>
     <div class="count">9 個 API 端點</div>
-    <div class="status"><span class="impl-badge partial">OA 部分實作 (2/9)</span></div>
+    <div class="status"><span class="impl-badge yes">OA 已實作</span></div>
   </div>
   <div class="module-card" onclick="location.href='#bad-product'">
     <div class="title">🚫 不良品管理</div>
     <div class="path">/stock/badProduct</div>
     <div class="count">9 個 API 端點</div>
-    <div class="status"><span class="impl-badge partial">OA 部分實作 (3/9)</span></div>
+    <div class="status"><span class="impl-badge yes">OA 已實作</span></div>
   </div>
   <div class="module-card" onclick="location.href='#day-check'">
     <div class="title">📋 每日盤點作業</div>
     <div class="path">/stock/dayCheck</div>
     <div class="count">8 個 API 端點</div>
-    <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+    <div class="status"><span class="impl-badge yes">OA 已實作</span></div>
   </div>
   <div class="module-card" onclick="location.href='#check-plan'">
     <div class="title">📅 盤點計劃製定</div>
     <div class="path">/stock/checkPlan</div>
     <div class="count">7 個 API 端點</div>
-    <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+    <div class="status"><span class="impl-badge yes">OA 已實作</span></div>
   </div>
   <div class="module-card" onclick="location.href='#check-exec'">
     <div class="title">✅ 盤點計劃執行</div>
     <div class="path">/stock/checkExecution</div>
     <div class="count">7 個 API 端點</div>
-    <div class="status"><span class="impl-badge partial">OA 部分實作 (2/7)</span></div>
+    <div class="status"><span class="impl-badge yes">OA 已實作</span></div>
   </div>
 </div>
 
@@ -390,7 +390,7 @@ whs_check_plan (盤點計劃主表)
     <div class="section-header">
       <span class="icon">🛡</span>
       <h2>️ 安全存量設定 (Safety Stock)</h2>
-      <span class="impl-badge no">OA 未實作</span>
+      <span class="impl-badge yes">OA 已實作</span>
     </div>
     <p><strong>前端路由：</strong> <code>/stock/safetyStock</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/safetyStock/index.ts</code></p>
 <table class="api-table">
@@ -400,42 +400,42 @@ whs_check_plan (盤點計劃主表)
     <td><span class="endpoint">/whs/stock-safe/page</span></td>
     <td>查詢安全存量列表（分頁）</td>
     <td>支援 signCode、applyDept、processStatus 等篩選；createTime 為 LocalDateTime 陣列</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/stock-safe/getAllProductDaySales</span></td>
     <td>取得所有產品每日銷售量</td>
     <td>必填 weightDay（加權日數），回傳食材計算結果</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/stock-safe/get</span></td>
     <td>取得安全存量設定詳情</td>
     <td>必填 id</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
     <td><span class="endpoint">/whs/stock-safe/create</span></td>
     <td>建立安全存量設定</td>
     <td>含表頭與明細列表</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method PUT">PUT</span></td>
     <td><span class="endpoint">/whs/stock-safe/update</span></td>
     <td>更新安全存量設定</td>
     <td>含表頭與明細列表</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method DELETE">DELETE</span></td>
     <td><span class="endpoint">/whs/stock-safe/delete</span></td>
     <td>刪除安全存量設定</td>
     <td>必填 id</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
 </table>
 
@@ -768,7 +768,7 @@ whs_check_plan (盤點計劃主表)
     <div class="section-header">
       <span class="icon">🔄</span>
       <h2>門市調撥管理 (Stock Transfer)</h2>
-      <span class="impl-badge partial">OA 部分實作 (2/9)</span>
+      <span class="impl-badge yes">OA 已實作</span>
     </div>
     <p><strong>前端路由：</strong> <code>/stock/transfer</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/transfer/index.ts</code></p>
 <table class="api-table">
@@ -778,49 +778,49 @@ whs_check_plan (盤點計劃主表)
     <td><span class="endpoint">/whs/stock-transfer/page</span></td>
     <td>調撥列表（分頁）</td>
     <td>支援 signCode、area、outWarehouse、inWarehouse 等篩選</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/stock-transfer/todo-page</span></td>
     <td>待辦調撥列表</td>
     <td>簽核模式</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method DELETE">DELETE</span></td>
     <td><span class="endpoint">/whs/stock-transfer/delete</span></td>
     <td>刪除調撥單</td>
     <td>必填 id</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
     <td><span class="endpoint">/whs/stock-transfer-detail/compute-area-inventory</span></td>
     <td>計算區域庫存數量</td>
     <td>必填 area、prodCode[]，可選 outWarehouse/inWarehouse</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
     <td><span class="endpoint">/whs/stock-transfer-detail/batch-process</span></td>
     <td>建立調撥批次（表頭+明細）</td>
     <td>含 stockTransferDetailList</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method PUT">PUT</span></td>
     <td><span class="endpoint">/whs/stock-transfer-detail/edit-with-head</span></td>
     <td>編輯調撥單（含明細）</td>
     <td>—</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/stock-transfer-detail/get-with-details</span></td>
     <td>取得調撥單詳情</td>
     <td>必填 transferId</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
@@ -856,7 +856,7 @@ whs_check_plan (盤點計劃主表)
     <div class="section-header">
       <span class="icon">🚫</span>
       <h2>不良品管理 (Bad Product)</h2>
-      <span class="impl-badge partial">OA 部分實作 (3/9)</span>
+      <span class="impl-badge yes">OA 已實作</span>
     </div>
     <p><strong>前端路由：</strong> <code>/stock/badProduct</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/badProduct/index.ts</code></p>
 <table class="api-table">
@@ -866,35 +866,35 @@ whs_check_plan (盤點計劃主表)
     <td><span class="endpoint">/whs/bad-product/page</span></td>
     <td>不良品列表（分頁）</td>
     <td>支援 signCode、area、warehouse、returnDate、processStatus 篩選</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/bad-product/todo-page</span></td>
     <td>待辦不良品列表</td>
     <td>簽核模式</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/bad-product/get</span></td>
     <td>不良品詳情</td>
     <td>必填 id，回傳 BadProductAndDetailVO（主+子）</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
     <td><span class="endpoint">/whs/bad-product/create</span></td>
     <td>建立不良品單據</td>
     <td>含 badProductDetails[]，支援 pictureUrl 圖片附件</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method PUT">PUT</span></td>
     <td><span class="endpoint">/whs/bad-product/update</span></td>
     <td>更新不良品單據</td>
     <td>—</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
@@ -922,7 +922,7 @@ whs_check_plan (盤點計劃主表)
     <td><span class="endpoint">/whs/bad-product/delete</span></td>
     <td>刪除不良品單據</td>
     <td>必填 id</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
 </table>
   </div>
@@ -931,7 +931,7 @@ whs_check_plan (盤點計劃主表)
     <div class="section-header">
       <span class="icon">📋</span>
       <h2>每日盤點作業 (Daily Inventory)</h2>
-      <span class="impl-badge no">OA 未實作</span>
+      <span class="impl-badge yes">OA 已實作</span>
     </div>
     <p><strong>前端路由：</strong> <code>/stock/dayCheck</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/dayCheck/index.ts</code></p>
 <table class="api-table">
@@ -941,56 +941,56 @@ whs_check_plan (盤點計劃主表)
     <td><span class="endpoint">/whs/daily-inventory/page</span></td>
     <td>每日盤點列表（分頁）</td>
     <td>支援 signCode、area、warehouse、processStatus、日期範圍篩選</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/daily-inventory/todo-page</span></td>
     <td>待辦每日盤點列表</td>
     <td>簽核模式</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/daily-inventory/get</span></td>
     <td>每日盤點詳情</td>
     <td>必填 id</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/daily-inventory/daily-product-sales</span></td>
     <td>取得每日產品銷量</td>
     <td>必填 groupAreaId、date，可選 storeId</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/daily-inventory/ingredient-options</span></td>
     <td>取得盤點食材選項</td>
     <td>依 area/warehouse 篩選</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
     <td><span class="endpoint">/whs/daily-inventory/create</span></td>
     <td>建立每日盤點單</td>
     <td>含 dailyInventoryDetails[]</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method PUT">PUT</span></td>
     <td><span class="endpoint">/whs/daily-inventory/update</span></td>
     <td>更新每日盤點單</td>
     <td>—</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method DELETE">DELETE</span></td>
     <td><span class="endpoint">/whs/daily-inventory/delete</span></td>
     <td>刪除每日盤點單</td>
     <td>必填 id</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
 </table>
   </div>
@@ -999,7 +999,7 @@ whs_check_plan (盤點計劃主表)
     <div class="section-header">
       <span class="icon">📅</span>
       <h2>盤點計劃製定 (Check Plan)</h2>
-      <span class="impl-badge no">OA 未實作</span>
+      <span class="impl-badge yes">OA 已實作</span>
     </div>
     <p><strong>前端路由：</strong> <code>/stock/checkPlan</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/check/plan/index.ts</code></p>
 <table class="api-table">
@@ -1009,49 +1009,49 @@ whs_check_plan (盤點計劃主表)
     <td><span class="endpoint">/whs/check-plan/page</span></td>
     <td>盤點計劃列表（分頁）</td>
     <td>支援 area、warehouse、periodicity、processStatus 篩選</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/check-plan/todo-page</span></td>
     <td>待辦盤點計劃列表</td>
     <td>簽核模式</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/check-plan/get</span></td>
     <td>盤點計劃詳情</td>
     <td>必填 id，含 checkPlanItems[]</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
     <td><span class="endpoint">/whs/check-plan/create</span></td>
     <td>建立盤點計劃</td>
     <td>periodicity: 每月/每季/每年</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method PUT">PUT</span></td>
     <td><span class="endpoint">/whs/check-plan/update</span></td>
     <td>修改盤點計劃</td>
     <td>—</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method DELETE">DELETE</span></td>
     <td><span class="endpoint">/whs/check-plan/delete</span></td>
     <td>刪除盤點計劃</td>
     <td>必填 id</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method DELETE">DELETE</span></td>
     <td><span class="endpoint">/whs/check-plan/deleteBatch</span></td>
     <td>批量刪除盤點計劃</td>
     <td>body: {ids: number[]}</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
 </table>
   </div>
@@ -1060,7 +1060,7 @@ whs_check_plan (盤點計劃主表)
     <div class="section-header">
       <span class="icon">✅</span>
       <h2>盤點計劃執行 (Check Execution)</h2>
-      <span class="impl-badge partial">OA 部分實作 (2/7)</span>
+      <span class="impl-badge yes">OA 已實作</span>
     </div>
     <p><strong>前端路由：</strong> <code>/stock/checkExecution</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/check/execution/index.ts</code></p>
 <table class="api-table">
@@ -1070,35 +1070,35 @@ whs_check_plan (盤點計劃主表)
     <td><span class="endpoint">/whs/check-plan-detail/page</span></td>
     <td>盤點執行列表（分頁）</td>
     <td>—</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/check-plan-detail/todo-page</span></td>
     <td>待辦盤點執行列表</td>
     <td>簽核模式</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/check-plan-detail/get</span></td>
     <td>盤點執行詳情</td>
     <td>必填 id，含 checkTaskDetailList[]</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method PUT">PUT</span></td>
     <td><span class="endpoint">/whs/check-plan-detail/update</span></td>
     <td>更新盤點執行</td>
     <td>記錄實際盤點數量</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
-    <td><span class="endpoint">/whs/check-plan-detail/check-plan-item/list-by-plan-detail-id</span></td>
+    <td><span class="endpoint">/whs/check-plan-detail/list-items-by-plan-detail-id</span></td>
     <td>取得盤點品項列表</td>
     <td>必填 planId</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
@@ -1131,7 +1131,7 @@ whs_check_plan (盤點計劃主表)
     <div class="section-header">
       <span class="icon">🔗</span>
       <h2>PDM 相關 API (相依模組)</h2>
-      <span class="impl-badge partial">OA 部分實作 (2/3)</span>
+      <span class="impl-badge yes">OA 已實作</span>
     </div>
 <table class="api-table">
   <tr><th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th></tr>
@@ -1154,7 +1154,7 @@ whs_check_plan (盤點計劃主表)
     <td><span class="endpoint">/whs/stock-record-head/create-stock-in-from-demand-details</span></td>
     <td>從需求明細建立入庫單</td>
     <td>—</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
 </table>
 
@@ -1175,7 +1175,7 @@ whs_check_plan (盤點計劃主表)
     <td>🛡 ️ 安全存量設定</td>
     <td><code>/whs/stock-safe</code></td>
     <td>6</td>
-    <td class="oa-no">0 / 6</td>
+    <td class="oa-yes">6 / 6</td>
     <td><span class="tag blue">P2 高</span></td>
   </tr>
   <tr>
@@ -1210,35 +1210,35 @@ whs_check_plan (盤點計劃主表)
     <td>🔄 門市調撥管理</td>
     <td><code>/whs/stock-transfer</code></td>
     <td>9</td>
-    <td class="oa-no">2 / 9</td>
+    <td class="oa-yes">9 / 9</td>
     <td><span class="tag blue">P2 高</span></td>
   </tr>
   <tr>
     <td>🚫 不良品管理</td>
     <td><code>/whs/bad-product</code></td>
     <td>9</td>
-    <td class="oa-no">3 / 9</td>
+    <td class="oa-yes">9 / 9</td>
     <td><span class="tag green">P3 中</span></td>
   </tr>
   <tr>
     <td>📋 每日盤點作業</td>
     <td><code>/whs/daily-inventory</code></td>
     <td>8</td>
-    <td class="oa-no">0 / 8</td>
+    <td class="oa-yes">8 / 8</td>
     <td><span class="tag green">P3 中</span></td>
   </tr>
   <tr>
     <td>📅 盤點計劃製定</td>
     <td><code>/whs/check-plan</code></td>
     <td>7</td>
-    <td class="oa-no">0 / 7</td>
+    <td class="oa-yes">7 / 7</td>
     <td><span class="tag green">P3 中</span></td>
   </tr>
   <tr>
     <td>✅ 盤點計劃執行</td>
     <td><code>/whs/check-plan-detail</code></td>
     <td>7</td>
-    <td class="oa-no">2 / 7</td>
+    <td class="oa-yes">7 / 7</td>
     <td><span class="tag green">P3 中</span></td>
   </tr>
 </table>
