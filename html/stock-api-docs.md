@@ -27,17 +27,17 @@
 
 | 方法 | 端點 | 功能 | 說明 | OA實作 |
 |:----:|------|------|------|:------:|
-| GET | `/whs/warehouse/page` | 倉庫列表（分頁） | 支援 category、warehouseType、warehouse、zone、area 篩選 | [ ] |
-| POST | `/whs/warehouse/create` | 新增倉庫 | 建立一筆倉庫記錄 | [ ] |
-| PUT | `/whs/warehouse/update` | 修改倉庫 | 更新倉庫資料 | [ ] |
-| DELETE | `/whs/warehouse/delete` | 刪除倉庫 | 必填 id | [ ] |
-| POST | `/whs/warehouse/deleteList` | 批量刪除倉庫 | ids 以逗號分隔 | [ ] |
-| GET | `/whs/warehouse/hierarchy` | 層級查詢倉庫 | 返回樹狀結構，支援 area/warehouseType/warehouse/zone/binCode 篩選 | [ ] |
-| GET | `/whs/warehouse/distinct-areas` | 取得區域列表 | 回傳 {area, areaName}[] | [ ] |
-| GET | `/whs/warehouse/distinct-warehouse-types` | 取得倉別列表 | 可依 area 篩選，回傳 {warehouseType, warehouseTypeName}[] | [ ] |
-| GET | `/whs/warehouse/distinct-warehouses` | 取得倉名列表 | 可依 area/warehouseType 篩選 | [ ] |
-| GET | `/whs/warehouse/distinct-zones` | 取得儲區列表 | 可依 area/warehouseType/warehouse 篩選 | [ ] |
-| GET | `/whs/warehouse/distinct-area-warehouses` | 取得區域倉庫（調撥用） | 用於調撥單出/入庫倉選擇 | [ ] |
+| GET | `/whs/warehouse/page` | 倉庫列表（分頁） | 支援 category、warehouseType、warehouse、zone、area 篩選 | [x] |
+| POST | `/whs/warehouse/create` | 新增倉庫 | 建立一筆倉庫記錄 | [x] |
+| PUT | `/whs/warehouse/update` | 修改倉庫 | 更新倉庫資料 | [x] |
+| DELETE | `/whs/warehouse/delete` | 刪除倉庫 | 必填 id | [x] |
+| POST | `/whs/warehouse/deleteList` | 批量刪除倉庫 | ids 以逗號分隔 | [x] |
+| GET | `/whs/warehouse/hierarchy` | 層級查詢倉庫 | 返回樹狀結構，支援 area/warehouseType/warehouse/zone/binCode 篩選 | [x] |
+| GET | `/whs/warehouse/distinct-areas` | 取得區域列表 | 回傳 {area, areaName}[] | [x] |
+| GET | `/whs/warehouse/distinct-warehouse-types` | 取得倉別列表 | 可依 area 篩選，回傳 {warehouseType, warehouseTypeName}[] | [x] |
+| GET | `/whs/warehouse/distinct-warehouses` | 取得倉名列表 | 可依 area/warehouseType 篩選 | [x] |
+| GET | `/whs/warehouse/distinct-zones` | 取得儲區列表 | 可依 area/warehouseType/warehouse 篩選 | [x] |
+| GET | `/whs/warehouse/distinct-area-warehouses` | 取得區域倉庫（調撥用） | 用於調撥單出/入庫倉選擇 | [x] |
 
 ---
 

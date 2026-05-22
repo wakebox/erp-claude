@@ -120,7 +120,7 @@
   <a href="#model-overview">資料模型圖</a>
   <div class="group">庫存管理模組</div>
   <a href="#safety-stock">🛡 ️ 安全存量設定 <span class="badge no">未實作</span></a>
-  <a href="#warehouse">🏭 倉庫基本設定 <span class="badge no">未實作</span></a>
+  <a href="#warehouse">🏭 倉庫基本設定 <span class="badge yes">已實作</span></a>
   <a href="#stock-query">🔍 倉儲查詢作業 <span class="badge no">未實作</span></a>
   <a href="#stock-in">📥 入庫作業管理 <span class="badge no">未實作</span></a>
   <a href="#stock-out">📤 出庫作業管理 <span class="badge no">未實作</span></a>
@@ -143,13 +143,13 @@
     <div class="stats">
       <div class="stat"><div class="num">10</div><div class="label">功能模組</div></div>
       <div class="stat"><div class="num">75</div><div class="label">API 端點</div></div>
-      <div class="stat"><div class="num">2</div><div class="label">OA 已實作</div></div>
-      <div class="stat"><div class="num">73</div><div class="label">待實作</div></div>
+      <div class="stat"><div class="num">13</div><div class="label">OA 已實作</div></div>
+      <div class="stat"><div class="num">62</div><div class="label">待實作</div></div>
     </div>
   </div>
 
   <div class="alert warning">
-    <strong>⚠️ 實作進度：</strong> 共 75 個 API 端點，已實作 2 個，尚有 73 個待實作。
+    <strong>⚠️ 實作進度：</strong> 共 75 個 API 端點，已實作 13 個，尚有 62 個待實作。
   </div>
 
   <div id="overview" class="section">
@@ -169,7 +169,7 @@
     <div class="title">🏭 倉庫基本設定</div>
     <div class="path">/stock/stockBasic</div>
     <div class="count">11 個 API 端點</div>
-    <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+    <div class="status"><span class="impl-badge yes">OA 已實作</span></div>
   </div>
   <div class="module-card" onclick="location.href='#stock-query'">
     <div class="title">🔍 倉儲查詢作業</div>
@@ -478,7 +478,7 @@ whs_check_plan (盤點計劃主表)
     <div class="section-header">
       <span class="icon">🏭</span>
       <h2>倉庫基本設定 (Warehouse)</h2>
-      <span class="impl-badge no">OA 未實作</span>
+      <span class="impl-badge yes">OA 已實作</span>
     </div>
     <p><strong>前端路由：</strong> <code>/stock/stockBasic</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/stockBasic/index.ts</code></p>
 <table class="api-table">
@@ -488,77 +488,77 @@ whs_check_plan (盤點計劃主表)
     <td><span class="endpoint">/whs/warehouse/page</span></td>
     <td>倉庫列表（分頁）</td>
     <td>支援 category、warehouseType、warehouse、zone、area 篩選</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
     <td><span class="endpoint">/whs/warehouse/create</span></td>
     <td>新增倉庫</td>
     <td>建立一筆倉庫記錄</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method PUT">PUT</span></td>
     <td><span class="endpoint">/whs/warehouse/update</span></td>
     <td>修改倉庫</td>
     <td>更新倉庫資料</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method DELETE">DELETE</span></td>
     <td><span class="endpoint">/whs/warehouse/delete</span></td>
     <td>刪除倉庫</td>
     <td>必填 id</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
     <td><span class="endpoint">/whs/warehouse/deleteList</span></td>
     <td>批量刪除倉庫</td>
     <td>ids 以逗號分隔</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/warehouse/hierarchy</span></td>
     <td>層級查詢倉庫</td>
     <td>返回樹狀結構，支援 area/warehouseType/warehouse/zone/binCode 篩選</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/warehouse/distinct-areas</span></td>
     <td>取得區域列表</td>
     <td>回傳 {area, areaName}[]</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/warehouse/distinct-warehouse-types</span></td>
     <td>取得倉別列表</td>
     <td>可依 area 篩選，回傳 {warehouseType, warehouseTypeName}[]</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/warehouse/distinct-warehouses</span></td>
     <td>取得倉名列表</td>
     <td>可依 area/warehouseType 篩選</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/warehouse/distinct-zones</span></td>
     <td>取得儲區列表</td>
     <td>可依 area/warehouseType/warehouse 篩選</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/warehouse/distinct-area-warehouses</span></td>
     <td>取得區域倉庫（調撥用）</td>
     <td>用於調撥單出/入庫倉選擇</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
 </table>
 
@@ -1182,7 +1182,7 @@ whs_check_plan (盤點計劃主表)
     <td>🏭 倉庫基本設定</td>
     <td><code>/whs/warehouse</code></td>
     <td>11</td>
-    <td class="oa-no">0 / 11</td>
+    <td class="oa-yes">11 / 11</td>
     <td><span class="tag orange">P1 最高</span></td>
   </tr>
   <tr>
