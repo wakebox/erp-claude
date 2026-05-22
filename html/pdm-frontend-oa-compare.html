@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PDM 前端 API 呼叫 × OA 實作對照</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:13px}
+.header{background:linear-gradient(135deg,#0a1628 0%,#1a3a5c 100%);color:#fff;padding:22px 32px 18px}
+.header h1{font-size:21px;font-weight:700}
+.header p{font-size:12px;color:#8bb4d8;margin-top:3px}
+
+.progress-wrap{background:#fff;border-bottom:1px solid #e8eaf0;padding:12px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.progress-bar-bg{flex:1;min-width:120px;height:10px;background:#f0f0f0;border-radius:99px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#52c41a,#73d13d);border-radius:99px;transition:width .4s}
+.prog-label{font-size:12px;color:#555;white-space:nowrap}
+.prog-label strong{color:#237804}
+
+.summary{display:flex;gap:10px;padding:14px 24px;flex-wrap:wrap}
+.card{background:#fff;border-radius:8px;padding:12px 18px;box-shadow:0 1px 5px rgba(0,0,0,.07);min-width:100px;text-align:center}
+.card .n{font-size:26px;font-weight:800;line-height:1}
+.card .l{font-size:10px;color:#888;margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+.c-fe .n{color:#1677ff}.c-oa .n{color:#237804}.c-miss .n{color:#cf1322}.c-extra .n{color:#d46b08}
+
+.toolbar{background:#fff;border-bottom:1px solid #e8eaf0;padding:10px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.toolbar input{flex:1;min-width:180px;max-width:280px;border:1px solid #d0d7e2;border-radius:6px;padding:6px 11px;font-size:13px;outline:none}
+.filter-btn{padding:4px 11px;border-radius:5px;border:1px solid #d0d7e2;background:#fafafa;cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap}
+.filter-btn.active{background:#1677ff;color:#fff;border-color:#1677ff}
+.filter-btn.miss.active{background:#cf1322;border-color:#cf1322}
+.filter-btn.ok.active{background:#237804;border-color:#237804}
+.stat{margin-left:auto;font-size:12px;color:#888;white-space:nowrap}
+
+.section{margin:0 14px 16px}
+.section-header{display:flex;align-items:center;gap:10px;padding:9px 16px;background:#fff;border-radius:8px 8px 0 0;border-left:4px solid var(--gc,#1677ff);box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;user-select:none}
+.section-header:hover{background:#fafcff}
+.section-title{font-size:14px;font-weight:700;color:#0a1628}
+.section-badge{font-size:11px;background:var(--gc,#1677ff);color:#fff;padding:2px 8px;border-radius:10px}
+.section-toggle{margin-left:auto;color:#aaa;font-size:12px}
+.section-body{border:1px solid #eef0f5;border-top:none;border-radius:0 0 8px 8px;overflow:hidden}
+
+.page-block{border-bottom:1px solid #f0f2f5}
+.page-block:last-child{border-bottom:none}
+.page-header{padding:7px 16px;background:#f9fafc;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0f2f5;flex-wrap:wrap}
+.page-name{font-size:12px;font-weight:700;color:#0a1628}
+.page-path{font-family:Consolas,monospace;font-size:11px;color:#888;background:#eef0f5;padding:1px 6px;border-radius:4px}
+.page-badge{font-size:10px;padding:2px 7px;border-radius:10px;margin-left:auto;font-weight:600}
+.page-badge.full{background:#f6ffed;color:#237804;border:1px solid #95de64}
+.page-badge.partial{background:#fff7e6;color:#d46b08;border:1px solid #ffd591}
+.page-badge.none{background:#fff1f0;color:#cf1322;border:1px solid #ffccc7}
+.page-badge.bpm{background:#f0f0ff;color:#531dab;border:1px solid #b5b0ff}
+
+.tbl-head{display:grid;grid-template-columns:68px 1fr 1.6fr 130px;background:#f5f7fa;border-bottom:2px solid #e8eaf0;font-size:10px;font-weight:700;color:#666;text-transform:uppercase}
+.tbl-head span{padding:6px 12px;border-right:1px solid #eee}
+.tbl-head span:last-child{border-right:none;text-align:center}
+
+.api-row{display:grid;grid-template-columns:68px 1fr 1.6fr 130px;border-bottom:1px solid #f8f8f8;transition:background .12s}
+.api-row:last-child{border-bottom:none}
+.api-row:hover{background:#f5f8ff}
+.api-row.oa-done{background:#f6ffed}
+.api-row.oa-done:hover{background:#d9f7be}
+.api-row.oa-miss{background:#fff1f0}
+.api-row.oa-miss:hover{background:#ffccc7}
+.api-row.oa-bpm{background:#f5f0ff}
+.api-row.hidden{display:none!important}
+.api-cell{padding:8px 12px;border-right:1px solid #f5f5f5;display:flex;align-items:flex-start}
+.api-cell:last-child{border-right:none;justify-content:center;align-items:center}
+
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+.GET{background:#e6f4ff;color:#0958d9}
+.POST{background:#f6ffed;color:#237804}
+.PUT{background:#fff7e6;color:#d46b08}
+.DELETE{background:#fff1f0;color:#cf1322}
+.DOWNLOAD{background:#f9f0ff;color:#531dab}
+
+.ep{font-family:Consolas,monospace;font-size:12px;color:#1a1a2e;word-break:break-all;line-height:1.4}
+.ep-note{font-size:11px;color:#888;margin-top:2px}
+
+.status-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:99px;font-weight:600}
+.s-done{background:#f6ffed;color:#237804;border:1px solid #95de64}
+.s-miss{background:#fff1f0;color:#cf1322;border:1px solid #ffccc7}
+.s-bpm {background:#f0f0ff;color:#531dab;border:1px solid #b5b0ff}
+
+.legend{background:#fff;border-top:1px solid #eee;padding:10px 28px;display:flex;gap:20px;font-size:12px;color:#888;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:5px}
+.leg-box{width:14px;height:14px;border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>PDM 前端 API 呼叫 × OA 實作對照</h1>
+  <p>來源：erp-kingmaker/apps/burger-king/src/api/pdm/  +  api/gatherReq/ · 比對：pdm-api-list.html OA_DONE · 2026-05-20</p>
+</div>
+
+<div class="progress-wrap">
+  <span class="prog-label">前端呼叫 → OA 覆蓋率：<strong id="prog-text">—</strong></span>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+  <span class="prog-label" id="prog-pct" style="min-width:40px;text-align:right"></span>
+</div>
+
+<div class="summary">
+  <div class="card c-fe"><div class="n" id="s-fe">0</div><div class="l">前端呼叫</div></div>
+  <div class="card c-oa"><div class="n" id="s-oa">0</div><div class="l">OA 已實作</div></div>
+  <div class="card c-miss"><div class="n" id="s-miss">0</div><div class="l">OA 缺少</div></div>
+  <div class="card c-extra"><div class="n" id="s-extra">0</div><div class="l">OA 有但前端未呼叫</div></div>
+</div>
+
+<div class="toolbar">
+  <input type="text" id="search" placeholder="搜尋端點…" oninput="doFilter()"/>
+  <button class="filter-btn active" onclick="setFilter('ALL',this)">全部</button>
+  <button class="filter-btn miss" onclick="setFilter('MISS',this)">❌ OA 缺少</button>
+  <button class="filter-btn ok" onclick="setFilter('DONE',this)">✅ OA 已實作</button>
+  <div class="stat">顯示 <span id="v-count">—</span> / 共 <span id="t-count">—</span></div>
+</div>
+
+<div id="container"></div>
+
+<div class="legend">
+  <div class="leg-item"><div class="leg-box" style="background:#f6ffed;border:1px solid #95de64"></div> OA 已實作</div>
+  <div class="leg-item"><div class="leg-box" style="background:#fff1f0;border:1px solid #ffccc7"></div> OA 缺少實作</div>
+  <div class="leg-item"><div class="leg-box" style="background:#f5f0ff;border:1px solid #b5b0ff"></div> BPM / 簽核（不實作）</div>
+  <div class="leg-item"><div class="leg-box" style="background:#f5f7fa;border:1px solid #eee"></div> OA 有實作但前端未呼叫</div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────
+// OA_DONE：來自 pdm-api-list.html
+// ─────────────────────────────────────────────────
+const OA_DONE = new Set([
+  'GET /pdm/code-category/page','GET /pdm/code-category/getAll','GET /pdm/code-category/get',
+  'POST /pdm/code-category/create','PUT /pdm/code-category/update','DELETE /pdm/code-category/delete',
+  'GET /pdm/code-item/page','GET /pdm/code-item/get',
+  'POST /pdm/code-item/create','PUT /pdm/code-item/update','DELETE /pdm/code-item/delete',
+  'GET /pdm/code-structure/page','GET /pdm/code-structure/get',
+  'POST /pdm/code-structure/create','PUT /pdm/code-structure/update','DELETE /pdm/code-structure/delete',
+  'GET /pdm/code-structure/code-structure-detail/page','GET /pdm/code-structure/code-structure-detail/get',
+  'POST /pdm/code-structure/code-structure-detail/create','PUT /pdm/code-structure/code-structure-detail/update',
+  'DELETE /pdm/code-structure/code-structure-detail/delete',
+  'GET /pdm/ingredient/page','GET /pdm/ingredient/getOne',
+  'POST /pdm/ingredient/create','PUT /pdm/ingredient/update',
+  'DELETE /pdm/ingredient/delete','DELETE /pdm/ingredient/deleteByIds',
+  'GET /pdm/packing-materials/page','GET /pdm/packing-materials/get',
+  'POST /pdm/packing-materials/create','PUT /pdm/packing-materials/update',
+  'DELETE /pdm/packing-materials/delete','DELETE /pdm/packing-materials/batch-delete',
+  'GET /pdm/packing-materials/packing-materials-dtl/list-by-packing-materials-id',
+  'GET /pdm/packing-materials/packing-materials-dtl/list-all-packing-materials',
+  'GET /pdm/recipe/page','GET /pdm/recipe/get','GET /pdm/recipe/allRecipe',
+  'POST /pdm/recipe/create','PUT /pdm/recipe/update',
+  'DELETE /pdm/recipe/delete',
+  'GET /pdm/recipe/single-serving-recipe/list-by-recipe-id',
+  'GET /pdm/recipe/getSingleServingRecipe',
+  'GET /pdm/recipe/recipe-nutritional-contents/list-by-recipe-id',
+  'GET /pdm/code-bom/page','GET /pdm/code-bom/get','GET /pdm/code-bom/detail',
+  'GET /pdm/code-bom/getCodeBomByLevel','GET /pdm/code-bom/getCodeBomByCategory',
+  'POST /pdm/code-bom/create','PUT /pdm/code-bom/update','DELETE /pdm/code-bom/delete',
+  'GET /pdm/code-structure-detail/page','GET /pdm/code-structure-detail/get',
+  'POST /pdm/code-structure-detail/create','PUT /pdm/code-structure-detail/update',
+  'DELETE /pdm/code-structure-detail/delete',
+  'GET /pdm/ingredient-specs/getList','GET /pdm/ingredient-specs/getAllList',
+  'GET /pdm/ingredient-specs/allIngredientSpecs',
+  'GET /pdm/ingredient-specs/getAllIngredientPage',
+  'DELETE /pdm/ingredient-specs/delete','DELETE /pdm/ingredient-specs/deleteBatch',
+  'GET /pdm/ingredient-compat/getList',
+  'DELETE /pdm/ingredient-compat/delete','DELETE /pdm/ingredient-compat/deleteBatch',
+  'GET /pdm/ingredient-nutrition/getList','DELETE /pdm/ingredient-nutrition/delete',
+  'GET /pdm/logistics-type/page','GET /pdm/logistics-type/get',
+  'POST /pdm/logistics-type/create','PUT /pdm/logistics-type/update','DELETE /pdm/logistics-type/delete',
+  'GET /pdm/meal-type/page','GET /pdm/meal-type/get',
+  'POST /pdm/meal-type/create','PUT /pdm/meal-type/update',
+  'DELETE /pdm/meal-type/delete','DELETE /pdm/meal-type/batch-delete',
+  'GET /pdm/nutritional-definitions/page','GET /pdm/nutritional-definitions/get',
+  'POST /pdm/nutritional-definitions/create','PUT /pdm/nutritional-definitions/update',
+  'DELETE /pdm/nutritional-definitions/delete','DELETE /pdm/nutritional-definitions/batch-delete',
+  'GET /pdm/udf/page','POST /pdm/udf/create','PUT /pdm/udf/update/{id}','DELETE /pdm/udf/delete',
+  'GET /pdm/unit-conv/page','POST /pdm/unit-conv/create','PUT /pdm/unit-conv/update/{id}','DELETE /pdm/unit-conv/delete',
+  'GET /pdm/raw-material-logistics/page','GET /pdm/raw-material-logistics/get',
+  'POST /pdm/raw-material-logistics/create','PUT /pdm/raw-material-logistics/update',
+  'DELETE /pdm/raw-material-logistics/delete',
+  'GET /pdm/raw-material-logistics/raw-material-logistics-dtl/list-by-parent-id',
+  'GET /pdm/temp-req/page','GET /pdm/temp-req/get',
+  'POST /pdm/temp-req/create','PUT /pdm/temp-req/update','DELETE /pdm/temp-req/delete',
+  'GET /pdm/temp-req/temp-req-detail/list-by-parent-id',
+  'GET /pdm/demand-forecast/page','DELETE /pdm/demand-forecast/deleteBatch',
+  'GET /pdm/demand-forecast/detail/get-with-header','DELETE /pdm/demand-forecast/detail/deleteBatch',
+  'GET /pdm/demand-forecast/detail/bk/group-with-stores-inner',
+  'GET /pdm/demand-forecast/detail/bk/all-areas-with-stores',
+  'GET /pdm/demand-forecast/detail/bk/group-summaries',
+  'GET /pdm/demand-forecast/detail/bk/stores-by-group',
+  'GET /pdm/demand-forecast/detail/product-recipe-analysis',
+  'POST /pdm/demand-forecast/detail/calculate-projected-sales',
+  'POST /pdm/demand-forecast/detail/create-with-details',
+  'PUT /pdm/demand-forecast/detail/update-with-details',
+  'GET /pdm/demand-forecast-config/list','GET /pdm/demand-forecast-config/get',
+  'POST /pdm/demand-forecast-config/save','POST /pdm/demand-forecast-config/precheck',
+  'PUT /pdm/demand-forecast-config/enable','PUT /pdm/demand-forecast-config/disable',
+  'POST /pdm/demand-forecast-config/run-now',
+  'GET /pdm/code-category/export-excel','GET /pdm/code-item/export-excel',
+  'GET /pdm/code-structure/export-excel','GET /pdm/code-structure-detail/export-excel',
+  'GET /pdm/code-bom/export-excel','GET /pdm/logistics-type/export-excel',
+  'GET /pdm/meal-type/export-excel','GET /pdm/nutritional-definitions/export-excel',
+  'GET /pdm/recipe/export-excel','GET /pdm/packing-materials/export-excel',
+  'GET /pdm/raw-material-logistics/export-excel','GET /pdm/temp-req/export-excel',
+  'GET /pdm/raw-material/list','GET /pdm/raw-material/detail',
+  'GET /pdm/raw-material-demand-head/page','GET /pdm/raw-material-demand-head/get',
+  'POST /pdm/raw-material-demand-head/create',
+  'GET /pdm/raw-material-demand-head/list','GET /pdm/raw-material-demand-head/detail',
+  'GET /pdm/raw-material-demand-head/query-details-by-month',
+  'POST /pdm/raw-material-demand-head/query-details-by-ids',
+  'GET /pdm/raw-material-demand-head/query-group-by-delivery-date',
+  'GET /pdm/raw-material-demand-head/query-details-by-delivery-date',
+  'POST /pdm/raw-material-demand-head/generateCsv',
+]);
+
+// ─────────────────────────────────────────────────
+// 前端 API 呼叫資料（按 menu 頁面）
+// ─────────────────────────────────────────────────
+// status: 'done'=OA有實作, 'miss'=OA缺少, 'bpm'=BPM不實作
+const sections = [
+{
+  name:'PDM › 基礎設定 Basic Settings', color:'#1677ff',
+  pages:[
+    {
+      name:'編碼類別管理', path:'/pdm/basicSettings/codecategory', file:'api/pdm/codecategory/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/code-category/page',         note:'分頁列表'},
+        {m:'GET',    ep:'/pdm/code-category/getAll',       note:'所有類別'},
+        {m:'GET',    ep:'/pdm/code-category/get',          note:'單筆詳情'},
+        {m:'POST',   ep:'/pdm/code-category/create',       note:'新增'},
+        {m:'PUT',    ep:'/pdm/code-category/update',       note:'修改'},
+        {m:'DELETE', ep:'/pdm/code-category/delete',       note:'刪除'},
+        {m:'POST',   ep:'/pdm/code-category/deleteList',   note:'批量刪除（ids query）'},
+        {m:'DOWNLOAD',ep:'/pdm/code-category/export-excel',note:'匯出 Excel'},
+      ]
+    },
+    {
+      name:'編碼項目管理', path:'/pdm/basicSettings/codeitem', file:'api/pdm/codeitem/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/code-item/page',              note:'分頁列表'},
+        {m:'GET',    ep:'/pdm/code-item/get',               note:'單筆詳情'},
+        {m:'POST',   ep:'/pdm/code-item/create',            note:'新增'},
+        {m:'PUT',    ep:'/pdm/code-item/update',            note:'修改'},
+        {m:'DELETE', ep:'/pdm/code-item/delete',            note:'刪除'},
+        {m:'POST',   ep:'/pdm/code-item/deleteList',        note:'批量刪除（ids query）'},
+        {m:'DOWNLOAD',ep:'/pdm/code-item/export-excel',     note:'匯出 Excel'},
+      ]
+    },
+    {
+      name:'編碼原則維護', path:'/pdm/basicSettings/codestructure', file:'api/pdm/codestructure/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/code-structure/page',                          note:'主類分頁'},
+        {m:'GET',    ep:'/pdm/code-structure/get',                           note:'主類單筆'},
+        {m:'POST',   ep:'/pdm/code-structure/create',                        note:'主類新增'},
+        {m:'PUT',    ep:'/pdm/code-structure/update',                        note:'主類修改'},
+        {m:'DELETE', ep:'/pdm/code-structure/delete',                        note:'主類刪除'},
+        {m:'POST',   ep:'/pdm/code-structure/deleteList',                    note:'主類批量刪除'},
+        {m:'DOWNLOAD',ep:'/pdm/code-structure/export-excel',                 note:'主類匯出'},
+        {m:'GET',    ep:'/pdm/code-structure/code-structure-detail/page',    note:'子類分頁'},
+        {m:'GET',    ep:'/pdm/code-structure/code-structure-detail/get',     note:'子類單筆'},
+        {m:'POST',   ep:'/pdm/code-structure/code-structure-detail/create',  note:'子類新增'},
+        {m:'PUT',    ep:'/pdm/code-structure/code-structure-detail/update',  note:'子類修改'},
+        {m:'DELETE', ep:'/pdm/code-structure/code-structure-detail/delete',  note:'子類刪除'},
+        {m:'POST',   ep:'/pdm/code-structure-detail/deleteList',             note:'子類批量刪除（不同前綴）'},
+      ]
+    },
+    {
+      name:'物流類型', path:'/pdm/basicSettings/logisticstype', file:'api/pdm/logisticstype/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/logistics-type/page',   note:'分頁列表'},
+        {m:'GET',    ep:'/pdm/logistics-type/get',    note:'單筆詳情'},
+        {m:'POST',   ep:'/pdm/logistics-type/create', note:'新增'},
+        {m:'PUT',    ep:'/pdm/logistics-type/update', note:'修改'},
+        {m:'DELETE', ep:'/pdm/logistics-type/delete', note:'刪除'},
+      ]
+    },
+    {
+      name:'餐食類型', path:'/pdm/basicSettings/mealtype', file:'api/pdm/mealtype/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/meal-type/page',        note:'分頁列表'},
+        {m:'GET',    ep:'/pdm/meal-type/get',         note:'單筆詳情'},
+        {m:'POST',   ep:'/pdm/meal-type/create',      note:'新增'},
+        {m:'PUT',    ep:'/pdm/meal-type/update',      note:'修改'},
+        {m:'DELETE', ep:'/pdm/meal-type/delete',      note:'刪除（單筆）'},
+        {m:'DELETE', ep:'/pdm/meal-type/delete-list', note:'批量刪除（FE用 delete-list，OA用 batch-delete）'},
+      ]
+    },
+    {
+      name:'營養成分定義', path:'/pdm/basicSettings/nutritionaldefinitions', file:'api/pdm/nutritionaldefinitions/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/nutritional-definitions/page',        note:'分頁列表'},
+        {m:'GET',    ep:'/pdm/nutritional-definitions/get',         note:'單筆詳情'},
+        {m:'POST',   ep:'/pdm/nutritional-definitions/create',      note:'新增'},
+        {m:'PUT',    ep:'/pdm/nutritional-definitions/update',      note:'修改'},
+        {m:'DELETE', ep:'/pdm/nutritional-definitions/delete',      note:'刪除（單筆）'},
+        {m:'DELETE', ep:'/pdm/nutritional-definitions/delete-list', note:'批量刪除（FE用 delete-list，OA用 batch-delete）'},
+      ]
+    },
+    {
+      name:'單位轉換', path:'/pdm/basicSettings/unitconversion', file:'api/pdm/unitconversion/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/unit-conv/page',          note:'分頁列表'},
+        {m:'GET',    ep:'/pdm/unit-conv/get',           note:'單筆詳情'},
+        {m:'POST',   ep:'/pdm/unit-conv/create',        note:'新增'},
+        {m:'PUT',    ep:'/pdm/unit-conv/update/{id}',   note:'修改'},
+        {m:'DELETE', ep:'/pdm/unit-conv/delete',        note:'批量刪除'},
+      ]
+    },
+    {
+      name:'單位定義', path:'/pdm/basicSettings/unitdefinition', file:'api/pdm/unitdefinition/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/udf/page',        note:'分頁列表'},
+        {m:'GET',    ep:'/pdm/udf/get',         note:'單筆詳情'},
+        {m:'POST',   ep:'/pdm/udf/create',      note:'新增'},
+        {m:'PUT',    ep:'/pdm/udf/update/{id}', note:'修改'},
+        {m:'DELETE', ep:'/pdm/udf/delete',      note:'批量刪除'},
+      ]
+    },
+  ]
+},
+{
+  name:'PDM › 資料設定 Data Settings', color:'#389e0d',
+  pages:[
+    {
+      name:'食材主類 Ingredients', path:'/pdm/dataSettings/Ingredients', file:'api/pdm/ingredient/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/ingredient/page',                note:'分頁（或 todo-page，由簽核開關決定）'},
+        {m:'POST',   ep:'/pdm/ingredient/create',              note:'新增食材'},
+        {m:'PUT',    ep:'/pdm/ingredient/update',              note:'修改食材'},
+        {m:'DELETE', ep:'/pdm/ingredient/deleteByIds',         note:'批量刪除'},
+        {m:'GET',    ep:'/pdm/ingredient/getOne',              note:'食材詳情'},
+        {m:'GET',    ep:'/pdm/ingredient-specs/getList',       note:'規格列表'},
+        {m:'DELETE', ep:'/pdm/ingredient-specs/delete',        note:'規格刪除（單筆）'},
+        {m:'DELETE', ep:'/pdm/ingredient-specs/deleteBatch',   note:'規格批量刪除'},
+        {m:'DELETE', ep:'/pdm/ingredient-specs/deleteByIds',   note:'規格批量刪除（第二路由）'},
+        {m:'GET',    ep:'/pdm/ingredient-compat/getList',      note:'相生相剋列表'},
+        {m:'DELETE', ep:'/pdm/ingredient-compat/delete',       note:'相生相剋刪除'},
+        {m:'GET',    ep:'/pdm/ingredient-nutrition/getList',   note:'營養成分列表'},
+      ]
+    },
+    {
+      name:'食材 BOM', path:'/pdm/dataSettings/Ingredients/codebom', file:'api/pdm/codebom/index.ts',
+      apis:[
+        {m:'GET', ep:'/pdm/code-bom/page', note:'BOM 分頁'},
+      ]
+    },
+    {
+      name:'包材 Packing Materials', path:'/pdm/dataSettings/PackagingMaterials', file:'api/pdm/packagingMaterials/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/packing-materials/page',                                        note:'分頁'},
+        {m:'GET',    ep:'/pdm/packing-materials/get',                                         note:'單筆詳情'},
+        {m:'POST',   ep:'/pdm/packing-materials/create',                                      note:'新增'},
+        {m:'PUT',    ep:'/pdm/packing-materials/update',                                      note:'修改'},
+        {m:'DELETE', ep:'/pdm/packing-materials/delete',                                      note:'單筆刪除'},
+        {m:'DELETE', ep:'/pdm/packing-materials/batch-delete',                                note:'批量刪除'},
+        {m:'GET',    ep:'/pdm/packing-materials/packing-materials-dtl/list-by-packing-materials-id', note:'明細列表'},
+        {m:'GET',    ep:'/pdm/packing-materials/packing-materials-dtl/list-all-packing-materials',   note:'所有包材維護子表'},
+      ]
+    },
+    {
+      name:'食譜 / 單品 Recipe', path:'/pdm/dataSettings/Recipe', file:'api/pdm/Recipe/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/recipe/page',                                   note:'分頁（或 todo-page）'},
+        {m:'GET',    ep:'/pdm/recipe/get',                                    note:'表頭詳情'},
+        {m:'GET',    ep:'/pdm/recipe/allRecipe',                              note:'所有食譜清單'},
+        {m:'POST',   ep:'/pdm/recipe/create',                                 note:'新增'},
+        {m:'PUT',    ep:'/pdm/recipe/update',                                 note:'修改'},
+        {m:'DELETE', ep:'/pdm/recipe/delete',                                 note:'單筆刪除'},
+        {m:'DELETE', ep:'/pdm/recipe/batch-delete',                           note:'批量刪除'},
+        {m:'GET',    ep:'/pdm/ingredient-specs/getAllList',                   note:'食材規格全量（供食譜選食材）'},
+        {m:'GET',    ep:'/pdm/recipe/single-serving-recipe/list-by-recipe-id',note:'單份配方列表'},
+        {m:'GET',    ep:'/pdm/recipe/recipe-nutritional-contents/list-by-recipe-id',note:'營養成分含量列表'},
+      ]
+    },
+  ]
+},
+{
+  name:'需求預測 Demand Forecast', color:'#722ed1',
+  pages:[
+    {
+      name:'需求預測排程配置', path:'/pdm/demand-forecast-config', file:'api/pdm/demandForecast/index.ts',
+      apis:[
+        {m:'GET',  ep:'/pdm/demand-forecast/detail/bk/all-areas-with-stores', note:'區域門市層級（供配置頁選範圍）'},
+        {m:'GET',  ep:'/pdm/demand-forecast-config/list',     note:'配置列表'},
+        {m:'GET',  ep:'/pdm/demand-forecast-config/get',      note:'配置詳情'},
+        {m:'POST', ep:'/pdm/demand-forecast-config/save',     note:'新增/修改配置'},
+        {m:'POST', ep:'/pdm/demand-forecast-config/precheck', note:'互斥預檢'},
+        {m:'PUT',  ep:'/pdm/demand-forecast-config/enable',   note:'啟用'},
+        {m:'PUT',  ep:'/pdm/demand-forecast-config/disable',  note:'停用'},
+        {m:'POST', ep:'/pdm/demand-forecast-config/run-now',  note:'立即執行'},
+      ]
+    },
+  ]
+},
+{
+  name:'需求試算 Req Calculation (gatherReq)', color:'#d46b08',
+  pages:[
+    {
+      name:'需求試算', path:'/gatherReq/reqCalculation', file:'api/gatherReq/reqCalculation/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/demand-forecast/page',                               note:'分頁列表'},
+        {m:'GET',    ep:'/pdm/demand-forecast/detail/bk/group-with-stores-inner',  note:'門市分組（內部格式）'},
+        {m:'DELETE', ep:'/pdm/demand-forecast/deleteBatch',                        note:'批量刪除'},
+        {m:'GET',    ep:'/pdm/demand-forecast/detail/get-with-header',             note:'含表頭的詳情'},
+        {m:'GET',    ep:'/pdm/demand-forecast/detail/product-recipe-analysis',     note:'產品食譜分析'},
+        {m:'POST',   ep:'/pdm/demand-forecast/detail/create-with-details',         note:'建立含明細'},
+        {m:'PUT',    ep:'/pdm/demand-forecast/detail/update-with-details',         note:'修改含明細'},
+        {m:'PUT',    ep:'/pdm/demand-forecast/update-process-status',              note:'更新流程狀態（BPM 簽核）'},
+        {m:'POST',   ep:'/pdm/demand-forecast/detail/calculate-projected-sales',   note:'計算預測平均銷量'},
+      ]
+    },
+  ]
+},
+{
+  name:'臨時需求計算 Temporary Calculation (gatherReq)', color:'#c41d7f',
+  pages:[
+    {
+      name:'臨時需求計算', path:'/gatherReq/temporaryCalculation', file:'api/gatherReq/temporaryCalculation/index.ts',
+      apis:[
+        {m:'GET',    ep:'/pdm/temp-req/page',                                     note:'分頁（或 todo-page）'},
+        {m:'GET',    ep:'/pdm/temp-req/get',                                      note:'詳情'},
+        {m:'POST',   ep:'/pdm/temp-req/create',                                   note:'新增'},
+        {m:'PUT',    ep:'/pdm/temp-req/update',                                   note:'修改'},
+        {m:'DELETE', ep:'/pdm/temp-req/delete',                                   note:'刪除'},
+        {m:'GET',    ep:'/pdm/demand-forecast/detail/bk/group-with-stores-inner', note:'門市分組（共用）'},
+        {m:'GET',    ep:'/pdm/recipe/getSingleServingRecipe',                     note:'取單份配方'},
+        {m:'GET',    ep:'/pdm/recipe/allRecipe',                                  note:'所有食譜'},
+        {m:'PUT',    ep:'/pdm/demand-forecast/update-process-status',             note:'更新流程狀態（BPM 簽核）'},
+      ]
+    },
+  ]
+},
+{
+  name:'原物料需求行事曆 Material Requirement Calendar (gatherReq)', color:'#0958d9',
+  pages:[
+    {
+      name:'原物料需求行事曆', path:'/gatherReq/materialRequirementCalendar', file:'api/gatherReq/materialRequirementCalendar/index.ts',
+      apis:[
+        {m:'GET',  ep:'/pdm/raw-material-demand-head/list',   note:'主表列表'},
+        {m:'GET',  ep:'/pdm/raw-material-demand-head/detail', note:'明細列表'},
+        {m:'GET',  ep:'/pdm/raw-material-demand-head/page',   note:'分頁（保存的查詢條件）'},
+        {m:'GET',  ep:'/pdm/raw-material-demand-head/get',    note:'保存的查詢條件詳情'},
+        {m:'POST', ep:'/pdm/raw-material-demand-head/create', note:'建立保存的查詢條件'},
+      ]
+    },
+  ]
+},
+{
+  name:'物流單查詢 Logistics Order Query (gatherReq)', color:'#08979c',
+  pages:[
+    {
+      name:'物流單查詢', path:'/gatherReq/logisticsOrderQuery', file:'api/gatherReq/logisticsOrderQuery/index.ts',
+      apis:[
+        {m:'GET', ep:'/pdm/raw-material-logistics/page',                                      note:'列表'},
+        {m:'GET', ep:'/pdm/raw-material-logistics/raw-material-logistics-dtl/list-by-parent-id',note:'明細'},
+      ]
+    },
+  ]
+},
+];
+
+// ─────────────────────────────────────────────────
+// OA 有實作但前端未呼叫的 API
+// ─────────────────────────────────────────────────
+const feCalledSet = new Set();
+sections.forEach(sec => sec.pages.forEach(pg => pg.apis.forEach(a => {
+  let ep = a.ep.replace(/\/\{[^}]+\}/g,'/{id}');
+  feCalledSet.add(a.m + ' ' + ep);
+  // alias: DOWNLOAD → GET
+  if(a.m === 'DOWNLOAD') feCalledSet.add('GET ' + ep);
+})));
+
+const oaOnlyApis = [...OA_DONE].filter(key => !feCalledSet.has(key));
+
+// ─────────────────────────────────────────────────
+// 決定每個 API 的 OA 狀態
+// ─────────────────────────────────────────────────
+function getStatus(m, ep) {
+  if(m === 'DOWNLOAD') m = 'GET';
+  const bpmList = [
+    '/pdm/ingredient/todo-page','/pdm/packing-materials/todo-page',
+    '/pdm/recipe/todo-page','/pdm/demand-forecast/todo-page',
+    '/pdm/temp-req/todo-page','/pdm/demand-forecast/update-process-status',
+  ];
+  if(bpmList.some(b => ep.includes(b))) return 'bpm';
+  let key = m + ' ' + ep;
+  // handle {id} pattern
+  const keyNorm = key.replace(/\/\d+([/?]|$)/,'/{id}$1');
+  if(OA_DONE.has(key) || OA_DONE.has(keyNorm)) return 'done';
+  // special: delete-list → check batch-delete
+  if(ep.includes('delete-list')) {
+    const altKey = key.replace('delete-list','batch-delete');
+    if(OA_DONE.has(altKey)) return 'mismatch';
+  }
+  return 'miss';
+}
+
+// ─────────────────────────────────────────────────
+// Render
+// ─────────────────────────────────────────────────
+const container = document.getElementById('container');
+let totalFe=0, totalDone=0, totalMiss=0;
+
+sections.forEach(sec => {
+  let secDone=0, secTotal=0;
+  sec.pages.forEach(pg => {
+    pg.apis.forEach(a => {
+      a._status = getStatus(a.m, a.ep);
+      if(a._status !== 'bpm') { secTotal++; totalFe++; }
+      if(a._status === 'done' || a._status === 'mismatch') { secDone++; totalDone++; }
+      if(a._status === 'miss' || a._status === 'mismatch') totalMiss++;
+    });
+  });
+
+  const secEl = document.createElement('div');
+  secEl.className = 'section';
+  secEl.style.setProperty('--gc', sec.color);
+
+  let pagesHtml = '';
+  sec.pages.forEach(pg => {
+    let pgDone=0, pgTotal=0;
+    pg.apis.forEach(a => {
+      if(a._status !== 'bpm') pgTotal++;
+      if(a._status === 'done' || a._status === 'mismatch') pgDone++;
+    });
+    const pgBadgeClass = pgTotal===0 ? 'bpm' : pgDone===pgTotal ? 'full' : pgDone>0 ? 'partial' : 'none';
+    const pgBadgeText = pgTotal===0 ? 'BPM 僅' : pgDone+'/'+pgTotal+' OA';
+
+    let rowsHtml = pg.apis.map(a => {
+      const sc = a._status === 'done' ? 'oa-done' : a._status === 'miss' ? 'oa-miss' : a._status === 'mismatch' ? 'oa-miss' : 'oa-bpm';
+      let statusHtml;
+      if(a._status === 'done')      statusHtml = '<span class="status-badge s-done">✅ 已實作</span>';
+      else if(a._status === 'mismatch') statusHtml = '<span class="status-badge s-miss">⚠️ 路由名不同</span>';
+      else if(a._status === 'miss') statusHtml = '<span class="status-badge s-miss">❌ 缺少</span>';
+      else                          statusHtml = '<span class="status-badge s-bpm">🔄 BPM</span>';
+      const methodClass = a.m === 'DOWNLOAD' ? 'DOWNLOAD' : a.m;
+      return `<div class="api-row ${sc}" data-ep="${a.m} ${a.ep}" data-status="${a._status}">
+        <div class="api-cell"><span class="badge ${methodClass}">${a.m}</span></div>
+        <div class="api-cell"><div class="ep">${a.ep}</div></div>
+        <div class="api-cell"><div class="ep-note">${a.note}</div></div>
+        <div class="api-cell">${statusHtml}</div>
+      </div>`;
+    }).join('');
+
+    pagesHtml += `<div class="page-block">
+      <div class="page-header">
+        <span class="page-name">${pg.name}</span>
+        <span class="page-path">${pg.path}</span>
+        <span style="font-size:11px;color:#aaa;margin-left:4px">${pg.file}</span>
+        <span class="page-badge ${pgBadgeClass}" style="margin-left:auto">${pgBadgeText}</span>
+      </div>
+      <div class="tbl-head"><span>Method</span><span>Endpoint</span><span>說明</span><span style="text-align:center">OA 狀態</span></div>
+      ${rowsHtml}
+    </div>`;
+  });
+
+  const pct = secTotal>0 ? Math.round(secDone/secTotal*100) : 100;
+  secEl.innerHTML = `
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="section-title">${sec.name}</span>
+      <span class="section-badge">${secDone}/${secTotal} OA 實作</span>
+      <span class="section-toggle">▼</span>
+    </div>
+    <div class="section-body">${pagesHtml}</div>`;
+  container.appendChild(secEl);
+});
+
+// OA only section
+const oaOnlyEl = document.createElement('div');
+oaOnlyEl.className = 'section';
+oaOnlyEl.style.setProperty('--gc','#8c8c8c');
+let oaOnlyRows = oaOnlyApis.map(key => {
+  const [m, ...rest] = key.split(' ');
+  const ep = rest.join(' ');
+  return `<div class="api-row" data-ep="${key}" data-status="oa-only">
+    <div class="api-cell"><span class="badge ${m}">${m}</span></div>
+    <div class="api-cell"><div class="ep">${ep}</div></div>
+    <div class="api-cell"><div class="ep-note">OA 已實作，但前端 API 檔案未呼叫</div></div>
+    <div class="api-cell"><span class="status-badge" style="background:#f5f5f5;color:#888;border:1px solid #d9d9d9">➖ 前端未呼叫</span></div>
+  </div>`;
+}).join('');
+oaOnlyEl.innerHTML = `
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">OA 已實作 但前端未呼叫</span>
+    <span class="section-badge">${oaOnlyApis.length} 個</span>
+    <span class="section-toggle">▼</span>
+  </div>
+  <div class="section-body">
+    <div class="page-block">
+      <div class="page-header"><span class="page-name">以下 API 已在 OA routes/erp.php 實作，但前端 API 檔案中未找到對應呼叫</span></div>
+      <div class="tbl-head"><span>Method</span><span>Endpoint</span><span>說明</span><span style="text-align:center">狀態</span></div>
+      ${oaOnlyRows}
+    </div>
+  </div>`;
+container.appendChild(oaOnlyEl);
+
+// Stats
+document.getElementById('s-fe').textContent = totalFe;
+document.getElementById('s-oa').textContent = totalDone;
+document.getElementById('s-miss').textContent = totalMiss;
+document.getElementById('s-extra').textContent = oaOnlyApis.length;
+document.getElementById('t-count').textContent = totalFe + oaOnlyApis.length;
+
+const pct = totalFe > 0 ? Math.round(totalDone/totalFe*100) : 0;
+document.getElementById('prog-text').textContent = totalDone+' / '+totalFe;
+document.getElementById('prog-fill').style.width = pct+'%';
+document.getElementById('prog-pct').textContent = pct+'%';
+doFilter();
+
+// ─────────────────────────────────────────────────
+// Filter / Search
+// ─────────────────────────────────────────────────
+let curFilter = 'ALL';
+function setFilter(f, btn) {
+  curFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  doFilter();
+}
+function toggleSection(hdr) {
+  const body = hdr.nextElementSibling;
+  const toggle = hdr.querySelector('.section-toggle');
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+  toggle.textContent = body.style.display === 'none' ? '▶' : '▼';
+}
+function doFilter() {
+  const q = document.getElementById('search').value.toLowerCase();
+  let vis = 0;
+  document.querySelectorAll('.api-row').forEach(row => {
+    const ep = (row.dataset.ep || '').toLowerCase();
+    const status = row.dataset.status || '';
+    const matchQ = !q || ep.includes(q);
+    const matchF = curFilter === 'ALL' ||
+                   (curFilter === 'MISS' && (status === 'miss' || status === 'mismatch')) ||
+                   (curFilter === 'DONE' && (status === 'done' || status === 'oa-only'));
+    if(matchQ && matchF){ row.classList.remove('hidden'); vis++; }
+    else row.classList.add('hidden');
+  });
+  document.getElementById('v-count').textContent = vis;
+}
+</script>
+</body>
+</html>

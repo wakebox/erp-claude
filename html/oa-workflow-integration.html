@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BK ERP × OA 流程整合分析</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --surface2: #f0f2f8;
+    --surface3: #e6e9f4;
+    --border: #d4d8eb;
+    --accent: #5b52e8;
+    --accent2: #00b896;
+    --accent3: #e8534a;
+    --accent4: #f09332;
+    --text: #1a1d2e;
+    --text-muted: #5a5f7a;
+    --text-dim: #9aa0bc;
+    --green: #17c964;
+    --red: #f31260;
+    --yellow: #f5a524;
+    --blue: #2196f3;
+    --purple: #9750dd;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #ffffff 0%, #eef0ff 50%, #f0faf8 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 40px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(91,82,232,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: 200px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(0,184,150,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-badge {
+    display: inline-block;
+    background: rgba(91,82,232,0.1);
+    border: 1px solid rgba(91,82,232,0.3);
+    color: #5b52e8;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+  header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #3730a3 0%, #5b52e8 60%, #9750dd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+  header p {
+    color: var(--text-muted);
+    font-size: 15px;
+    max-width: 600px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 24px;
+  }
+  .header-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .header-stat span:first-child {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+  .header-stat span:last-child {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 40px; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── OVERVIEW CARDS ── */
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .ov-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ov-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .ov-card.flowable::before { background: linear-gradient(90deg, #f97066, #fb8c00); }
+  .ov-card.oa::before      { background: linear-gradient(90deg, #17c964, #2196f3); }
+  .ov-card.plan::before    { background: linear-gradient(90deg, #5b52e8, #9750dd); }
+  .ov-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .ov-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .ov-card p  { font-size: 12px; color: var(--text-muted); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 40px;
+    overflow-x: auto;
+  }
+  .flow-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+  }
+  .flow-diagram {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    min-width: 900px;
+  }
+  .flow-lane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  .flow-lane-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  .lane-bk   { background: rgba(249,112,102,0.12); color: #d94436; border: 1px solid rgba(249,112,102,0.35); }
+  .lane-menu { background: rgba(91,82,232,0.12);   color: #4a41c0; border: 1px solid rgba(91,82,232,0.35); }
+  .lane-flow { background: rgba(251,140,0,0.12);   color: #b86200; border: 1px solid rgba(251,140,0,0.35); }
+  .lane-oa   { background: rgba(23,201,100,0.12);  color: #0a8a44; border: 1px solid rgba(23,201,100,0.35); }
+  .flow-node {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 12px;
+    text-align: center;
+    width: 90%;
+    max-width: 180px;
+    position: relative;
+    z-index: 1;
+  }
+  .flow-node.current { border-color: #f97066; background: rgba(249,112,102,0.07); }
+  .flow-node.replace { border-color: #17c964; background: rgba(23,201,100,0.07); }
+  .flow-node.neutral { border-color: var(--accent); background: rgba(91,82,232,0.07); }
+  .flow-node.bridge  { border-color: #fb8c00; background: rgba(251,140,0,0.07); }
+  .flow-node-title { font-weight: 600; font-size: 12px; margin-bottom: 3px; }
+  .flow-node-sub   { font-size: 10px; color: var(--text-muted); }
+  .flow-arrow {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    color: var(--text-dim);
+    font-size: 18px;
+  }
+  .flow-connector {
+    display: flex;
+    align-items: center;
+    width: 30px;
+    margin-top: 68px;
+    flex-shrink: 0;
+  }
+  .fc-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .fc-arrow {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  .fc-label {
+    position: absolute;
+    top: -16px;
+    font-size: 9px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    text-align: center;
+    width: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* ── TABS ── */
+  .tabs-wrapper { margin-bottom: 40px; }
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+  .tab-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tab-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    display: none;
+  }
+  .tab-content.active { display: block; }
+  .tab-inner { padding: 28px; }
+
+  /* ── INTEGRATION POINT CARD ── */
+  .ip-card {
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .ip-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+  }
+  .ip-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ip-card h4 { font-size: 14px; font-weight: 600; }
+  .ip-card .ip-sub { font-size: 11px; opacity: 0.7; }
+  .ip-body { padding: 18px; }
+
+  /* color themes for ip-card */
+  .ip-red .ip-header    { background: rgba(249,112,102,0.1); border-bottom: 1px solid rgba(249,112,102,0.2); }
+  .ip-red .ip-num       { background: rgba(249,112,102,0.18); color: #c0392b; }
+  .ip-red               { border: 1px solid rgba(249,112,102,0.25); }
+  .ip-green .ip-header  { background: rgba(23,201,100,0.1); border-bottom: 1px solid rgba(23,201,100,0.2); }
+  .ip-green .ip-num     { background: rgba(23,201,100,0.18); color: #0a7c3e; }
+  .ip-green             { border: 1px solid rgba(23,201,100,0.25); }
+  .ip-purple .ip-header { background: rgba(91,82,232,0.1); border-bottom: 1px solid rgba(91,82,232,0.2); }
+  .ip-purple .ip-num    { background: rgba(91,82,232,0.18); color: #4a41c0; }
+  .ip-purple            { border: 1px solid rgba(91,82,232,0.25); }
+  .ip-orange .ip-header { background: rgba(251,140,0,0.1); border-bottom: 1px solid rgba(251,140,0,0.2); }
+  .ip-orange .ip-num    { background: rgba(251,140,0,0.18); color: #b06000; }
+  .ip-orange            { border: 1px solid rgba(251,140,0,0.25); }
+
+  /* ── CODE BLOCK ── */
+  .code-wrap {
+    background: #f8f9ff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+  .code-header {
+    background: #eef0fa;
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .code-file {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+  }
+  .code-body {
+    padding: 16px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    line-height: 1.7;
+  }
+  .code-body pre { white-space: pre; }
+  /* syntax */
+  .k  { color: #7c3aed; }   /* keyword */
+  .t  { color: #1d4ed8; }   /* type */
+  .s  { color: #15803d; }   /* string */
+  .n  { color: #c2410c; }   /* number */
+  .c  { color: #94a3b8; font-style: italic; } /* comment */
+  .m  { color: #0369a1; }   /* method */
+  .v  { color: #1e293b; }   /* var */
+  .an { color: #b45309; }   /* annotation */
+  .p  { color: #0369a1; }   /* punctuation */
+  .hl { background: rgba(91,82,232,0.08); display: block; margin: 0 -16px; padding: 0 16px; border-left: 3px solid var(--accent); }
+  .del-line { background: rgba(243,18,96,0.07); display: block; margin: 0 -16px; padding: 0 16px; border-left: 3px solid var(--red); }
+  .add-line { background: rgba(23,201,100,0.08); display: block; margin: 0 -16px; padding: 0 16px; border-left: 3px solid var(--green); }
+
+  /* ── DIFF COMPARE ── */
+  .diff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 12px 0;
+  }
+  .diff-side { border-radius: 8px; overflow: hidden; }
+  .diff-head {
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .diff-head.old { background: rgba(243,18,96,0.08); color: #c0102c; border-bottom: 1px solid rgba(243,18,96,0.18); }
+  .diff-head.new { background: rgba(23,201,100,0.1);  color: #0a7c3e; border-bottom: 1px solid rgba(23,201,100,0.2); }
+  .diff-side.old { border: 1px solid rgba(243,18,96,0.2); }
+  .diff-side.new { border: 1px solid rgba(23,201,100,0.25); }
+  .diff-code {
+    background: #f8f9ff;
+    padding: 14px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .cmp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 12px 0;
+  }
+  .cmp-table th {
+    background: var(--surface3);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .cmp-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .cmp-table tr:last-child td { border-bottom: none; }
+  .cmp-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .pill-red    { background: rgba(243,18,96,0.1);   color: #b50d26; }
+  .pill-green  { background: rgba(23,201,100,0.12); color: #0a7c3e; }
+  .pill-purple { background: rgba(91,82,232,0.12);  color: #4a41c0; }
+  .pill-orange { background: rgba(251,140,0,0.12);  color: #966000; }
+  .pill-blue   { background: rgba(33,150,243,0.12); color: #1565c0; }
+
+  /* ── STRATEGY CARDS ── */
+  .strategy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 12px 0;
+  }
+  .strat-card {
+    background: var(--surface2);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .strat-head {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .strat-body { padding: 14px 16px; font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+  .strat-card.recommended { border: 1px solid rgba(23,201,100,0.3); }
+  .strat-card.recommended .strat-head { background: rgba(23,201,100,0.08); }
+  .strat-card.alt          { border: 1px solid rgba(251,140,0,0.3); }
+  .strat-card.alt .strat-head { background: rgba(251,140,0,0.08); }
+  .rec-badge {
+    margin-left: auto;
+    font-size: 9px;
+    background: rgba(23,201,100,0.15);
+    color: #0a7c3e;
+    border: 1px solid rgba(23,201,100,0.3);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .pro-con { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .pro-con-item { display: flex; gap: 8px; font-size: 12px; }
+  .pro-con-item span:first-child { flex-shrink: 0; }
+
+  /* ── ROADMAP ── */
+  .roadmap { position: relative; padding-left: 32px; margin: 12px 0; }
+  .roadmap::before {
+    content: '';
+    position: absolute;
+    left: 10px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2));
+  }
+  .rm-step { position: relative; margin-bottom: 20px; }
+  .rm-dot {
+    position: absolute;
+    left: -26px; top: 4px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  .rm-dot.d1 { background: rgba(249,112,102,0.2); border: 2px solid #e53935; color: #c62828; }
+  .rm-dot.d2 { background: rgba(251,140,0,0.2);   border: 2px solid #f57c00; color: #e65100; }
+  .rm-dot.d3 { background: rgba(91,82,232,0.2);   border: 2px solid #5b52e8; color: #4a41c0; }
+  .rm-dot.d4 { background: rgba(33,150,243,0.2);  border: 2px solid #1976d2; color: #1565c0; }
+  .rm-dot.d5 { background: rgba(23,201,100,0.2);  border: 2px solid #2e7d32; color: #1b5e20; }
+  .rm-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .rm-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .rm-tags  { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .rm-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--surface3);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 12px 0;
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .callout.info    { background: rgba(33,150,243,0.07);  border: 1px solid rgba(33,150,243,0.25);  color: #1565c0; }
+  .callout.warning { background: rgba(251,140,0,0.08);   border: 1px solid rgba(251,140,0,0.28);   color: #7a4000; }
+  .callout.success { background: rgba(23,201,100,0.08);  border: 1px solid rgba(23,201,100,0.28);  color: #145a32; }
+  .callout.danger  { background: rgba(243,18,96,0.07);   border: 1px solid rgba(243,18,96,0.25);   color: #9b0a2a; }
+
+  /* ── FIELD MAP ── */
+  .field-map {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 12px 0;
+  }
+  .fm-row {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    gap: 10px;
+  }
+  .fm-row:last-child { border-bottom: none; }
+  .fm-row:hover { background: rgba(255,255,255,0.02); }
+  .fm-head { background: var(--surface3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+  .fm-from { color: #c0392b; font-family: monospace; }
+  .fm-to   { color: #0a7c3e; font-family: monospace; }
+  .fm-arrow-cell { text-align: center; color: var(--text-dim); }
+
+  /* ── ARCH DIAGRAM ── */
+  .arch-svg-wrap {
+    background: #fafbff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 12px 0;
+    overflow-x: auto;
+  }
+  svg text { font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  /* ── SCROLLABLE CODE ── */
+  .scrollable { max-height: 300px; overflow-y: auto; }
+  .scrollable::-webkit-scrollbar { width: 6px; }
+  .scrollable::-webkit-scrollbar-track { background: transparent; }
+  .scrollable::-webkit-scrollbar-thumb { background: #c8cce0; border-radius: 3px; }
+
+  /* ── INLINE CODE ── */
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 11.5px;
+    background: rgba(91,82,232,0.08);
+    color: #4a41c0;
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(91,82,232,0.18);
+  }
+
+  /* ── SPACER ── */
+  .spacer { height: 28px; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    color: var(--text-dim);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════ -->
+<header>
+  <div class="header-badge">整合分析文件</div>
+  <h1>BK ERP × OA 系統流程整合</h1>
+  <p>將 Burger King ERP 的 Flowable BPM 工作流程，替換為 OA 系統自有的 wf_work_flows 簽核引擎</p>
+  <div class="header-meta">
+    <div class="header-stat"><span>4</span><span>整合點</span></div>
+    <div class="header-stat"><span>2</span><span>系統</span></div>
+    <div class="header-stat"><span>5</span><span>替換步驟</span></div>
+    <div class="header-stat"><span>15+</span><span>影響模組</span></div>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ════════════════════════════════════════════
+     OVERVIEW CARDS
+═══════════════════════════════════════════════ -->
+<div class="section-title">系統概覽</div>
+<div class="overview-grid">
+  <div class="ov-card flowable">
+    <div class="ov-icon">⚙️</div>
+    <h3>現況：Flowable BPM</h3>
+    <p>Spring Boot 內嵌的 Flowable 工作流程引擎，使用 BPMN 流程定義，透過 <code>processDefinitionKey</code> 識別流程。</p>
+  </div>
+  <div class="ov-card oa">
+    <div class="ov-icon">✅</div>
+    <h3>目標：OA 簽核引擎</h3>
+    <p>Laravel PHP 自建的 <code>wf_work_flows</code> 系統，支援串簽／會辦／擇辦／通知，完成時以 Strategy 模式回調。</p>
+  </div>
+  <div class="ov-card plan">
+    <div class="ov-icon">🔗</div>
+    <h3>整合策略</h3>
+    <p>BK ERP 新增 <code>OaWorkFlowHelper</code> 取代 Flowable 呼叫；OA 新增 <code>ToBkErpTrigger</code> 回調；共用 <code>flowKey</code> 橋接。</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     ARCHITECTURE FLOW DIAGRAM
+═══════════════════════════════════════════════ -->
+<div class="section-title">架構流程圖</div>
+<div class="flow-wrapper">
+  <div class="flow-title">▸ 現況流程（Flowable）vs 替換後流程（OA）</div>
+
+  <!-- SVG diagram -->
+  <div class="arch-svg-wrap" style="padding:0; background: #fafbff;">
+    <svg width="100%" viewBox="0 0 1100 420" xmlns="http://www.w3.org/2000/svg" style="display:block; min-width:900px;">
+      <defs>
+        <marker id="arrow-gray" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#9aa0bc"/>
+        </marker>
+        <marker id="arrow-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#e53935"/>
+        </marker>
+        <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#2e7d32"/>
+        </marker>
+        <marker id="arrow-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#7b1fa2"/>
+        </marker>
+      </defs>
+
+      <!-- Row labels -->
+      <text x="12" y="72"  fill="#5a5f7a" font-size="10" font-weight="700" letter-spacing="1">現況</text>
+      <text x="12" y="262" fill="#5a5f7a" font-size="10" font-weight="700" letter-spacing="1">替換</text>
+
+      <!-- ─── CURRENT ROW ─── -->
+      <!-- Node 1: Business Service -->
+      <rect x="60" y="46" width="130" height="52" rx="8" fill="#fff0ef" stroke="#e53935" stroke-width="1.5"/>
+      <text x="125" y="68"  fill="#c62828" font-size="11" font-weight="600" text-anchor="middle">業務 Service</text>
+      <text x="125" y="84"  fill="#78909c" font-size="10"  text-anchor="middle">提交簽核</text>
+
+      <line x1="190" y1="72" x2="240" y2="72" stroke="#b0bec5" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+      <!-- Node 2: MenuFlowProcessInstanceHelper -->
+      <rect x="240" y="46" width="150" height="52" rx="8" fill="#fff0ef" stroke="#e53935" stroke-width="1.5"/>
+      <text x="315" y="66"  fill="#c62828" font-size="10" font-weight="600" text-anchor="middle">MenuFlowProcess</text>
+      <text x="315" y="80"  fill="#c62828" font-size="10" font-weight="600" text-anchor="middle">InstanceHelper</text>
+      <text x="315" y="93"  fill="#78909c" font-size="9"  text-anchor="middle">flowIsOpen 判斷</text>
+
+      <line x1="390" y1="72" x2="440" y2="72" stroke="#b0bec5" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+      <text x="415" y="66" fill="#90a4ae" font-size="9" text-anchor="middle">flowKey</text>
+
+      <!-- Node 3: BpmProcessInstanceApi -->
+      <rect x="440" y="46" width="140" height="52" rx="8" fill="#fff8e1" stroke="#f57c00" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <text x="510" y="68"  fill="#e65100" font-size="11" font-weight="600" text-anchor="middle">BpmProcessInstance</text>
+      <text x="510" y="82"  fill="#e65100" font-size="10" text-anchor="middle">Api (Flowable)</text>
+
+      <line x1="580" y1="72" x2="630" y2="72" stroke="#b0bec5" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+      <!-- Node 4: Flowable Engine -->
+      <rect x="630" y="46" width="120" height="52" rx="8" fill="#fff8e1" stroke="#f57c00" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <text x="690" y="68"  fill="#e65100" font-size="11" font-weight="600" text-anchor="middle">Flowable</text>
+      <text x="690" y="82"  fill="#e65100" font-size="10" text-anchor="middle">Engine ⚙️</text>
+
+      <!-- callback arrow back -->
+      <path d="M690,98 Q690,130 510,130 Q390,130 315,130 Q240,130 160,130 L160,98"
+            fill="none" stroke="#b0bec5" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-gray)"/>
+      <text x="510" y="125" fill="#90a4ae" font-size="9" text-anchor="middle">BpmProcessInstanceStatusEvent 回調</text>
+
+      <!-- StatusListener -->
+      <rect x="60" y="148" width="130" height="40" rx="8" fill="#f5f5f5" stroke="#cfd8dc" stroke-width="1.5"/>
+      <text x="125" y="166" fill="#546e7a" font-size="10" font-weight="600" text-anchor="middle">*StatusListener</text>
+      <text x="125" y="180" fill="#90a4ae" font-size="9"  text-anchor="middle">更新業務單據狀態</text>
+
+      <!-- ─── REPLACE ROW ─── -->
+      <!-- Node 1 same -->
+      <rect x="60" y="236" width="130" height="52" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+      <text x="125" y="258" fill="#1b5e20" font-size="11" font-weight="600" text-anchor="middle">業務 Service</text>
+      <text x="125" y="274" fill="#78909c" font-size="10"  text-anchor="middle">提交簽核（不變）</text>
+
+      <line x1="190" y1="262" x2="240" y2="262" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+      <!-- Node 2: OaWorkFlowHelper (new) -->
+      <rect x="240" y="236" width="150" height="52" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+      <text x="315" y="256"  fill="#1b5e20" font-size="11" font-weight="600" text-anchor="middle">OaWorkFlowHelper</text>
+      <text x="315" y="270"  fill="#388e3c" font-size="9" text-anchor="middle">★ 新增</text>
+      <text x="315" y="283"  fill="#78909c" font-size="9"  text-anchor="middle">同介面，替換實作</text>
+
+      <line x1="390" y1="262" x2="440" y2="262" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+      <text x="415" y="256" fill="#78909c" font-size="9" text-anchor="middle">template_id</text>
+
+      <!-- Node 3: OA HTTP API -->
+      <rect x="440" y="236" width="140" height="52" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+      <text x="510" y="256"  fill="#1b5e20" font-size="11" font-weight="600" text-anchor="middle">POST /api/wf/</text>
+      <text x="510" y="270"  fill="#1b5e20" font-size="10" text-anchor="middle">work-flow/</text>
+      <text x="510" y="283"  fill="#78909c" font-size="9"  text-anchor="middle">OA Laravel API</text>
+
+      <line x1="580" y1="262" x2="630" y2="262" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+      <!-- Node 4: OA Workflow Engine -->
+      <rect x="630" y="236" width="120" height="52" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+      <text x="690" y="256"  fill="#1b5e20" font-size="11" font-weight="600" text-anchor="middle">OA 簽核引擎</text>
+      <text x="690" y="270"  fill="#1b5e20" font-size="10" text-anchor="middle">wf_work_flows ✅</text>
+
+      <!-- Node 5: ToBkErpTrigger (OA side) -->
+      <rect x="790" y="236" width="150" height="52" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2"/>
+      <text x="865" y="256"  fill="#4a148c" font-size="10" font-weight="600" text-anchor="middle">ToBkErpTrigger</text>
+      <text x="865" y="270"  fill="#7b1fa2" font-size="9" text-anchor="middle">★ OA 側新增</text>
+      <text x="865" y="283"  fill="#78909c" font-size="9"  text-anchor="middle">Strategy pattern</text>
+      <line x1="750" y1="262" x2="790" y2="262" stroke="#7b1fa2" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+
+      <!-- Node 6: BK ERP Callback Endpoint -->
+      <rect x="790" y="318" width="150" height="52" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2"/>
+      <text x="865" y="338"  fill="#4a148c" font-size="10" font-weight="600" text-anchor="middle">POST /bk/callback/</text>
+      <text x="865" y="352"  fill="#4a148c" font-size="10" text-anchor="middle">wf-complete</text>
+      <text x="865" y="365"  fill="#78909c" font-size="9"  text-anchor="middle">★ BK ERP 新增</text>
+      <line x1="865" y1="288" x2="865" y2="318" stroke="#7b1fa2" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+
+      <!-- callback to StatusListener -->
+      <path d="M790,344 Q740,344 740,310 Q740,290 700,290 Q500,290 400,310 Q300,330 200,330 Q160,330 160,318"
+            fill="none" stroke="#9c27b0" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-purple)"/>
+      <text x="400" y="308" fill="#9c27b0" font-size="9" text-anchor="middle">onApproved() 更新業務單據狀態</text>
+
+      <!-- StatusListener (new) -->
+      <rect x="60" y="318" width="130" height="52" rx="8" fill="#f3e5f5" stroke="#9c27b0" stroke-width="1.5"/>
+      <text x="125" y="338" fill="#4a148c" font-size="10" font-weight="600" text-anchor="middle">onApproved()</text>
+      <text x="125" y="352" fill="#7b1fa2" font-size="9"  text-anchor="middle">各模組保留邏輯</text>
+      <text x="125" y="365" fill="#78909c" font-size="9"  text-anchor="middle">僅改觸發來源</text>
+
+      <!-- X marks on old nodes (to be removed) -->
+      <text x="470" y="48" fill="rgba(211,47,47,0.7)" font-size="18" font-weight="700">✕</text>
+      <text x="656" y="48" fill="rgba(211,47,47,0.7)" font-size="18" font-weight="700">✕</text>
+
+      <!-- Legend -->
+      <rect x="60" y="395" width="12" height="12" rx="2" fill="none" stroke="#e53935" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <text x="78" y="405" fill="#5a5f7a" font-size="10">移除</text>
+      <rect x="120" y="395" width="12" height="12" rx="2" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+      <text x="138" y="405" fill="#5a5f7a" font-size="10">新增 / 替換</text>
+      <rect x="210" y="395" width="12" height="12" rx="2" fill="#f5f5f5" stroke="#cfd8dc" stroke-width="1.5"/>
+      <text x="228" y="405" fill="#5a5f7a" font-size="10">不變</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     TABS: 4 INTEGRATION POINTS
+═══════════════════════════════════════════════ -->
+<div class="section-title">四大整合點</div>
+<div class="tabs-wrapper">
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('ip1',this)">
+      <span class="tab-dot" style="background:#ff8080"></span> 整合點 1：建立流程
+    </button>
+    <button class="tab-btn" onclick="switchTab('ip2',this)">
+      <span class="tab-dot" style="background:#4ae69b"></span> 整合點 2：完成回調
+    </button>
+    <button class="tab-btn" onclick="switchTab('ip3',this)">
+      <span class="tab-dot" style="background:#a89aff"></span> 整合點 3：待辦查詢
+    </button>
+    <button class="tab-btn" onclick="switchTab('ip4',this)">
+      <span class="tab-dot" style="background:#ffc470"></span> 整合點 4：前端節點
+    </button>
+  </div>
+
+  <!-- ── IP1: 建立流程 ── -->
+  <div class="tab-content active" id="ip1">
+    <div class="tab-inner">
+      <div class="ip-card ip-red">
+        <div class="ip-header">
+          <div class="ip-num">1</div>
+          <div>
+            <h4>建立流程實例（Submit 時）</h4>
+            <div class="ip-sub">業務單據提交 → 觸發簽核流程</div>
+          </div>
+        </div>
+        <div class="ip-body">
+          <div class="callout info">
+            <span class="callout-icon">ℹ️</span>
+            <span>每個業務 Service（食材、單品、採購單…）呼叫 <code>MenuFlowProcessInstanceHelper.createProcessInstanceIfFlowOpen()</code>，若 <code>flowIsOpen=0</code> 則建立 Flowable 流程實例，回傳的 ID 存入業務單據。</span>
+          </div>
+
+          <div class="diff-grid">
+            <div class="diff-side old">
+              <div class="diff-head old">❌ 現況（Flowable）</div>
+              <div class="diff-code"><pre><span class="c">// MenuFlowProcessInstanceHelper.java:45</span>
+<span class="k">public</span> Optional&lt;String&gt; createProcessInstanceIfFlowOpen(
+    Long userId, String menuFlowPath, Long businessId) {
+
+  MenuDO menu = menuService
+    .getMenuByFlowpath(menuFlowPath);
+
+  <span class="k">if</span> (menu == <span class="k">null</span> || !isOpen(menu)) {
+    <span class="k">return</span> Optional.empty();
+  }
+
+  String businessKey =
+    menu.getPath() + <span class="s">":"</span> + businessId;
+
+  String instanceId =
+    <span class="hl">bpmProcessInstanceApi</span>
+      <span class="hl">.createProcessInstance(userId,</span>
+      <span class="hl">  new BpmProcessInstanceCreateReqDTO()</span>
+      <span class="hl">    .setProcessDefinitionKey(</span>
+      <span class="hl">        menu.getFlowKey())</span>
+      <span class="hl">    .setBusinessKey(businessKey));</span>
+
+  <span class="k">return</span> Optional.of(instanceId);
+}</pre></div>
+            </div>
+            <div class="diff-side new">
+              <div class="diff-head new">✅ 替換後（OA API）</div>
+              <div class="diff-code"><pre><span class="c">// OaWorkFlowHelper.java（新增）</span>
+<span class="k">public</span> Optional&lt;String&gt; createProcessInstanceIfFlowOpen(
+    Long userId, String menuFlowPath, Long businessId) {
+
+  MenuDO menu = menuService
+    .getMenuByFlowpath(menuFlowPath);
+
+  <span class="k">if</span> (menu == <span class="k">null</span> || !isOpen(menu)) {
+    <span class="k">return</span> Optional.empty();
+  }
+
+  String businessKey =
+    menu.getPath() + <span class="s">":"</span> + businessId;
+
+  String workFlowId =
+    <span class="add-line">oaWorkFlowApiClient</span>
+      <span class="add-line">.createWorkFlow(</span>
+      <span class="add-line">  new OaWorkFlowCreateDTO()</span>
+      <span class="add-line">    .setTemplateId(</span>
+      <span class="add-line">        menu.getFlowKey()) <span class="c">// ← 改為 OA template_id</span></span>
+      <span class="add-line">    .setBusinessKey(businessKey)</span>
+      <span class="add-line">    .setUserId(userId));</span>
+
+  <span class="k">return</span> Optional.of(workFlowId);
+}</pre></div>
+            </div>
+          </div>
+
+          <div class="field-map" style="margin-top:16px;">
+            <div class="fm-row fm-head"><span>Flowable 欄位</span><span></span><span>OA 欄位</span></div>
+            <div class="fm-row"><span class="fm-from">processDefinitionKey</span><span class="fm-arrow-cell">→</span><span class="fm-to">template_id（菜單 flowKey 改存此值）</span></div>
+            <div class="fm-row"><span class="fm-from">businessKey（"path:id"）</span><span class="fm-arrow-cell">→</span><span class="fm-to">content JSON 內的 businessKey 欄位</span></div>
+            <div class="fm-row"><span class="fm-from">userId（Long）</span><span class="fm-arrow-cell">→</span><span class="fm-to">user（OA 使用者 ID，需對應）</span></div>
+            <div class="fm-row"><span class="fm-from">回傳 processInstanceId（String）</span><span class="fm-arrow-cell">→</span><span class="fm-to">回傳 wf_work_flows.id（業務單據存此值）</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── IP2: 完成回調 ── -->
+  <div class="tab-content" id="ip2">
+    <div class="tab-inner">
+      <div class="ip-card ip-green">
+        <div class="ip-header">
+          <div class="ip-num">2</div>
+          <div>
+            <h4>流程完成回調（最關鍵整合點）</h4>
+            <div class="ip-sub">簽核通過 / 拒絕 → 業務單據狀態更新</div>
+          </div>
+        </div>
+        <div class="ip-body">
+          <div class="callout warning">
+            <span class="callout-icon">⚠️</span>
+            <span>現況依賴 Flowable 內部 Spring Event 機制；OA 是 PHP 系統，無法直接發 Spring Event。必須在兩端各加一個接縫（OA 的 Trigger + BK ERP 的 Webhook）。</span>
+          </div>
+
+          <div class="strategy-grid">
+            <div class="strat-card recommended">
+              <div class="strat-head">
+                🔔 做法 A：OA 新增 Trigger 呼叫 BK ERP Webhook
+                <span class="rec-badge">推薦</span>
+              </div>
+              <div class="strat-body">
+                OA 完成流程時，透過現有 Strategy 模式呼叫 BK ERP 暴露的 callback endpoint。
+                <div class="pro-con">
+                  <div class="pro-con-item"><span>✅</span><span>即時；架構乾淨；符合 OA 現有 Strategy 設計</span></div>
+                  <div class="pro-con-item"><span>⚡</span><span>需改動 OA 程式（新增一個 Trigger class）</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="strat-card alt">
+              <div class="strat-head">🔄 做法 B：BK ERP 輪詢 OA 狀態</div>
+              <div class="strat-body">
+                Spring Scheduler 定時呼叫 OA 的 <code>GET /api/wf/work-flow/processing</code>，比對 <code>processInstanceId</code>（即 OA wf id）的狀態。
+                <div class="pro-con">
+                  <div class="pro-con-item"><span>✅</span><span>OA 零改動</span></div>
+                  <div class="pro-con-item"><span>⚡</span><span>不即時（秒級延遲）；增加 OA 查詢壓力</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:20px;">
+            <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.08em;">做法 A 實作細節</div>
+
+            <div class="code-wrap">
+              <div class="code-header">
+                <span class="code-lang">PHP</span>
+                <span class="code-file">app/Strategy/WF/ToBkErpTrigger.php（OA 新增）</span>
+              </div>
+              <div class="code-body"><pre><span class="k">class</span> <span class="t">ToBkErpTrigger</span> <span class="k">implements</span> <span class="t">WorkFlowStrategyInterface</span> {
+
+    <span class="k">public function</span> <span class="m">execute</span>(<span class="t">WorkFlow</span> <span class="v">$workFlow</span>): <span class="t">void</span> {
+        <span class="v">$content</span> = json_decode(<span class="v">$workFlow</span>->content, <span class="k">true</span>);
+        <span class="v">$businessKey</span> = <span class="v">$content</span>[<span class="s">'businessKey'</span>] ?? <span class="k">null</span>;
+
+        <span class="k">if</span> (!<span class="v">$businessKey</span>) <span class="k">return</span>;
+
+        Http::withToken(config(<span class="s">'services.bk_erp.token'</span>))
+            ->post(config(<span class="s">'services.bk_erp.callback_url'</span>), [
+                <span class="s">'businessKey'</span> => <span class="v">$businessKey</span>,
+                <span class="s">'status'</span>      => <span class="v">$workFlow</span>->status, <span class="c">// C=通過, R=拒絕</span>
+                <span class="s">'workFlowId'</span>  => <span class="v">$workFlow</span>->id,
+            ]);
+    }
+
+    <span class="k">public function</span> <span class="m">supports</span>(<span class="t">WorkFlow</span> <span class="v">$workFlow</span>): <span class="t">bool</span> {
+        <span class="k">return</span> <span class="v">$workFlow</span>->model_type === <span class="s">'bk'</span>;
+    }
+}</pre></div>
+            </div>
+
+            <div class="code-wrap">
+              <div class="code-header">
+                <span class="code-lang">Java</span>
+                <span class="code-file">OaCallbackController.java（BK ERP 新增）</span>
+              </div>
+              <div class="code-body"><pre><span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="s">"/bk/callback"</span>)
+<span class="k">public class</span> <span class="t">OaCallbackController</span> {
+
+    <span class="an">@Resource</span> <span class="k">private</span> <span class="t">ApplicationEventPublisher</span> eventPublisher;
+
+    <span class="an">@PostMapping</span>(<span class="s">"/wf-complete"</span>)
+    <span class="k">public</span> <span class="t">CommonResult</span>&lt;Void&gt; <span class="m">onWorkFlowComplete</span>(
+            <span class="an">@RequestBody</span> <span class="t">OaCallbackReqDTO</span> req) {
+
+        <span class="c">// businessKey 格式："menuPath:businessId"（與原 Flowable 相同）</span>
+        String[] parts = req.getBusinessKey().split(<span class="s">":"</span>, <span class="n">2</span>);
+        <span class="k">int</span> status = <span class="s">"C"</span>.equals(req.getStatus())
+            ? BpmTaskStatusEnum.APPROVE.getStatus()
+            : BpmTaskStatusEnum.REJECT.getStatus();
+
+        <span class="hl">eventPublisher.publishEvent(</span>
+        <span class="hl">    <span class="k">new</span> <span class="t">BpmProcessInstanceStatusEvent</span>(<span class="k">this</span>)</span>
+        <span class="hl">        .setBusinessKey(req.getBusinessKey())</span>
+        <span class="hl">        .setStatus(status));</span>
+
+        <span class="k">return</span> success(<span class="k">null</span>);
+    }
+}</pre></div>
+            </div>
+
+            <div class="callout success" style="margin-top:12px;">
+              <span class="callout-icon">💡</span>
+              <span>重用現有 <code>BpmProcessInstanceStatusEvent</code>：各模組的 <code>*StatusListener</code> 不用改一行。BK ERP 側唯一新增的是這個 webhook controller，和 OA 側的一個 Trigger class。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── IP3: 待辦查詢 ── -->
+  <div class="tab-content" id="ip3">
+    <div class="tab-inner">
+      <div class="ip-card ip-purple">
+        <div class="ip-header">
+          <div class="ip-num">3</div>
+          <div>
+            <h4>待辦 / 已辦查詢</h4>
+            <div class="ip-sub">查詢當前使用者的待審核清單與已完成清單</div>
+          </div>
+        </div>
+        <div class="ip-body">
+
+          <div class="diff-grid">
+            <div class="diff-side old">
+              <div class="diff-head old">❌ 現況（Flowable HistoryService）</div>
+              <div class="diff-code"><pre><span class="c">// MenuFlowProcessInstanceHelper.java:70</span>
+HistoricTaskInstanceQuery query =
+  historyService
+    .createHistoricTaskInstanceQuery()
+    .unfinished()
+    <span class="hl">.processDefinitionKey(flowKey)</span>
+    <span class="hl">.processInstanceBusinessKeyLike(</span>
+    <span class="hl">    menuFlowPath + <span class="s">":%" </span>)</span>
+    .taskAssignee(assignee);
+
+<span class="c">// 回傳 List&lt;String&gt; processInstanceIds</span></pre></div>
+            </div>
+            <div class="diff-side new">
+              <div class="diff-head new">✅ 替換後（OA API）</div>
+              <div class="diff-code"><pre><span class="c">// OaWorkFlowHelper.java</span>
+List&lt;String&gt; workFlowIds =
+  oaWorkFlowApiClient
+    <span class="add-line">.getHandlingWorkFlows(userId)  <span class="c">// 待辦</span></span>
+    <span class="add-line">// GET /api/wf/work-flow/handling</span>
+    .stream()
+    .filter(wf -> {
+      String bk = extractBusinessKey(wf);
+      <span class="k">return</span> bk != <span class="k">null</span>
+        && bk.startsWith(menuFlowPath + <span class="s">":"</span>);
+    })
+    .map(wf -> String.valueOf(wf.getId()))
+    .collect(toList());
+
+<span class="c">// 回傳 List&lt;String&gt; OA workFlowIds</span></pre></div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <table class="cmp-table">
+              <thead>
+                <tr><th>查詢類型</th><th>Flowable 方法</th><th>OA 替換 API</th><th>篩選邏輯</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="pill pill-orange">待辦</span></td>
+                  <td><code>.unfinished().taskAssignee()</code></td>
+                  <td><code>GET /api/wf/work-flow/handling</code></td>
+                  <td>content.businessKey 前綴匹配</td>
+                </tr>
+                <tr>
+                  <td><span class="pill pill-blue">已辦</span></td>
+                  <td><code>.finished().taskAssignee()</code></td>
+                  <td><code>GET /api/wf/work-flow/processing</code></td>
+                  <td>content.businessKey 前綴匹配</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout warning" style="margin-top:16px;">
+            <span class="callout-icon">⚠️</span>
+            <span>OA 的 <code>content</code> 是 JSON 字串，<code>businessKey</code> 需存在固定的 JSON key 內（如 <code>content.businessKey</code>）。建立流程時要確保格式一致，否則這邊的篩選會失效。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── IP4: 前端節點 ── -->
+  <div class="tab-content" id="ip4">
+    <div class="tab-inner">
+      <div class="ip-card ip-orange">
+        <div class="ip-header">
+          <div class="ip-num">4</div>
+          <div>
+            <h4>前端流程節點選項（狀態篩選器）</h4>
+            <div class="ip-sub">codebom 頁面的「待辦狀態」下拉選單，節點名稱來源</div>
+          </div>
+        </div>
+        <div class="ip-body">
+
+          <div class="callout info">
+            <span class="callout-icon">ℹ️</span>
+            <span>前端用 <code>getFlowOptions(flowKey)</code> 查 BPM 流程圖取得節點名稱，渲染成狀態篩選下拉。替換後應改為查 OA 的 template 審批步驟。</span>
+          </div>
+
+          <div class="diff-grid" style="margin-top:14px;">
+            <div class="diff-side old">
+              <div class="diff-head old">❌ 現況</div>
+              <div class="diff-code"><pre><span class="c">// flowOptions.ts:8</span>
+<span class="k">export async function</span> <span class="m">getFlowOptions</span>(
+    type: <span class="t">string</span>) {
+
+  <span class="c">// 查 BPM simpleModel</span>
+  <span class="hl">const modelInfo = await getModelByKey(type);</span>
+
+  getAllNodeName(modelInfo.simpleModel);
+
+  <span class="c">// 從 BPMN 圖節點取名稱</span>
+  nodeName.value.forEach(name =>
+    list.push({ value: name, label: name })
+  );
+}</pre></div>
+            </div>
+            <div class="diff-side new">
+              <div class="diff-head new">✅ 替換後</div>
+              <div class="diff-code"><pre><span class="c">// flowOptions.ts:8</span>
+<span class="k">export async function</span> <span class="m">getFlowOptions</span>(
+    type: <span class="t">string</span>) {
+
+  <span class="c">// 改查 OA template steps</span>
+  <span class="add-line">const steps = await getOaTemplateSteps(type);</span>
+  <span class="c">// GET /api/wf/template-flows?template_code=type</span>
+
+  steps.forEach(step =>
+    list.push({
+      value: step.name,
+      label: step.name,
+      sequence: step.sequence
+    })
+  );
+}</pre></div>
+            </div>
+          </div>
+
+          <div class="callout success" style="margin-top:14px;">
+            <span class="callout-icon">💡</span>
+            <span>OA 的 <code>wf_template_flows</code> 有 <code>sequence</code> 和簽核人名稱，可直接對應 Flowable 的 BPMN task node。只需在 OA 側暴露一個「取得 template 步驟清單」的 API（若尚未有）。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     FLOWKEY MEANING CHANGE
+═══════════════════════════════════════════════ -->
+<div class="section-title">flowKey 欄位意義變更</div>
+<div class="flow-wrapper" style="margin-bottom:40px;">
+  <div class="flow-title">▸ MenuDO.flowKey 的角色轉換</div>
+
+  <div class="field-map">
+    <div class="fm-row fm-head"><span>情境</span><span></span><span>flowKey 的值</span></div>
+    <div class="fm-row">
+      <span style="color:#c62828;">現況（Flowable）</span>
+      <span class="fm-arrow-cell">→</span>
+      <span class="fm-to">Flowable <code>processDefinitionKey</code>，例如 <code>"ingredients"</code>、<code>"prm"</code></span>
+    </div>
+    <div class="fm-row">
+      <span style="color:#0a7c3e;">替換後（OA）</span>
+      <span class="fm-arrow-cell">→</span>
+      <span class="fm-to">OA <code>wf_templates.id</code> 或 template code，由系統管理員重新設定</span>
+    </div>
+    <div class="fm-row">
+      <span style="color:#4a41c0;">flowIsOpen</span>
+      <span class="fm-arrow-cell">—</span>
+      <span style="color:#4a41c0;font-family:monospace;">不變：<code>0</code> = 開啟 / <code>1</code> = 關閉</span>
+    </div>
+  </div>
+
+  <div class="callout danger" style="margin-top:14px;">
+    <span class="callout-icon">🔴</span>
+    <span>所有已在系統選單中設定過 <code>flowKey</code> 的菜單，需由管理員逐一將值改為對應的 OA template ID。這是 <strong>上線前必做的資料遷移</strong>，建議用一張對照表紀錄。</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     IMPLEMENTATION ROADMAP
+═══════════════════════════════════════════════ -->
+<div class="section-title">實作路線圖</div>
+<div class="flow-wrapper" style="margin-bottom:40px;">
+  <div class="roadmap">
+
+    <div class="rm-step">
+      <div class="rm-dot d1">1</div>
+      <div class="rm-title">建立 OA API Client（BK ERP 後端）</div>
+      <div class="rm-desc">新增 <code>OaWorkFlowApiClient</code>（Spring RestClient / Feign），封裝 OA 的 <code>POST /api/wf/work-flow/</code>、<code>GET /api/wf/work-flow/handling</code>、<code>GET /api/wf/work-flow/processing</code>。加入 OA JWT token 的 auth header。</div>
+      <div class="rm-tags"><span class="rm-tag">Java</span><span class="rm-tag">新增</span><span class="rm-tag">無破壞性</span></div>
+    </div>
+
+    <div class="rm-step">
+      <div class="rm-dot d2">2</div>
+      <div class="rm-title">實作 OaWorkFlowHelper，取代 MenuFlowProcessInstanceHelper</div>
+      <div class="rm-desc">新增 <code>OaWorkFlowHelper</code> 實作相同介面（<code>createProcessInstanceIfFlowOpen</code>、<code>listProcessInstanceIdsForAssigneeTodoPage</code>）。用 Spring <code>@Profile</code> 或 <code>@Primary</code> 切換，原 Helper 暫時保留。</div>
+      <div class="rm-tags"><span class="rm-tag">Java</span><span class="rm-tag">新增</span><span class="rm-tag">可 A/B 切換</span></div>
+    </div>
+
+    <div class="rm-step">
+      <div class="rm-dot d3">3</div>
+      <div class="rm-title">新增 OA Callback Webhook（BK ERP）+ ToBkErpTrigger（OA）</div>
+      <div class="rm-desc">BK ERP 新增 <code>POST /bk/callback/wf-complete</code>，接收 OA 的完成通知後 publish 現有 <code>BpmProcessInstanceStatusEvent</code>（各 StatusListener 一行不用改）。OA 新增 <code>ToBkErpTrigger</code> strategy，<code>model_type='bk'</code> 時觸發。</div>
+      <div class="rm-tags"><span class="rm-tag">Java 新增</span><span class="rm-tag">PHP 新增</span><span class="rm-tag">核心整合</span></div>
+    </div>
+
+    <div class="rm-step">
+      <div class="rm-dot d4">4</div>
+      <div class="rm-title">替換前端 getFlowOptions</div>
+      <div class="rm-desc">OA 若尚未有「取得 template 步驟」API 則先補上。前端 <code>flowOptions.ts</code> 改呼叫 OA API，取得 <code>wf_template_flows</code> 的 sequence 與名稱，映射成下拉選項。</div>
+      <div class="rm-tags"><span class="rm-tag">TypeScript</span><span class="rm-tag">PHP（視需要）</span></div>
+    </div>
+
+    <div class="rm-step">
+      <div class="rm-dot d5">5</div>
+      <div class="rm-title">資料遷移：更新菜單 flowKey 值</div>
+      <div class="rm-desc">製作 Flowable flowKey → OA template_id 對照表，由管理員透過系統選單設定頁更新所有業務表單的 <code>flowKey</code>。<code>flowIsOpen</code> 值不變。上線前在測試環境完整走一遍各模組的簽核流程。</div>
+      <div class="rm-tags"><span class="rm-tag">資料遷移</span><span class="rm-tag">管理員操作</span><span class="rm-tag">需測試</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     IMPACT SUMMARY TABLE
+═══════════════════════════════════════════════ -->
+<div class="section-title">影響範圍總覽</div>
+<table class="cmp-table" style="margin-bottom:40px;">
+  <thead>
+    <tr><th>檔案 / 位置</th><th>類型</th><th>動作</th><th>說明</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>MenuFlowProcessInstanceHelper.java</code></td>
+      <td><span class="pill pill-orange">BK ERP 後端</span></td>
+      <td><span class="pill pill-red">停用</span></td>
+      <td>用 <code>OaWorkFlowHelper</code> 取代，保留以備回滾</td>
+    </tr>
+    <tr>
+      <td><code>OaWorkFlowHelper.java</code>（新）</td>
+      <td><span class="pill pill-orange">BK ERP 後端</span></td>
+      <td><span class="pill pill-green">新增</span></td>
+      <td>相同介面，呼叫 OA API</td>
+    </tr>
+    <tr>
+      <td><code>OaCallbackController.java</code>（新）</td>
+      <td><span class="pill pill-orange">BK ERP 後端</span></td>
+      <td><span class="pill pill-green">新增</span></td>
+      <td>接收 OA 完成回調，轉發 Spring Event</td>
+    </tr>
+    <tr>
+      <td>所有 <code>*StatusListener.java</code>（15+）</td>
+      <td><span class="pill pill-orange">BK ERP 後端</span></td>
+      <td><span class="pill pill-blue">不變</span></td>
+      <td>仍監聽 <code>BpmProcessInstanceStatusEvent</code></td>
+    </tr>
+    <tr>
+      <td><code>ToBkErpTrigger.php</code>（新）</td>
+      <td><span class="pill pill-green">OA 後端</span></td>
+      <td><span class="pill pill-green">新增</span></td>
+      <td>Strategy pattern，model_type='bk' 時呼叫 BK ERP</td>
+    </tr>
+    <tr>
+      <td><code>flowOptions.ts</code></td>
+      <td><span class="pill pill-purple">BK ERP 前端</span></td>
+      <td><span class="pill pill-orange">修改</span></td>
+      <td>改呼叫 OA template steps API</td>
+    </tr>
+    <tr>
+      <td>菜單設定 <code>flowKey</code> 欄位值</td>
+      <td><span class="pill pill-red">資料</span></td>
+      <td><span class="pill pill-orange">遷移</span></td>
+      <td>由 Flowable key 改為 OA template_id</td>
+    </tr>
+  </tbody>
+</table>
+
+</div><!-- /container -->
+
+<footer>
+  <span>BK ERP × OA 工作流程整合分析</span>
+  <span>2026-05-20</span>
+</footer>
+
+<script>
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

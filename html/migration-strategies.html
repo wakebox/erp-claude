@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>漢堡王 ERP 遷移：前後端並行策略</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --card: #ffffff;
+    --border: #d0d7de;
+    --code-bg: #f6f8fa;
+    --accent: #0969da;
+    --red: #cf222e;
+    --red-bg: #ffebe9;
+    --yellow: #9a6700;
+    --yellow-bg: #fff8c5;
+    --green: #1a7f37;
+    --green-bg: #dafbe1;
+    --purple: #6639ba;
+    --purple-bg: #fbefff;
+    --orange: #bc4c00;
+    --orange-bg: #fff1e5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
+                 "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    line-height: 1.7;
+    color: var(--fg);
+    background: var(--bg);
+    margin: 0;
+    padding: 0;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  header.cover {
+    background: linear-gradient(135deg, #0a3d62 0%, #0969da 100%);
+    color: #fff;
+    padding: 48px 32px;
+    border-radius: 12px;
+    margin-bottom: 32px;
+  }
+  header.cover h1 { margin: 0 0 12px; font-size: 26px; }
+  header.cover .subtitle { opacity: 0.9; font-size: 15px; }
+  header.cover .meta {
+    display: flex; flex-wrap: wrap; gap: 24px;
+    margin-top: 20px; font-size: 13px; opacity: 0.85;
+  }
+
+  /* Tab switcher */
+  .tabs {
+    display: flex; gap: 0; margin-bottom: 0;
+    border-bottom: 2px solid var(--border);
+  }
+  .tab-btn {
+    padding: 12px 28px;
+    font-size: 15px; font-weight: 600;
+    border: none; background: none;
+    cursor: pointer; color: var(--muted);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color .15s, border-color .15s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--fg); }
+  .tab-panel { display: none; padding-top: 32px; }
+  .tab-panel.active { display: block; }
+
+  h2 {
+    font-size: 20px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 8px;
+    margin-top: 40px;
+  }
+  h3 { font-size: 16px; margin-top: 28px; }
+  h4 { font-size: 14px; margin-top: 18px; color: var(--muted); }
+  p, li { font-size: 14.5px; }
+
+  code {
+    font-family: "SFMono-Regular","Consolas","Liberation Mono",monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  pre {
+    background: #0d1117;
+    color: #e6edf3;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+  pre code { background: transparent; padding: 0; color: inherit; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background: var(--card);
+    font-size: 13.5px;
+  }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); font-weight: 600; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; margin-right: 4px;
+  }
+  .badge.red    { background: var(--red);    color: #fff; }
+  .badge.yellow { background: var(--yellow); color: #fff; }
+  .badge.green  { background: var(--green);  color: #fff; }
+  .badge.blue   { background: var(--accent); color: #fff; }
+  .badge.purple { background: var(--purple); color: #fff; }
+  .badge.gray   { background: var(--muted);  color: #fff; }
+  .badge.orange { background: var(--orange); color: #fff; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin: 14px 0;
+  }
+  .card.red    { border-left: 4px solid var(--red);    background: var(--red-bg); }
+  .card.yellow { border-left: 4px solid var(--yellow); background: var(--yellow-bg); }
+  .card.green  { border-left: 4px solid var(--green);  background: var(--green-bg); }
+  .card.purple { border-left: 4px solid var(--purple); background: var(--purple-bg); }
+  .card.orange { border-left: 4px solid var(--orange); background: var(--orange-bg); }
+
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: #ddf4ff;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    margin: 10px 0;
+    font-size: 13.5px;
+  }
+  .callout.warn  { border-left-color: var(--yellow); background: var(--yellow-bg); }
+  .callout.green { border-left-color: var(--green);  background: var(--green-bg); }
+  .callout.red   { border-left-color: var(--red);    background: var(--red-bg); }
+
+  /* Phase / Step card */
+  .phase {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 14px 0;
+    border-left: 5px solid var(--accent);
+  }
+  .phase.java    { border-left-color: #e85d04; }
+  .phase.laravel { border-left-color: var(--green); }
+  .phase.shared  { border-left-color: var(--purple); }
+  .phase.remove  { border-left-color: var(--red); }
+  .phase .phase-head {
+    display: flex; justify-content: space-between;
+    align-items: baseline; flex-wrap: wrap; gap: 10px;
+  }
+  .phase h3 { margin: 0; }
+  .phase .effort {
+    background: var(--code-bg);
+    padding: 3px 10px; border-radius: 12px;
+    font-size: 12px; color: var(--muted);
+  }
+
+  /* Two-column layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  @media (max-width: 680px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* Timeline */
+  .timeline { margin: 20px 0; }
+  .tl-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 12px;
+    align-items: start;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .tl-row::before {
+    content: '';
+    position: absolute;
+    left: 52px; top: 22px; bottom: -12px;
+    width: 2px;
+    background: var(--border);
+  }
+  .tl-row:last-child::before { display: none; }
+  .tl-label {
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    padding-top: 4px;
+    padding-right: 8px;
+    white-space: nowrap;
+  }
+  .tl-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .tl-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13.5px;
+  }
+  .tl-content strong { display: block; margin-bottom: 4px; }
+
+  /* ASCII diagram */
+  .ascii {
+    font-family: "SFMono-Regular","Consolas",monospace;
+    white-space: pre;
+    background: var(--code-bg);
+    padding: 16px; border-radius: 8px;
+    font-size: 12.5px; line-height: 1.4;
+    overflow-x: auto;
+  }
+
+  /* Stat grid */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px; margin: 14px 0;
+  }
+  .stat {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; text-align: center;
+  }
+  .stat .num { font-size: 24px; font-weight: 700; color: var(--accent); }
+  .stat .label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* Checklist */
+  .checklist { list-style: none; padding: 0; margin: 10px 0; }
+  .checklist li { padding: 4px 0; font-size: 13.5px; }
+  .checklist li::before { content: '☐ '; font-size: 13px; }
+  .checklist li.done::before { content: '✅ '; }
+  .checklist li.warn::before { content: '⚠️ '; }
+  .checklist li.block::before { content: '🚫 '; }
+
+  nav.toc {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 18px 22px; margin-bottom: 24px;
+  }
+  nav.toc h3 { margin-top: 0; }
+  nav.toc ol { padding-left: 20px; margin: 0; }
+  nav.toc li { margin: 5px 0; }
+  nav.toc a { color: var(--accent); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="cover">
+  <h1>漢堡王 ERP 遷移：前後端並行策略</h1>
+  <div class="subtitle">
+    基於漸進式遷移（Phase 0–5）的前端與後端雙軌執行指南
+  </div>
+  <div class="meta">
+    <span>版本：v1.0</span>
+    <span>日期：2026-05-20</span>
+    <span>參考：java-to-laravel-migration.html § 8</span>
+  </div>
+</header>
+
+<!-- Tab Nav -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('backend')">🖥️ 後端策略（Java ↔ Laravel 並行）</button>
+  <button class="tab-btn" onclick="switchTab('frontend')">🎨 前端策略（Vue 不分叉）</button>
+</div>
+
+<!-- ================================================================ -->
+<!-- BACKEND TAB -->
+<!-- ================================================================ -->
+<div id="tab-backend" class="tab-panel active">
+
+  <h2 id="be-principle">後端並行核心原則</h2>
+
+  <div class="two-col">
+    <div class="card orange">
+      <strong><span class="badge orange">Java</span> 凍結維護期</strong>
+      <ul style="margin:8px 0 0 0">
+        <li>除阻斷性 bug，不接受新功能 PR</li>
+        <li>繼續服務「尚未遷移」的模組路由</li>
+        <li>PostgreSQL 保持唯讀副本，直到階段 5</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <strong><span class="badge green">Laravel</span> 主力開發</strong>
+      <ul style="margin:8px 0 0 0">
+        <li>所有新功能、所有新模組一律寫在 Laravel</li>
+        <li>共用 MySQL，表前綴 <code>erp_&lt;module&gt;_</code></li>
+        <li>沿用 OA 的使用者體系、流程引擎、JWT</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 id="be-arch">核心架構：Nginx Gateway 雙 Upstream</h2>
+
+  <div class="ascii">
+     ┌─────────────┐
+     │   Vue 前端   │   ← 前端代碼一份，不因後端分叉
+     └──────┬──────┘
+            │ HTTP / WebSocket
+     ┌──────▼──────────────────────────────┐
+     │           Nginx Gateway             │
+     │   路由表決定每個 URL 打到哪個後端    │
+     └──┬──────────────────────────────┬───┘
+        │                              │
+     ┌──▼──────────────┐   ┌──────────▼───────────────┐
+     │   Java ERP      │   │     Laravel OA + ERP      │
+     │  :48080 (PG)    │   │       :8080 (MySQL)       │
+     │                 │   │                           │
+     │  pdm/forecast/  │   │  pdm/ingredient/  ✅ P1   │
+     │  whs/*          │   │  pdm/bom/         ✅ P1   │
+     │  pmm/*          │   │  bhm/*            ✅ P1   │
+     │  bhm/*          │   │  whs/*            ✅ P2   │
+     │  (待遷移)       │   │  pmm/*            ✅ P3   │
+     └─────────────────┘   │  pdm/forecast/    ✅ P4   │
+                           └───────────────────────────┘
+  </div>
+
+  <div class="callout">
+    <strong>切換開關</strong>：新增一條 Nginx <code>location</code>，然後 <code>nginx -s reload</code> — 零停機切換。回退同理：刪掉那行重載即可。
+  </div>
+
+  <h2 id="be-phases">各階段後端工作清單</h2>
+
+  <!-- Phase 0 -->
+  <div class="phase shared">
+    <div class="phase-head">
+      <h3><span class="badge blue">Phase 0</span> 地基（並行前提）</h3>
+      <span class="effort">1.5 ~ 2 人月</span>
+    </div>
+    <p><strong>目標：</strong>讓 Java 與 Laravel 能在同一個 JWT 下共存，且流程引擎 PoC 通過。</p>
+
+    <div class="two-col">
+      <div>
+        <h4>Java 側工作</h4>
+        <ul>
+          <li>改為接受 Laravel OA 發的 JWT（公鑰驗簽）</li>
+          <li>停止自己的 <code>/auth/login</code>，統一走 OA 登入</li>
+          <li>凍結新功能合併：建立 <code>java-freeze</code> 分支政策</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Laravel 側工作</h4>
+        <ul>
+          <li>建立 <code>BaseModel</code>（id / creator / createTime / deleter / deleteTime）</li>
+          <li>建立 <code>CommonResult</code>、<code>PageResult</code> Response Macro</li>
+          <li>建立 <code>ErrorCode</code> 字典與全局 Exception Handler</li>
+          <li>流程整合 helper（<code>MenuFlowProcessInstanceHelper</code> 對應）</li>
+          <li>DB 命名規約：<code>erp_pdm_</code>、<code>erp_whs_</code>、<code>erp_pmm_</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>風險閘門：</strong>流程引擎 PoC 必須跑通（建立假單 → OA 起流程 → callback 回寫狀態），否則時程估算無效，禁止進入 Phase 1。
+    </div>
+
+    <h4>Nginx 初始狀態（所有流量打 Java）</h4>
+    <pre><code>upstream java_erp    { server 127.0.0.1:48080; keepalive 64; }
+upstream laravel_erp { server 127.0.0.1:8080;  keepalive 64; }
+
+server {
+    listen 80;
+    server_name erp.example.com;
+
+    proxy_http_version 1.1;
+    proxy_set_header Connection        "";
+    proxy_set_header Authorization     $http_authorization;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    location /admin-api/ { proxy_pass http://java_erp; }   # ← 全部 Java
+}</code></pre>
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="phase laravel">
+    <div class="phase-head">
+      <h3><span class="badge green">Phase 1</span> BHM + PDM 主檔</h3>
+      <span class="effort">2 ~ 2.5 人月</span>
+    </div>
+    <p><strong>選擇理由：</strong>純 CRUD、無流程、無跨模組寫操作依賴。失敗影響面最小，最適合熱身。</p>
+
+    <div class="two-col">
+      <div>
+        <h4>Laravel 實作範圍</h4>
+        <ul>
+          <li>BHM 客戶基礎資料（若解凍）</li>
+          <li>PDM 食材、產品、BOM、配方（<strong>不含</strong>需求預測計算）</li>
+          <li>漢堡王中繼 API：TokenManager + 3 條 Guzzle 呼叫</li>
+          <li>PG dump → DDL 翻 MySQL（保留原始 ID）</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Java 側動作</h4>
+        <ul>
+          <li>對應 Controller 加 <code>@Deprecated</code> + 寫入 log 警告</li>
+          <li>尚未遷移的模組（whs / pmm）改走 Laravel REST API 取 PDM 主檔</li>
+          <li>Feign Client：<code>PdmIngredientFeignApi</code> 改指 Laravel 端</li>
+        </ul>
+      </div>
+    </div>
+
+    <h4>Nginx 切換（新增 4 行）</h4>
+    <pre><code>server {
+    # ─── Phase 1：已遷移到 Laravel ─────────────────────────
+    location ^~ /admin-api/pdm/ingredient/ { proxy_pass http://laravel_erp; }
+    location ^~ /admin-api/pdm/bom/        { proxy_pass http://laravel_erp; }
+    location ^~ /admin-api/pdm/product/    { proxy_pass http://laravel_erp; }
+    location ^~ /admin-api/bhm/            { proxy_pass http://laravel_erp; }
+
+    # 其餘 PDM 子路徑（forecast）仍走 Java
+    location ^~ /admin-api/pdm/            { proxy_pass http://java_erp; }
+
+    # 預設：Java
+    location /admin-api/ { proxy_pass http://java_erp; }
+}</code></pre>
+
+    <div class="callout green">
+      <strong>跨系統引用：</strong>Java 的 WHS / PMM 若需要讀 PDM 食材，改成 HTTP 呼叫 <code>GET /admin-api/pdm/ingredient/{id}</code>（Laravel），不再直接 JOIN PostgreSQL。
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase laravel">
+    <div class="phase-head">
+      <h3><span class="badge green">Phase 2</span> WHS 庫存模組</h3>
+      <span class="effort">2 人月</span>
+    </div>
+    <p><strong>選擇理由：</strong>WHS 只依賴 PDM 食材（已遷移完畢）；盤點單是第一個走 OA 流程的業務單，驗證 Phase 0 helper。</p>
+
+    <div class="two-col">
+      <div>
+        <h4>Laravel 實作範圍</h4>
+        <ul>
+          <li>倉庫、儲位主檔 CRUD</li>
+          <li>進出庫單、即時庫存</li>
+          <li>盤點單（接 OA 流程）</li>
+          <li>庫存扣減：<code>SELECT ... FOR UPDATE</code> 或 <code>Cache::lock</code></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Java 側動作</h4>
+        <ul>
+          <li>WHS Controller 全部標 <code>@Deprecated</code></li>
+          <li>PMM 的驗收寫庫動作改呼叫 Laravel WHS API</li>
+          <li>WHS Feign Client 改指 Laravel</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>壓測要求：</strong>庫存併發扣減必須跑負載測試（模擬 50 並發倉操），確認 <code>SELECT ... FOR UPDATE</code> 不會死鎖，且 QPS 滿足業務需求後才切換。
+    </div>
+
+    <h4>Nginx 新增</h4>
+    <pre><code>location ^~ /admin-api/whs/ { proxy_pass http://laravel_erp; }</code></pre>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase laravel">
+    <div class="phase-head">
+      <h3><span class="badge green">Phase 3</span> PMM 採購模組</h3>
+      <span class="effort">2.5 人月</span>
+    </div>
+    <p><strong>選擇理由：</strong>PMM 驗收單寫 WHS — WHS 已在 Laravel，可在同一進程呼叫 Service，效率最高。</p>
+
+    <div class="two-col">
+      <div>
+        <h4>Laravel 實作範圍</h4>
+        <ul>
+          <li>廠商主檔、報價維護</li>
+          <li>請購 → 詢價 → 採購 → 驗收（狀態機）</li>
+          <li>用 <code>spatie/laravel-model-states</code> 建模</li>
+          <li>多階段審批（金額分級，走 OA 流程）</li>
+          <li>跨單關聯：請購拆採購、採購分批驗收</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Java 側動作</h4>
+        <ul>
+          <li>PMM Controller 全部標 <code>@Deprecated</code></li>
+          <li>BPM biz 層的 PMM callback listener 刪除</li>
+          <li>若有其他 Java 模組引用 PMM，改走 Laravel REST API</li>
+        </ul>
+      </div>
+    </div>
+    <h4>Nginx 新增</h4>
+    <pre><code>location ^~ /admin-api/pmm/ { proxy_pass http://laravel_erp; }</code></pre>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="phase laravel">
+    <div class="phase-head">
+      <h3><span class="badge green">Phase 4</span> PDM 計算層 / 需求預測</h3>
+      <span class="effort">2 ~ 3 人月</span>
+    </div>
+    <p><strong>選擇理由：</strong>計算依賴 PDM 主檔（P1）、PMM（P3）、WHS（P2）全部就位，計算輸入完整。</p>
+
+    <div class="two-col">
+      <div>
+        <h4>Laravel 實作範圍</h4>
+        <ul>
+          <li>拉漢堡王 API 銷售資料（P1 已有 TokenManager）</li>
+          <li>需求預測計算（建議寫單元測試覆蓋邊界）</li>
+          <li>BOM 樹狀展開 → 原物料需求（遞迴）</li>
+          <li>預測單審批 → 觸發 PMM 請購</li>
+          <li>批次計算包成 <code>Queue Job</code>（Horizon），必要時上 Octane</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Java 側動作</h4>
+        <ul>
+          <li>PDM forecast Controller 標 <code>@Deprecated</code></li>
+          <li>BPM 的預測單 listener 刪除</li>
+          <li>Java 已幾乎只剩基礎設施，無業務邏輯</li>
+        </ul>
+      </div>
+    </div>
+    <h4>Nginx 新增</h4>
+    <pre><code>location ^~ /admin-api/pdm/forecast/ { proxy_pass http://laravel_erp; }</code></pre>
+  </div>
+
+  <!-- Phase 5 -->
+  <div class="phase remove">
+    <div class="phase-head">
+      <h3><span class="badge red">Phase 5</span> 拆除 Java 後端</h3>
+      <span class="effort">0.5 人月</span>
+    </div>
+    <p><strong>前提：</strong>Phase 1–4 全部驗收、UAT 跑過至少一個完整業務週期（月結 / 採購週期）。</p>
+    <ul>
+      <li>Nginx 路由表清空 java_erp 相關 location，所有 <code>/admin-api/*</code> 指向 Laravel</li>
+      <li>Java 服務停機；保留 Docker Image + PG snapshot 作為 90 天回退保障</li>
+      <li>PostgreSQL 退役；歷史資料 read-only 副本保留 6 個月</li>
+      <li>刪除 Java upstream 區塊，Nginx config 清潔完成</li>
+    </ul>
+    <div class="callout red">
+      <strong>不可逆動作：</strong>停機前先確認 PG snapshot 完整可還原，並在低峰時段執行，預留 4 小時回退窗口。
+    </div>
+  </div>
+
+  <h2 id="be-timeline">後端並行時程</h2>
+  <div class="ascii">
+月份:           M1    M2    M3    M4    M5    M6    M7    M8    M9    M10
+─────────────────────────────────────────────────────────────────────────
+Phase 0 (地基)  ████
+Phase 1 (PDM)         ████████
+Phase 2 (WHS)                   ████████
+Phase 3 (PMM)                          ████████████
+Phase 4 (PDM計算)                                  ████████████
+Phase 5 (拆Java)                                               ██
+壓測 / UAT                       ░░░   ░░░   ░░░░  ░░░░
+─────────────────────────────────────────────────────────────────────────
+Java 凍結維護   ════════════════════════════════════════════╗
+                                                            ✕ 停機
+Laravel 開發          ════════════════════════════════════════════
+  </div>
+
+  <h2 id="be-crosscall">Java ↔ Laravel 跨模組呼叫規則</h2>
+  <table>
+    <tr><th>情境</th><th>做法</th><th>說明</th></tr>
+    <tr>
+      <td>Java 讀已遷移的 Laravel 主檔</td>
+      <td>Java Feign Client → Laravel REST API</td>
+      <td>不再 JOIN PostgreSQL；保持 ID 不變，呼叫 <code>GET /admin-api/pdm/ingredient/{id}</code></td>
+    </tr>
+    <tr>
+      <td>Java 寫已遷移的 Laravel 表</td>
+      <td><span class="badge red">禁止</span>直接寫 MySQL；改呼叫 Laravel API</td>
+      <td>避免雙寫導致資料不一致</td>
+    </tr>
+    <tr>
+      <td>Laravel 讀尚未遷移的 Java 資料</td>
+      <td>Laravel Guzzle / Saloon → Java REST API</td>
+      <td>僅在 Phase 過渡期使用；遷移完成後刪除</td>
+    </tr>
+    <tr>
+      <td>同一 Phase 內跨服務（已全遷 Laravel）</td>
+      <td>直接呼叫 Laravel Service 層</td>
+      <td>無需 HTTP；同進程內調用效率最高</td>
+    </tr>
+  </table>
+
+  <h2 id="be-rollback">回退機制</h2>
+  <div class="card yellow">
+    <strong>每個 Phase 切換的標準回退流程（30 秒內完成）：</strong>
+    <ol style="margin:10px 0 0 0">
+      <li>回退 PR：移除對應 <code>location ^~</code> 行</li>
+      <li>執行 <code>nginx -t &amp;&amp; nginx -s reload</code></li>
+      <li>流量立即回到 Java；資料寫入自動走回 PostgreSQL</li>
+      <li>Laravel 側資料（若有）人工 rollback migration，或保留等待再次切換</li>
+    </ol>
+    <p style="margin:8px 0 0 0; font-size:13px; color:var(--muted)">切換 PR 與回退 PR 應同時準備好，並在 Code Review 時一起審查。</p>
+  </div>
+
+</div><!-- /tab-backend -->
+
+<!-- ================================================================ -->
+<!-- FRONTEND TAB -->
+<!-- ================================================================ -->
+<div id="tab-frontend" class="tab-panel">
+
+  <h2 id="fe-principle">前端並行核心原則</h2>
+
+  <div class="card purple">
+    <strong><span class="badge purple">鐵律</span> Vue 代碼只有一份，不分叉</strong>
+    <p style="margin:8px 0 0 0">前端（erp-kingmaker）不因後端切換而建立分支版本。所有 API base URL 切換由 Nginx Gateway 在伺服器端完成，前端完全感知不到後端語言。</p>
+  </div>
+
+  <div class="two-col">
+    <div class="card green">
+      <strong>前端需要做的事</strong>
+      <ul style="margin:6px 0 0 0">
+        <li>維持 <code>CommonResult&lt;T&gt;</code> / <code>PageResult&lt;T&gt;</code> 回應格式</li>
+        <li>調整因後端重構而變動的欄位名稱</li>
+        <li>移除對已廢棄 Java 端 API 的特殊處理</li>
+        <li>WebSocket 通道切換（Reverb 取代 Java WS）</li>
+      </ul>
+    </div>
+    <div class="card red">
+      <strong>前端不應該做的事</strong>
+      <ul style="margin:6px 0 0 0">
+        <li>建立 <code>if (env === 'java') ... else ...</code> 的 API 分支</li>
+        <li>為 Java / Laravel 各自維護一套 API service 檔</li>
+        <li>硬編碼後端 IP / Port</li>
+        <li>自行做流量切換（應由 Nginx 負責）</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 id="fe-api-contract">API 契約：前端的唯一關注點</h2>
+
+  <p>前端只需關心 <strong>API 路徑</strong> 與 <strong>回應結構</strong> 是否一致，不管後端是 Java 還是 Laravel。</p>
+
+  <table>
+    <tr><th>合約項目</th><th>Java 原版</th><th>Laravel 目標</th><th>前端需改動？</th></tr>
+    <tr>
+      <td>成功回應結構</td>
+      <td><code>{"code":0,"data":{...},"msg":"ok"}</code></td>
+      <td>完全相同（Response Macro）</td>
+      <td><span class="badge green">不需</span></td>
+    </tr>
+    <tr>
+      <td>分頁結構</td>
+      <td><code>{"list":[...],"total":N}</code></td>
+      <td>完全相同</td>
+      <td><span class="badge green">不需</span></td>
+    </tr>
+    <tr>
+      <td>錯誤碼結構</td>
+      <td><code>{"code":1001002,"msg":"..."}</code></td>
+      <td>完全相同（ErrorCode 字典對齊）</td>
+      <td><span class="badge green">不需</span></td>
+    </tr>
+    <tr>
+      <td>日期格式</td>
+      <td><code>timestamp（ms）</code> 或 ISO 8601</td>
+      <td>需統一 — 若格式有差，前端要加 adapter</td>
+      <td><span class="badge yellow">需確認</span></td>
+    </tr>
+    <tr>
+      <td>欄位命名</td>
+      <td>camelCase（Java 慣例）</td>
+      <td>Laravel 預設 snake_case → 需設定 <code>JsonResource::withoutWrapping</code> + transform</td>
+      <td><span class="badge yellow">需確認</span></td>
+    </tr>
+    <tr>
+      <td>JWT Token 位置</td>
+      <td><code>Authorization: Bearer &lt;token&gt;</code></td>
+      <td>完全相同（Nginx 轉發）</td>
+      <td><span class="badge green">不需</span></td>
+    </tr>
+    <tr>
+      <td>WebSocket 通道</td>
+      <td>Java WebSocket Starter <code>ws://erp.example.com/ws</code></td>
+      <td>Laravel Reverb <code>ws://erp.example.com/app/KEY</code></td>
+      <td><span class="badge red">需改</span>（Phase 2 起）</td>
+    </tr>
+    <tr>
+      <td>檔案上傳路徑</td>
+      <td><code>/admin-api/infra/file/upload</code></td>
+      <td>沿用 OA 既有路徑或建立相容路徑</td>
+      <td><span class="badge yellow">需確認</span></td>
+    </tr>
+  </table>
+
+  <div class="callout warn">
+    <strong>最常踩的雷：camelCase vs snake_case</strong>。建議在 Laravel 全域設定 <code>JsonResource</code> 的 key 輸出為 camelCase，或在 Phase 0 時一次性在前端加 Axios response interceptor 轉換，避免每個模組個別處理。
+  </div>
+
+  <h2 id="fe-env">環境設定：API Base URL 管理</h2>
+
+  <p>前端 API base URL 只有一個入口，不因後端語言而分叉：</p>
+
+  <pre><code># .env.development
+VITE_API_BASE_URL=http://localhost:80   # 打 Nginx dev proxy
+
+# .env.staging
+VITE_API_BASE_URL=https://erp-staging.example.com
+
+# .env.production
+VITE_API_BASE_URL=https://erp.example.com</code></pre>
+
+  <pre><code>// src/api/request.ts  — Axios 全域設定
+import axios from 'axios'
+
+const request = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: 30000,
+})
+
+// Response interceptor：統一處理 CommonResult
+request.interceptors.response.use(res => {
+  const { code, data, msg } = res.data
+  if (code !== 0) throw new ApiError(code, msg)
+  return data
+})
+
+export default request</code></pre>
+
+  <div class="callout">
+    <strong>開發環境 Vite Proxy：</strong>本機不需要 Nginx，Vite <code>server.proxy</code> 也只設一個 target（打本機 Nginx 或直接打 Laravel dev server 視開發階段而定）。
+  </div>
+
+  <h2 id="fe-phases">各階段前端工作清單</h2>
+
+  <div class="timeline">
+
+    <div class="tl-row">
+      <div class="tl-label">Phase 0<br>地基</div>
+      <div class="tl-content">
+        <strong><span class="badge blue">準備期</span> 前端配合事項</strong>
+        <ul style="margin:6px 0 0 0">
+          <li>確認 <code>VITE_API_BASE_URL</code> 已統一，移除任何硬編碼後端位址</li>
+          <li>加入 Axios response interceptor（<code>code / data / msg</code> 解構）</li>
+          <li>驗證 camelCase / snake_case 策略，決定是否加 key transformer</li>
+          <li>與後端確認 JWT 格式（payload 欄位名稱）一致</li>
+          <li><strong>PoC：</strong>使用假帳號呼叫 OA 登入 → 取得 JWT → 打 Java ERP API，確認 token 可穿透</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tl-row">
+      <div class="tl-label">Phase 1<br>PDM 主檔</div>
+      <div class="tl-content">
+        <strong><span class="badge green">低風險切換</span> 前端驗收清單</strong>
+        <ul style="margin:6px 0 0 0">
+          <li>Nginx 切換後，食材 / BOM / 產品頁面功能測試（CRUD 完整 e2e）</li>
+          <li>分頁、搜尋、Excel 匯出確認正常</li>
+          <li>確認 PDM 主檔 API 回應格式與 Java 版完全一致（可用 Postman collection 對比）</li>
+          <li>若有欄位名稱差異 → 前端加 adapter 或後端對齊，<strong>不寫 if/else 分支</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tl-row">
+      <div class="tl-label">Phase 2<br>WHS 庫存</div>
+      <div class="tl-content">
+        <strong><span class="badge yellow">含 WebSocket</span> 前端改動</strong>
+        <ul style="margin:6px 0 0 0">
+          <li>庫存異動通知：從 Java WebSocket → Laravel Reverb</li>
+          <li>前端 Laravel Echo 設定（<code>echo.channel('inventory').listen(...)</code>）</li>
+          <li>盤點單頁面：確認流程狀態欄位（<code>status</code>）與 OA 流程回調格式一致</li>
+          <li>庫存並發警告：壓測若發現前端輪詢太頻繁，改為 WebSocket push</li>
+        </ul>
+        <div class="callout warn" style="margin-top:8px">
+          WebSocket 切換是本次遷移前端工作量最大的單點，建議單獨安排 1~2 天 spike。
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-row">
+      <div class="tl-label">Phase 3<br>PMM 採購</div>
+      <div class="tl-content">
+        <strong><span class="badge green">含多步驟審批 UI</span></strong>
+        <ul style="margin:6px 0 0 0">
+          <li>審批流程 UI：確認 OA 流程引擎回傳的審批節點資料格式</li>
+          <li>請購 → 詢價 → 採購 → 驗收 四個頁面狀態機顯示測試</li>
+          <li>驗收單觸發的庫存寫入：確認 WHS 庫存頁面即時更新（WebSocket）</li>
+          <li>如需在審批頁嵌入 OA 流程圖 — 確認 OA 提供對應的 iframe 或 API</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tl-row">
+      <div class="tl-label">Phase 4<br>PDM 計算</div>
+      <div class="tl-content">
+        <strong><span class="badge purple">含非同步計算 UI</span></strong>
+        <ul style="margin:6px 0 0 0">
+          <li>需求預測頁面：計算為非同步（Queue Job），前端需實作「計算中 / 完成 / 失敗」狀態輪詢或 WebSocket push</li>
+          <li>BOM 展開結果：樹狀表格 / 折疊展開 UX 確認</li>
+          <li>預測單觸發請購：確認跳轉到 PMM 頁面帶入預填資料的流程正確</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tl-row">
+      <div class="tl-label">Phase 5<br>收尾</div>
+      <div class="tl-content">
+        <strong><span class="badge gray">清理期</span></strong>
+        <ul style="margin:6px 0 0 0">
+          <li>移除所有對 Java API 的特殊 workaround 或 adapter</li>
+          <li>移除開發工具中 <code>proxy</code> 指向 Java 的設定</li>
+          <li>更新 API 文件（Swagger / Postman collection）</li>
+          <li>確認 Vue Router 所有路由都對應到 Laravel 端有實作的 API</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <h2 id="fe-websocket">WebSocket 切換詳解（Phase 2）</h2>
+
+  <div class="two-col">
+    <div>
+      <h4>Java 側（舊）</h4>
+      <pre><code>// 舊：直連 Java WebSocket
+const ws = new WebSocket(
+  'ws://erp.example.com/ws?token=...'
+)
+ws.onmessage = (e) => {
+  const { type, data } = JSON.parse(e.data)
+  // ...
+}</code></pre>
+    </div>
+    <div>
+      <h4>Laravel Reverb（新）</h4>
+      <pre><code">// 新：Laravel Echo + Reverb
+import Echo from 'laravel-echo'
+import Pusher from 'pusher-js'
+window.Pusher = Pusher
+
+const echo = new Echo({
+  broadcaster: 'reverb',
+  key: import.meta.env.VITE_REVERB_KEY,
+  wsHost: import.meta.env.VITE_REVERB_HOST,
+  wsPort: import.meta.env.VITE_REVERB_PORT,
+  forceTLS: false,
+  auth: { headers: {
+    Authorization: `Bearer ${token}`
+  }}
+})
+
+echo.channel('inventory')
+  .listen('StockUpdated', (e) => {
+    store.updateStock(e.warehouseId, e.qty)
+  })</code></pre>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    Phase 2 切換期間，兩套 WebSocket 可能同時存在（Java 舊通知 + Laravel 新通知）。建議用 feature flag（env var 或 Cookie）讓前端在切換期間只連一套，避免重複通知。
+  </div>
+
+  <h2 id="fe-qa">前端 QA 策略</h2>
+
+  <table>
+    <tr><th>QA 層次</th><th>工具</th><th>時機</th></tr>
+    <tr>
+      <td>API 契約比對</td>
+      <td>Postman Collection Runner（Java vs Laravel 同路徑回應對比）</td>
+      <td>每個 Phase 切換前</td>
+    </tr>
+    <tr>
+      <td>功能迴歸</td>
+      <td>Playwright E2E（關鍵頁面流程：CRUD + 流程審批）</td>
+      <td>每個 Phase 切換後</td>
+    </tr>
+    <tr>
+      <td>灰度測試（QA 帳號）</td>
+      <td>Cookie <code>erp_canary=new</code> → Nginx map 導到 Laravel</td>
+      <td>切換前 1 週，讓內部 QA 先用 Laravel 版本</td>
+    </tr>
+    <tr>
+      <td>UAT</td>
+      <td>真實業務場景跑一個完整週期（週採購、月盤點）</td>
+      <td>Phase 4 完成後，Phase 5 前</td>
+    </tr>
+  </table>
+
+  <h2 id="fe-canary">灰度切換：讓 QA 先體驗 Laravel（指定使用者）</h2>
+
+  <pre><code># Nginx：map cookie 決定後端
+map $cookie_erp_canary $whs_backend {
+    default  java_erp;
+    "new"    laravel_erp;
+}
+server {
+    location ^~ /admin-api/whs/ {
+        proxy_pass http://$whs_backend;
+    }
+}</code></pre>
+
+  <p>QA 在 DevTools 手動設定：</p>
+  <pre><code>document.cookie = "erp_canary=new; path=/"</code></pre>
+
+  <p>同一個 URL，QA 帳號體驗 Laravel 版本，其他使用者繼續用 Java — 前端代碼完全不需要改動。</p>
+
+  <h2 id="fe-checklist">前端遷移完整 Checklist</h2>
+
+  <ul class="checklist">
+    <li class="done">統一 <code>VITE_API_BASE_URL</code>，移除硬編碼後端 IP</li>
+    <li class="done">Axios interceptor：<code>CommonResult</code> 解構 + 錯誤碼統一處理</li>
+    <li>確認 camelCase vs snake_case 策略並全域套用</li>
+    <li>確認日期格式（timestamp ms vs ISO 8601）並建立 dayjs adapter</li>
+    <li>Phase 1：PDM CRUD e2e 測試通過</li>
+    <li>Phase 2：WebSocket 切換至 Laravel Reverb，庫存通知正常</li>
+    <li>Phase 2：盤點單流程狀態 UI 與 OA callback 格式對齊</li>
+    <li>Phase 3：採購多步驟審批 UI 確認正常</li>
+    <li>Phase 4：需求預測非同步計算狀態 UI 實作</li>
+    <li>UAT：業務人員確認完整流程（建單 → 審批 → 完成）</li>
+    <li>Phase 5：移除所有 Java workaround / adapter，前端代碼清潔</li>
+    <li>更新 Postman Collection、API 文件</li>
+  </ul>
+
+</div><!-- /tab-frontend -->
+
+<hr>
+<p style="text-align: center; color: var(--muted); font-size: 12px; margin-top: 40px;">
+  漢堡王 ERP 遷移策略文件 · 基於漸進式遷移 §8 · 2026-05-20
+</p>
+
+</div><!-- /container -->
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
+  document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'))
+  document.getElementById('tab-' + name).classList.add('active')
+  event.currentTarget.classList.add('active')
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock 模組 API 文件 - Burger King ERP</title>
+<style>
+  :root {
+    --primary: #d4380d;
+    --primary-light: #fff2e8;
+    --success: #389e0d;
+    --success-bg: #f6ffed;
+    --danger: #cf1322;
+    --danger-bg: #fff1f0;
+    --warning: #d48806;
+    --warning-bg: #fffbe6;
+    --info: #096dd9;
+    --info-bg: #e6f7ff;
+    --border: #d9d9d9;
+    --text: #262626;
+    --text-secondary: #595959;
+    --bg: #f5f5f5;
+    --code-bg: #1e1e2e;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+  /* Nav */
+  .sidebar { position: fixed; left: 0; top: 0; width: 260px; height: 100vh; background: #141414; color: #ccc; overflow-y: auto; z-index: 100; padding: 16px 0; }
+  .sidebar h2 { color: #fff; padding: 12px 20px; font-size: 14px; border-bottom: 1px solid #333; margin-bottom: 8px; }
+  .sidebar a { display: block; padding: 6px 20px; color: #aaa; text-decoration: none; font-size: 13px; transition: all 0.2s; }
+  .sidebar a:hover { color: #fff; background: #333; }
+  .sidebar .group { font-size: 11px; color: #666; padding: 10px 20px 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar .badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 10px; margin-left: 4px; }
+  .sidebar .badge.no { background: var(--danger); color: #fff; }
+  .sidebar .badge.yes { background: var(--success); color: #fff; }
+
+  /* Main */
+  .main { margin-left: 260px; padding: 24px; }
+  .header { background: linear-gradient(135deg, #d4380d, #fa541c); color: #fff; padding: 40px; border-radius: var(--radius); margin-bottom: 28px; }
+  .header h1 { font-size: 28px; margin-bottom: 8px; }
+  .header p { opacity: 0.85; font-size: 15px; }
+  .header .stats { display: flex; gap: 24px; margin-top: 20px; }
+  .header .stat { background: rgba(255,255,255,0.15); padding: 12px 20px; border-radius: var(--radius); text-align: center; }
+  .header .stat .num { font-size: 28px; font-weight: 700; }
+  .header .stat .label { font-size: 12px; opacity: 0.8; }
+
+  /* Section */
+  .section { background: #fff; border-radius: var(--radius); padding: 28px; margin-bottom: 24px; border: 1px solid var(--border); }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--bg); }
+  .section-header h2 { font-size: 20px; }
+  .section-header .icon { font-size: 24px; }
+  .impl-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .impl-badge.no { background: var(--danger-bg); color: var(--danger); border: 1px solid #ffa39e; }
+  .impl-badge.yes { background: var(--success-bg); color: var(--success); border: 1px solid #b7eb8f; }
+  .impl-badge.partial { background: var(--warning-bg); color: var(--warning); border: 1px solid #ffe58f; }
+
+  /* Overview cards */
+  .overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .module-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: pointer; transition: all 0.2s; }
+  .module-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(212,56,13,0.15); transform: translateY(-2px); }
+  .module-card .title { font-weight: 600; margin-bottom: 4px; }
+  .module-card .path { font-size: 12px; color: var(--primary); font-family: monospace; margin-bottom: 8px; }
+  .module-card .count { font-size: 12px; color: var(--text-secondary); }
+  .module-card .status { margin-top: 10px; }
+
+  /* API Table */
+  .api-table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+  .api-table th { background: #fafafa; padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border); font-weight: 600; color: var(--text-secondary); }
+  .api-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  .api-table tr:hover td { background: #fafafa; }
+  .method { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; font-family: monospace; min-width: 50px; text-align: center; }
+  .method.GET { background: #e6f7ff; color: #096dd9; }
+  .method.POST { background: #f6ffed; color: #389e0d; }
+  .method.PUT { background: #fff7e6; color: #d48806; }
+  .method.DELETE { background: #fff1f0; color: #cf1322; }
+  .endpoint { font-family: monospace; font-size: 12px; color: #531dab; background: #f9f0ff; padding: 2px 8px; border-radius: 4px; }
+  .oa-yes { color: var(--success); font-weight: 600; }
+  .oa-no { color: var(--danger); font-weight: 600; }
+
+  /* Code blocks */
+  pre { background: var(--code-bg); color: #cdd6f4; padding: 20px; border-radius: var(--radius); overflow-x: auto; font-size: 12px; line-height: 1.7; margin: 12px 0; }
+  pre .kw { color: #cba6f7; }
+  pre .str { color: #a6e3a1; }
+  pre .cm { color: #6c7086; font-style: italic; }
+  pre .tp { color: #89dceb; }
+  pre .num { color: #fab387; }
+  pre .fn { color: #89b4fa; }
+
+  /* Flowchart */
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin: 16px 0; }
+  .flow-box { background: var(--info-bg); border: 1px solid #91caff; padding: 10px 16px; border-radius: 6px; font-size: 13px; text-align: center; min-width: 110px; }
+  .flow-box.start { background: var(--success-bg); border-color: #b7eb8f; }
+  .flow-box.end { background: #f9f0ff; border-color: #d3adf7; }
+  .flow-box.decision { background: var(--warning-bg); border-color: #ffe58f; }
+  .flow-arrow { padding: 0 8px; color: #999; font-size: 18px; }
+  .flow-col { display: flex; flex-direction: column; gap: 8px; }
+
+  /* Tabs */
+  .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; gap: 0; }
+  .tab { padding: 10px 20px; cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; margin-bottom: -2px; color: var(--text-secondary); transition: all 0.2s; }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Model diagram */
+  .model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .model-box { border: 2px solid #d3adf7; border-radius: var(--radius); overflow: hidden; }
+  .model-box .model-title { background: #722ed1; color: #fff; padding: 10px 16px; font-weight: 700; font-size: 14px; }
+  .model-box table { width: 100%; font-size: 12px; }
+  .model-box table th { background: #f9f0ff; padding: 6px 12px; border-bottom: 1px solid #d3adf7; color: #531dab; }
+  .model-box table td { padding: 5px 12px; border-bottom: 1px solid #f0f0f0; font-family: monospace; }
+  .model-box table tr:last-child td { border-bottom: none; }
+  .field-key { color: var(--primary); font-weight: 600; }
+  .field-type { color: #096dd9; }
+  .field-desc { color: var(--text-secondary); font-family: sans-serif; font-size: 11px; }
+
+  /* Alert boxes */
+  .alert { padding: 12px 16px; border-radius: var(--radius); margin: 12px 0; border-left: 4px solid; font-size: 13px; }
+  .alert.info { background: var(--info-bg); border-color: var(--info); }
+  .alert.warning { background: var(--warning-bg); border-color: var(--warning); }
+  .alert.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .alert.success { background: var(--success-bg); border-color: var(--success); }
+
+  /* Scrollspy active */
+  .sidebar a.active { color: #fff; background: #1a1a3e; border-left: 3px solid var(--primary); }
+
+  h3 { font-size: 16px; margin: 20px 0 12px; color: var(--text); }
+  h4 { font-size: 14px; margin: 16px 0 8px; color: var(--text-secondary); }
+  p { font-size: 14px; color: var(--text-secondary); margin-bottom: 10px; }
+  ul { padding-left: 20px; font-size: 14px; color: var(--text-secondary); }
+  li { margin-bottom: 4px; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 11px; margin: 2px; }
+  .tag.blue { background: var(--info-bg); color: var(--info); border: 1px solid #91caff; }
+  .tag.green { background: var(--success-bg); color: var(--success); border: 1px solid #b7eb8f; }
+  .tag.orange { background: var(--primary-light); color: var(--primary); border: 1px solid #ffbb96; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <h2>🍔 Stock 模組 API 文件</h2>
+  <div class="group">概覽</div>
+  <a href="#overview">系統架構總覽</a>
+  <a href="#flow-overview">業務流程圖</a>
+  <a href="#model-overview">資料模型圖</a>
+
+  <div class="group">庫存管理模組</div>
+  <a href="#safety-stock">安全存量設定 <span class="badge no">未實作</span></a>
+  <a href="#warehouse">倉庫基本設定 <span class="badge no">未實作</span></a>
+  <a href="#stock-query">倉儲查詢作業 <span class="badge no">未實作</span></a>
+  <a href="#stock-in">入庫作業管理 <span class="badge no">未實作</span></a>
+  <a href="#stock-out">出庫作業管理 <span class="badge no">未實作</span></a>
+  <a href="#transfer">門市調撥管理 <span class="badge no">未實作</span></a>
+  <a href="#bad-product">不良品管理 <span class="badge no">未實作</span></a>
+  <a href="#day-check">每日盤點作業 <span class="badge no">未實作</span></a>
+  <a href="#check-plan">盤點計劃製定 <span class="badge no">未實作</span></a>
+  <a href="#check-exec">盤點計劃執行 <span class="badge no">未實作</span></a>
+
+  <div class="group">相關模組</div>
+  <a href="#pdm-related">PDM 相關 API <span class="badge yes">已實作</span></a>
+  <a href="#impl-summary">實作建議</a>
+</nav>
+
+<!-- Main Content -->
+<div class="main">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>📦 Stock 模組 API 完整文件</h1>
+    <p>基於前端 <code>/stock/</code> 目錄分析，整理所有 WHS (Warehouse) 相關 API 端點、資料模型與業務流程</p>
+    <div class="stats">
+      <div class="stat"><div class="num">10</div><div class="label">功能模組</div></div>
+      <div class="stat"><div class="num">58</div><div class="label">API 端點</div></div>
+      <div class="stat"><div class="num">0</div><div class="label">OA 已實作</div></div>
+      <div class="stat"><div class="num">58</div><div class="label">待實作</div></div>
+    </div>
+  </div>
+
+  <div class="alert danger">
+    <strong>⚠️ 重要：</strong> 後端 (<code>/data/newprooa</code>) 目前 <strong>完全未實作</strong> 任何 <code>/whs/*</code> 端點。前端已完整定義所有 API 介面與資料型別，後端需從零開始建立 WHS 模組。
+  </div>
+
+  <!-- Overview -->
+  <div id="overview" class="section">
+    <div class="section-header">
+      <span class="icon">🗺️</span>
+      <h2>系統架構總覽</h2>
+    </div>
+
+    <h3>模組清單</h3>
+    <div class="overview-grid">
+      <div class="module-card" onclick="location.href='#safety-stock'">
+        <div class="title">🛡️ 安全存量設定</div>
+        <div class="path">/stock/safetyStock</div>
+        <div class="count">6 個 API 端點</div>
+        <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+      </div>
+      <div class="module-card" onclick="location.href='#warehouse'">
+        <div class="title">🏭 倉庫基本設定</div>
+        <div class="path">/stock/stockBasic</div>
+        <div class="count">10 個 API 端點</div>
+        <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+      </div>
+      <div class="module-card" onclick="location.href='#stock-query'">
+        <div class="title">🔍 倉儲查詢作業</div>
+        <div class="path">/stock/storageQuery</div>
+        <div class="count">2 個 API 端點</div>
+        <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+      </div>
+      <div class="module-card" onclick="location.href='#stock-in'">
+        <div class="title">📥 入庫作業管理</div>
+        <div class="path">/stock/in</div>
+        <div class="count">8 個 API 端點</div>
+        <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+      </div>
+      <div class="module-card" onclick="location.href='#stock-out'">
+        <div class="title">📤 出庫作業管理</div>
+        <div class="path">/stock/out</div>
+        <div class="count">6 個 API 端點</div>
+        <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+      </div>
+      <div class="module-card" onclick="location.href='#transfer'">
+        <div class="title">🔄 門市調撥管理</div>
+        <div class="path">/stock/transfer</div>
+        <div class="count">10 個 API 端點</div>
+        <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+      </div>
+      <div class="module-card" onclick="location.href='#bad-product'">
+        <div class="title">🚫 不良品管理</div>
+        <div class="path">/stock/badProduct</div>
+        <div class="count">7 個 API 端點</div>
+        <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+      </div>
+      <div class="module-card" onclick="location.href='#day-check'">
+        <div class="title">📋 每日盤點作業</div>
+        <div class="path">/stock/dayCheck</div>
+        <div class="count">7 個 API 端點</div>
+        <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+      </div>
+      <div class="module-card" onclick="location.href='#check-plan'">
+        <div class="title">📅 盤點計劃製定</div>
+        <div class="path">/stock/checkPlan</div>
+        <div class="count">6 個 API 端點</div>
+        <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+      </div>
+      <div class="module-card" onclick="location.href='#check-exec'">
+        <div class="title">✅ 盤點計劃執行</div>
+        <div class="path">/stock/checkExecution</div>
+        <div class="count">6 個 API 端點</div>
+        <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+      </div>
+    </div>
+
+    <h3>前端檔案位置</h3>
+    <table class="api-table">
+      <tr><th>模組</th><th>API 檔案</th><th>View 檔案</th></tr>
+      <tr><td>安全存量</td><td><code>src/api/stock/safetyStock/index.ts</code></td><td><code>src/views/stock/safetyStock/</code></td></tr>
+      <tr><td>倉庫設定</td><td><code>src/api/stock/stockBasic/index.ts</code></td><td><code>src/views/stock/stockBasic/</code></td></tr>
+      <tr><td>倉儲查詢</td><td><code>src/api/stock/stockQuery/index.ts</code></td><td><code>src/views/stock/storageQuery/</code></td></tr>
+      <tr><td>入庫管理</td><td><code>src/api/stock/in/index.ts</code></td><td><code>src/views/stock/in/</code></td></tr>
+      <tr><td>出庫管理</td><td><code>src/api/stock/out/index.ts</code></td><td><code>src/views/stock/out/</code></td></tr>
+      <tr><td>調撥管理</td><td><code>src/api/stock/transfer/index.ts</code></td><td><code>src/views/stock/transfer/</code></td></tr>
+      <tr><td>不良品</td><td><code>src/api/stock/badProduct/index.ts</code></td><td><code>src/views/stock/badProduct/</code></td></tr>
+      <tr><td>每日盤點</td><td><code>src/api/stock/dayCheck/index.ts</code></td><td><code>src/views/stock/dayCheck/</code></td></tr>
+      <tr><td>盤點計劃</td><td><code>src/api/stock/check/plan/index.ts</code></td><td><code>src/views/stock/check/plan/</code></td></tr>
+      <tr><td>盤點執行</td><td><code>src/api/stock/check/execution/index.ts</code></td><td><code>src/views/stock/check/execution/</code></td></tr>
+    </table>
+  </div>
+
+  <!-- Flow Overview -->
+  <div id="flow-overview" class="section">
+    <div class="section-header">
+      <span class="icon">🔀</span>
+      <h2>業務流程圖</h2>
+    </div>
+
+    <h3>庫存異動主流程</h3>
+    <div class="flow">
+      <div class="flow-box start">食材需求預測<br><small>(PDM)</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">物流管理日曆<br><small>(gatherReq)</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box decision">觸發入庫<br><small>create-stock-in</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">入庫作業<br><small>/whs/stock-record-head</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">倉庫庫存<br><small>/whs/stock</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box end">倉儲查詢<br><small>/whs/stock/currentPage</small></div>
+    </div>
+
+    <h3>調撥作業流程</h3>
+    <div class="flow">
+      <div class="flow-box start">申請調撥<br><small>新增調撥單</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">計算庫存<br><small>compute-area-inventory</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">提交簽核<br><small>batch-process</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box decision">流程審核<br><small>todo-page</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">出庫記錄<br><small>stockType=0</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box end">入庫記錄<br><small>stockType=1</small></div>
+    </div>
+
+    <h3>盤點作業流程</h3>
+    <div class="flow">
+      <div class="flow-box start">制定盤點計劃<br><small>/whs/check-plan</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">執行盤點任務<br><small>/whs/check-plan-detail</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">盤點品項<br><small>check-plan-item</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box decision">帳面 vs 實際<br><small>差異計算</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">庫存調整<br><small>入/出庫</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box end">庫存更新<br><small>stock record</small></div>
+    </div>
+
+    <h3>簽核流程（所有異動單據）</h3>
+    <div class="flow">
+      <div class="flow-box start">建立單據<br><small>processStatus: draft</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">暫存<br><small>batch-process</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">提交<br><small>processStatus: pending</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box decision">審核<br><small>todo-page</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box end">核准/退回<br><small>update-process-status</small></div>
+    </div>
+
+    <div class="alert info">
+      <strong>💡 流程說明：</strong> 所有異動類單據（入庫、出庫、調撥、不良品、盤點）均支援簽核流程。前端透過 <code>isTodo</code> 參數自動切換 <code>/page</code>（無簽核）或 <code>/todo-page</code>（簽核待辦）模式。
+    </div>
+  </div>
+
+  <!-- Model Overview -->
+  <div id="model-overview" class="section">
+    <div class="section-header">
+      <span class="icon">🗄️</span>
+      <h2>資料模型關聯圖</h2>
+    </div>
+
+    <div class="alert info">資料表命名規則：<code>whs_</code> 前綴，全部使用 snake_case</div>
+
+    <h3>核心資料表關係</h3>
+    <pre>
+whs_warehouse (倉庫主檔)
+  ├── id, category, warehouse_type, warehouse, zone, bin_code, area
+  │
+  ├──◀ whs_stock (當前庫存)
+  │     └── warehouse_id, prod_code, standard_amount, standard_quantity, safe_stock
+  │
+  ├──◀ whs_stock_record (庫存異動記錄)
+  │     └── warehouse_id, prod_code, inv_num_change, stock_type, stock_reason
+  │          source_sign_code, record_id, zone, bin_code
+  │
+  └──◀ whs_stock_safe_detail (安全存量明細)
+        └── stock_safe_id, warehouse_id, ingredient_id, safe_stock
+
+whs_stock_safe (安全存量設定主表)
+  ├── id, sign_code, apply_dept, weight_day, warehouse, process_status
+  └──▶ whs_stock_safe_detail[]
+
+whs_stock_record_head (庫存異動表頭)
+  ├── id, form_code, stock_type(0=出/1=入), stock_reason
+  ├── area, warehouse_type, warehouse, warehouse_id
+  ├── process_status, source_sign_code, inbound_time
+  └──▶ whs_stock_record[] (透過 record_id 關聯)
+
+whs_stock_transfer (調撥單主表)
+  ├── id, sign_code, area, warehouse_type
+  ├── out_warehouse, in_warehouse, transfer_time, process_status
+  └──▶ whs_stock_transfer_detail[]
+        └── prod_code, standard_amount, confirmed_quantity, area_inv_num
+
+whs_bad_product (不良品主表)
+  ├── id, sign_code, area, warehouse, return_date, process_status
+  └──▶ whs_bad_product_detail[]
+        └── prod_code, standard_amount, standard_quantity, picture_url
+
+whs_daily_inventory (每日盤點主表)
+  ├── id, sign_code, inventory_date, area, warehouse, process_status
+  └──▶ whs_daily_inventory_detail[]
+
+whs_check_plan (盤點計劃主表)
+  ├── id, sign_code, area, warehouse, plan_date_st, plan_date_ed
+  ├── periodicity(每月/每季/每年), process_status
+  └──▶ whs_check_plan_detail[] (執行任務)
+        ├── take_time (執行日期)
+        ├── process_status
+        └──▶ whs_check_plan_item[] (盤點品項)
+              └── prod_code, account_quantity, check_quantity, audit_quantity</pre>
+
+    <h3>主要 Model 欄位詳細</h3>
+    <div class="model-grid">
+      <div class="model-box">
+        <div class="model-title">whs_warehouse（倉庫主檔）</div>
+        <table>
+          <tr><th>欄位</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="field-key">id</td><td class="field-type">bigint PK</td><td class="field-desc">自增主鍵</td></tr>
+          <tr><td>category</td><td class="field-type">varchar</td><td class="field-desc">類別代碼</td></tr>
+          <tr><td>warehouse_type</td><td class="field-type">varchar</td><td class="field-desc">倉別代碼</td></tr>
+          <tr><td>warehouse</td><td class="field-type">varchar</td><td class="field-desc">倉名代碼</td></tr>
+          <tr><td>zone</td><td class="field-type">varchar</td><td class="field-desc">儲區代碼</td></tr>
+          <tr><td>bin_code</td><td class="field-type">varchar</td><td class="field-desc">儲位代碼</td></tr>
+          <tr><td>area</td><td class="field-type">int</td><td class="field-desc">區域ID</td></tr>
+        </table>
+      </div>
+      <div class="model-box">
+        <div class="model-title">whs_stock（當前庫存）</div>
+        <table>
+          <tr><th>欄位</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="field-key">id</td><td class="field-type">bigint PK</td><td class="field-desc">自增主鍵</td></tr>
+          <tr><td class="field-key">warehouse_id</td><td class="field-type">bigint FK</td><td class="field-desc">→ whs_warehouse</td></tr>
+          <tr><td>prod_code</td><td class="field-type">varchar</td><td class="field-desc">品號</td></tr>
+          <tr><td>standard_amount</td><td class="field-type">decimal</td><td class="field-desc">庫存計量</td></tr>
+          <tr><td>standard_quantity</td><td class="field-type">decimal</td><td class="field-desc">庫存計數</td></tr>
+          <tr><td>safe_stock</td><td class="field-type">decimal</td><td class="field-desc">安全存量</td></tr>
+        </table>
+      </div>
+      <div class="model-box">
+        <div class="model-title">whs_stock_record_head（異動表頭）</div>
+        <table>
+          <tr><th>欄位</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="field-key">id</td><td class="field-type">bigint PK</td><td class="field-desc">自增主鍵</td></tr>
+          <tr><td>form_code</td><td class="field-type">varchar</td><td class="field-desc">單據編號</td></tr>
+          <tr><td>stock_type</td><td class="field-type">tinyint</td><td class="field-desc">0=出庫, 1=入庫</td></tr>
+          <tr><td>stock_reason</td><td class="field-type">varchar</td><td class="field-desc">異動事由</td></tr>
+          <tr><td>area</td><td class="field-type">int</td><td class="field-desc">區域ID</td></tr>
+          <tr><td class="field-key">warehouse_id</td><td class="field-type">bigint FK</td><td class="field-desc">→ whs_warehouse</td></tr>
+          <tr><td>process_status</td><td class="field-type">varchar</td><td class="field-desc">流程狀態</td></tr>
+          <tr><td>source_sign_code</td><td class="field-type">varchar</td><td class="field-desc">來源單據編號</td></tr>
+          <tr><td>inbound_time</td><td class="field-type">bigint</td><td class="field-desc">入/出庫時間戳</td></tr>
+        </table>
+      </div>
+      <div class="model-box">
+        <div class="model-title">whs_stock_record（庫存異動記錄）</div>
+        <table>
+          <tr><th>欄位</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="field-key">id</td><td class="field-type">bigint PK</td><td class="field-desc">自增主鍵</td></tr>
+          <tr><td class="field-key">record_id</td><td class="field-type">bigint FK</td><td class="field-desc">→ stock_record_head</td></tr>
+          <tr><td class="field-key">warehouse_id</td><td class="field-type">bigint FK</td><td class="field-desc">→ whs_warehouse</td></tr>
+          <tr><td>prod_code</td><td class="field-type">varchar</td><td class="field-desc">品號</td></tr>
+          <tr><td>inv_num_change</td><td class="field-type">decimal</td><td class="field-desc">庫存變化量</td></tr>
+          <tr><td>standard_amount</td><td class="field-type">decimal</td><td class="field-desc">計量</td></tr>
+          <tr><td>standard_quantity</td><td class="field-type">decimal</td><td class="field-desc">計數</td></tr>
+          <tr><td>zone</td><td class="field-type">varchar</td><td class="field-desc">儲區</td></tr>
+          <tr><td>bin_code</td><td class="field-type">varchar</td><td class="field-desc">儲位</td></tr>
+        </table>
+      </div>
+      <div class="model-box">
+        <div class="model-title">whs_stock_transfer（調撥單）</div>
+        <table>
+          <tr><th>欄位</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="field-key">id</td><td class="field-type">bigint PK</td><td class="field-desc">自增主鍵</td></tr>
+          <tr><td>sign_code</td><td class="field-type">varchar</td><td class="field-desc">單據編號</td></tr>
+          <tr><td>area</td><td class="field-type">int</td><td class="field-desc">區域ID</td></tr>
+          <tr><td>warehouse_type</td><td class="field-type">varchar</td><td class="field-desc">倉別</td></tr>
+          <tr><td>out_warehouse</td><td class="field-type">varchar</td><td class="field-desc">出庫倉名</td></tr>
+          <tr><td>in_warehouse</td><td class="field-type">varchar</td><td class="field-desc">入庫倉名</td></tr>
+          <tr><td>transfer_time</td><td class="field-type">datetime</td><td class="field-desc">調撥時間</td></tr>
+          <tr><td>process_status</td><td class="field-type">varchar</td><td class="field-desc">流程狀態</td></tr>
+        </table>
+      </div>
+      <div class="model-box">
+        <div class="model-title">whs_check_plan（盤點計劃）</div>
+        <table>
+          <tr><th>欄位</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="field-key">id</td><td class="field-type">bigint PK</td><td class="field-desc">自增主鍵</td></tr>
+          <tr><td>sign_code</td><td class="field-type">varchar</td><td class="field-desc">單據編號</td></tr>
+          <tr><td>area</td><td class="field-type">int</td><td class="field-desc">區域ID</td></tr>
+          <tr><td>warehouse</td><td class="field-type">varchar</td><td class="field-desc">執行倉名</td></tr>
+          <tr><td>plan_date_st</td><td class="field-type">datetime</td><td class="field-desc">計劃開始日</td></tr>
+          <tr><td>plan_date_ed</td><td class="field-type">datetime</td><td class="field-desc">計劃結束日</td></tr>
+          <tr><td>periodicity</td><td class="field-type">varchar</td><td class="field-desc">每月/每季/每年</td></tr>
+          <tr><td>process_status</td><td class="field-type">varchar</td><td class="field-desc">流程狀態</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Safety Stock -->
+  <div id="safety-stock" class="section">
+    <div class="section-header">
+      <span class="icon">🛡️</span>
+      <h2>安全存量設定 (Safety Stock)</h2>
+      <span class="impl-badge no">OA 未實作</span>
+    </div>
+
+    <p>根據每日銷售預測與食譜配方，自動計算各食材的安全庫存量。</p>
+    <p><strong>前端路由：</strong> <code>/stock/safetyStock</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/safetyStock/index.ts</code></p>
+
+    <table class="api-table">
+      <tr>
+        <th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-safe/page</span></td>
+        <td>查詢安全存量列表（分頁）</td>
+        <td>支援 signCode、applyDept、processStatus 等篩選；createTime 為 LocalDateTime 陣列</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-safe/getAllProductDaySales</span></td>
+        <td>取得所有產品每日銷售量</td>
+        <td>必填 weightDay（加權日數），回傳食材計算結果</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-safe/get</span></td>
+        <td>取得安全存量設定詳情</td>
+        <td>必填 id</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/stock-safe/create</span></td>
+        <td>建立安全存量設定</td>
+        <td>含表頭與明細列表</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/stock-safe/update</span></td>
+        <td>更新安全存量設定</td>
+        <td>含表頭與明細列表</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method DELETE">DELETE</span></td>
+        <td><span class="endpoint">/whs/stock-safe/delete</span></td>
+        <td>刪除安全存量設定</td>
+        <td>必填 id</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+
+    <h3>TypeScript 介面定義</h3>
+    <pre><span class="kw">export namespace</span> <span class="tp">StockSafeApi</span> {
+  <span class="cm">/** 庫存安全存量設定詳情 */</span>
+  <span class="kw">export interface</span> <span class="tp">StockSafeDetail</span> {
+    recipeId?: <span class="tp">number</span>;       <span class="cm">// 關聯食譜ID</span>
+    productName?: <span class="tp">string</span>;    <span class="cm">// 單品名稱</span>
+    dailySaleNum?: <span class="tp">number</span>;   <span class="cm">// 每日預計銷售量</span>
+    ingredientName?: <span class="tp">string</span>; <span class="cm">// 食材名稱</span>
+    ingredientId?: <span class="tp">number</span>;   <span class="cm">// 食材ID</span>
+    standardAmount?: <span class="tp">number</span>; <span class="cm">// 標準用量</span>
+    amountUnit?: <span class="tp">string</span>;     <span class="cm">// 用量單位</span>
+    standardQuantity?: <span class="tp">number</span>;<span class="cm">// 標準數量</span>
+    quantityUnit?: <span class="tp">string</span>;   <span class="cm">// 數量單位</span>
+    safeAmount?: <span class="tp">number</span>;     <span class="cm">// 安全需求計量</span>
+    safeQuantity?: <span class="tp">number</span>;   <span class="cm">// 安全需求計數</span>
+    safeStock?: <span class="tp">number</span>;      <span class="cm">// 安全存量</span>
+  }
+
+  <span class="cm">/** 庫存安全存量設定主表 */</span>
+  <span class="kw">export interface</span> <span class="tp">StockSafe</span> {
+    id?: <span class="tp">number</span>;
+    signCode?: <span class="tp">string</span>;       <span class="cm">// 單據編號</span>
+    applyDept?: <span class="tp">string</span>;      <span class="cm">// 申請單位</span>
+    subject?: <span class="tp">string</span>;        <span class="cm">// 主旨</span>
+    weightDay?: <span class="tp">string</span>;      <span class="cm">// 加權日數</span>
+    warehouse?: <span class="tp">string</span>;      <span class="cm">// 倉名代碼</span>
+    processStatus?: <span class="tp">string</span>;  <span class="cm">// 流程狀態</span>
+    stockSafeDetailReqVOList?: <span class="tp">StockSafeDetail</span>[];
+  }
+}</pre>
+
+    <h3>計算邏輯說明</h3>
+    <div class="alert info">
+      <strong>安全存量計算公式：</strong><br>
+      <code>safeStock = dailySaleNum × standardAmount × weightDay</code><br>
+      系統先呼叫 <code>getAllProductDaySales(weightDay)</code> 取得各產品每日銷售量，再依食譜配方中的 standardAmount 計算每種食材的安全存量。
+    </div>
+  </div>
+
+  <!-- Warehouse -->
+  <div id="warehouse" class="section">
+    <div class="section-header">
+      <span class="icon">🏭</span>
+      <h2>倉庫基本設定 (Warehouse)</h2>
+      <span class="impl-badge no">OA 未實作</span>
+    </div>
+
+    <p>管理倉庫層級結構：區域 → 倉別 → 倉名 → 儲區 → 儲位。支援 inline 編輯。</p>
+    <p><strong>前端路由：</strong> <code>/stock/stockBasic</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/stockBasic/index.ts</code></p>
+
+    <table class="api-table">
+      <tr><th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th></tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/warehouse/page</span></td>
+        <td>倉庫列表（分頁）</td>
+        <td>支援 category、warehouseType、warehouse、zone、area 篩選</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/warehouse/create</span></td>
+        <td>新增倉庫</td>
+        <td>建立一筆倉庫記錄</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/warehouse/update</span></td>
+        <td>修改倉庫</td>
+        <td>更新倉庫資料</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method DELETE">DELETE</span></td>
+        <td><span class="endpoint">/whs/warehouse/delete</span></td>
+        <td>刪除倉庫</td>
+        <td>必填 id</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/warehouse/deleteList</span></td>
+        <td>批量刪除倉庫</td>
+        <td>ids 以逗號分隔</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/warehouse/hierarchy</span></td>
+        <td>層級查詢倉庫</td>
+        <td>返回樹狀結構，支援 area/warehouseType/warehouse/zone/binCode 篩選</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/warehouse/distinct-areas</span></td>
+        <td>取得區域列表</td>
+        <td>回傳 {area, areaName}[]</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/warehouse/distinct-warehouse-types</span></td>
+        <td>取得倉別列表</td>
+        <td>可依 area 篩選，回傳 {warehouseType, warehouseTypeName}[]</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/warehouse/distinct-warehouses</span></td>
+        <td>取得倉名列表</td>
+        <td>可依 area/warehouseType 篩選</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/warehouse/distinct-zones</span></td>
+        <td>取得儲區列表</td>
+        <td>可依 area/warehouseType/warehouse 篩選</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/warehouse/distinct-area-warehouses</span></td>
+        <td>取得區域倉庫（調撥用）</td>
+        <td>用於調撥單出/入庫倉選擇</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+
+    <h3>倉庫層級結構</h3>
+    <div class="flow">
+      <div class="flow-box">區域<br><small>area</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">倉別<br><small>warehouseType</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">倉名<br><small>warehouse</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">儲區<br><small>zone</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">儲位<br><small>binCode</small></div>
+    </div>
+  </div>
+
+  <!-- Stock Query -->
+  <div id="stock-query" class="section">
+    <div class="section-header">
+      <span class="icon">🔍</span>
+      <h2>倉儲查詢作業 (Storage Query)</h2>
+      <span class="impl-badge no">OA 未實作</span>
+    </div>
+
+    <p>查詢當前庫存量與歷史異動記錄。</p>
+    <p><strong>前端路由：</strong> <code>/stock/storageQuery</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/stockQuery/index.ts</code></p>
+
+    <table class="api-table">
+      <tr><th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th></tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock/currentPage</span></td>
+        <td>查詢當前庫存（分頁）</td>
+        <td>支援品號、倉庫、區域、物料大類/中類、安全存量等篩選</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-record/pageHis</span></td>
+        <td>查詢出入庫明細（分頁）</td>
+        <td>必填 prodCode 和 warehouseId</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+
+    <h3>StockVO 回傳欄位</h3>
+    <pre><span class="kw">interface</span> <span class="tp">StockVO</span> {
+  warehouseId?: <span class="tp">number</span>;       <span class="cm">// 倉庫表id</span>
+  prodCode?: <span class="tp">string</span>;           <span class="cm">// 品號</span>
+  ingredientName?: <span class="tp">string</span>;     <span class="cm">// 食材名稱</span>
+  warehouseTypeName?: <span class="tp">string</span>;  <span class="cm">// 倉別名稱</span>
+  warehouseName?: <span class="tp">string</span>;      <span class="cm">// 倉名名稱</span>
+  zoneName?: <span class="tp">string</span>;           <span class="cm">// 儲區名稱</span>
+  binCode?: <span class="tp">string</span>;            <span class="cm">// 儲位</span>
+  standardAmount?: <span class="tp">number</span>;     <span class="cm">// 庫存計量</span>
+  standardQuantity?: <span class="tp">number</span>;   <span class="cm">// 庫存計數</span>
+  safeStock?: <span class="tp">number</span>;          <span class="cm">// 安全存量（用於高亮警示）</span>
+}</pre>
+  </div>
+
+  <!-- Stock In -->
+  <div id="stock-in" class="section">
+    <div class="section-header">
+      <span class="icon">📥</span>
+      <h2>入庫作業管理 (Stock In)</h2>
+      <span class="impl-badge no">OA 未實作</span>
+    </div>
+
+    <p>管理所有入庫單據，支援簽核流程（todo-page）與批次建立（batch-process）。</p>
+    <p><strong>前端路由：</strong> <code>/stock/in</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/in/index.ts</code></p>
+
+    <table class="api-table">
+      <tr><th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th></tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-record-head/page</span></td>
+        <td>入庫列表（分頁）</td>
+        <td>需帶 stockType=1 篩選入庫</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-record-head/todo-page</span></td>
+        <td>待辦入庫列表</td>
+        <td>簽核模式下使用，顯示待審核單據</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-record/get-with-details</span></td>
+        <td>取得入庫單詳情（含明細）</td>
+        <td>必填 recordId，回傳表頭+stockRecordList</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/stock-record/batch-process</span></td>
+        <td>批量處理（暫存/提交）</td>
+        <td>建立表頭+明細，stockType=1，回傳 id</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/stock-record/edit-with-head</span></td>
+        <td>編輯入庫單（含明細）</td>
+        <td>更新表頭與明細列表</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/stock-in/update-process-status</span></td>
+        <td>更新流程狀態</td>
+        <td>審核用，含 approvalComments</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method DELETE">DELETE</span></td>
+        <td><span class="endpoint">/whs/stock-record-head/delete</span></td>
+        <td>批量刪除表頭</td>
+        <td>params ids 陣列</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+
+    <h3>批量處理請求結構</h3>
+    <pre><span class="kw">interface</span> <span class="tp">BatchProcessStockRecordParams</span> {
+  id?: <span class="tp">number</span>;
+  formCode?: <span class="tp">string</span>;            <span class="cm">// 單據編號</span>
+  processStatus?: <span class="tp">string</span>;       <span class="cm">// 流程狀態</span>
+  stockType: <span class="tp">number</span>;            <span class="cm">// 0=出庫, 1=入庫 （必填）</span>
+  stockReason?: <span class="tp">string</span>;         <span class="cm">// 入庫事由</span>
+  sourceSignCode?: <span class="tp">string</span>;      <span class="cm">// 來源單據編號</span>
+  area?: <span class="tp">number</span>;                <span class="cm">// 區域ID</span>
+  warehouseType?: <span class="tp">string</span>;       <span class="cm">// 倉別</span>
+  warehouse?: <span class="tp">string</span>;           <span class="cm">// 倉名代碼</span>
+  warehouseId?: <span class="tp">number</span>;         <span class="cm">// 倉庫ID</span>
+  inboundTime?: <span class="tp">number</span>;         <span class="cm">// 入庫時間戳</span>
+  approvalComments?: <span class="tp">string</span>;    <span class="cm">// 簽核意見</span>
+  stockRecordList?: <span class="tp">Array</span>&lt;{
+    id?: <span class="tp">number</span>;
+    prodCode?: <span class="tp">string</span>;          <span class="cm">// 食材品號</span>
+    warehouseId?: <span class="tp">number</span>;       <span class="cm">// 倉庫ID</span>
+    invNumChange?: <span class="tp">number</span>;      <span class="cm">// 庫存變化量</span>
+    standardAmount?: <span class="tp">number</span>;    <span class="cm">// 入庫計量</span>
+    standardQuantity?: <span class="tp">number</span>;  <span class="cm">// 入庫計數</span>
+    stockType?: <span class="tp">number</span>;
+    recordId?: <span class="tp">number</span>;
+  }&gt;;
+}</pre>
+
+    <div class="alert warning">
+      <strong>⚠️ 注意：</strong> 入庫與出庫共用 <code>/whs/stock-record-head</code> 和 <code>/whs/stock-record</code>，以 <code>stockType</code> 區分（0=出庫，1=入庫）。舊版 <code>/whs/stock-in/*</code> 端點保留相容，但新功能應使用統一端點。
+    </div>
+  </div>
+
+  <!-- Stock Out -->
+  <div id="stock-out" class="section">
+    <div class="section-header">
+      <span class="icon">📤</span>
+      <h2>出庫作業管理 (Stock Out)</h2>
+      <span class="impl-badge no">OA 未實作</span>
+    </div>
+
+    <p>與入庫共用底層端點，以 stockType=0 區分。</p>
+    <p><strong>前端路由：</strong> <code>/stock/out</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/out/index.ts</code></p>
+
+    <table class="api-table">
+      <tr><th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th></tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-record-head/page</span></td>
+        <td>出庫列表（分頁）</td>
+        <td>需帶 stockType=0</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-record-head/todo-page</span></td>
+        <td>待辦出庫列表</td>
+        <td>簽核模式，stockType=0</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-record/get-with-details</span></td>
+        <td>取得出庫單詳情</td>
+        <td>必填 recordId</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/stock-record/batch-process</span></td>
+        <td>批量處理出庫</td>
+        <td>stockType=0</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/stock-record/edit-with-head</span></td>
+        <td>編輯出庫單</td>
+        <td></td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/stock-in/update-process-status</span></td>
+        <td>更新流程狀態</td>
+        <td>注意：出庫也沿用 stock-in 路徑</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Transfer -->
+  <div id="transfer" class="section">
+    <div class="section-header">
+      <span class="icon">🔄</span>
+      <h2>門市調撥管理 (Stock Transfer)</h2>
+      <span class="impl-badge no">OA 未實作</span>
+    </div>
+
+    <p>管理門市之間的庫存調撥，一張調撥單會產生一筆出庫記錄（出庫倉）和一筆入庫記錄（入庫倉）。</p>
+    <p><strong>前端路由：</strong> <code>/stock/transfer</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/transfer/index.ts</code></p>
+
+    <table class="api-table">
+      <tr><th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th></tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-transfer/page</span></td>
+        <td>調撥列表（分頁）</td>
+        <td>支援 signCode、area、outWarehouse、inWarehouse 等篩選</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-transfer/todo-page</span></td>
+        <td>待辦調撥列表</td>
+        <td>簽核模式</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method DELETE">DELETE</span></td>
+        <td><span class="endpoint">/whs/stock-transfer/delete</span></td>
+        <td>刪除調撥單</td>
+        <td>必填 id</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/stock-transfer-detail/compute-area-inventory</span></td>
+        <td>計算區域庫存數量</td>
+        <td>必填 area、prodCode[]，可選 outWarehouse/inWarehouse</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/stock-transfer-detail/batch-process</span></td>
+        <td>建立調撥批次（表頭+明細）</td>
+        <td>含 stockTransferDetailList</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/stock-transfer-detail/edit-with-head</span></td>
+        <td>編輯調撥單（含明細）</td>
+        <td></td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-transfer-detail/get-with-details</span></td>
+        <td>取得調撥單詳情</td>
+        <td>必填 transferId</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/stock-transfer-detail/get-by-opposite-stock-type</span></td>
+        <td>取得調撥來源單據</td>
+        <td>用於入/出庫單選擇來源，stockReason=SW02</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/stock-transfer-detail/record-batch-by-sign-code</span></td>
+        <td>依單號取得調撥記錄</td>
+        <td>用於入庫單填充明細</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+
+    <h3>調撥計算庫存請求</h3>
+    <pre><span class="kw">interface</span> <span class="tp">ComputeAreaInventoryParams</span> {
+  area: <span class="tp">number</span>;              <span class="cm">// 區域ID（必填）</span>
+  outWarehouse?: <span class="tp">string</span>;     <span class="cm">// 出庫倉名</span>
+  inWarehouse?: <span class="tp">string</span>;      <span class="cm">// 入庫倉名</span>
+  prodCode: <span class="tp">string</span>[];        <span class="cm">// 品號列表（必填）</span>
+}
+
+<span class="cm">// 回傳</span>
+<span class="kw">interface</span> <span class="tp">InventoryQuantity</span> {
+  prodCode: <span class="tp">string</span>;
+  areaInvNum?: <span class="tp">number</span>;       <span class="cm">// 出庫倉庫存數量</span>
+  inAreaInvNum?: <span class="tp">number</span>;     <span class="cm">// 入庫倉庫存數量</span>
+}</pre>
+  </div>
+
+  <!-- Bad Product -->
+  <div id="bad-product" class="section">
+    <div class="section-header">
+      <span class="icon">🚫</span>
+      <h2>不良品管理 (Bad Product)</h2>
+      <span class="impl-badge no">OA 未實作</span>
+    </div>
+
+    <p>管理因品質問題需退倉或銷毀的食材，可連結入/出庫來源單據。</p>
+    <p><strong>前端路由：</strong> <code>/stock/badProduct</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/badProduct/index.ts</code></p>
+
+    <table class="api-table">
+      <tr><th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th></tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/bad-product/page</span></td>
+        <td>不良品列表（分頁）</td>
+        <td>支援 signCode、area、warehouse、returnDate、processStatus 篩選</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/bad-product/todo-page</span></td>
+        <td>待辦不良品列表</td>
+        <td>簽核模式</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/bad-product/get</span></td>
+        <td>不良品詳情</td>
+        <td>必填 id，回傳 BadProductAndDetailVO（主+子）</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/bad-product/create</span></td>
+        <td>建立不良品單據</td>
+        <td>含 badProductDetails[]，支援 pictureUrl 圖片附件</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/bad-product/update</span></td>
+        <td>更新不良品單據</td>
+        <td></td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/bad-product/get-outbound-source-list</span></td>
+        <td>取得出庫來源單據</td>
+        <td>必填 area/warehouse/stockReason</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/bad-product/get-inbound-source-list</span></td>
+        <td>取得入庫來源單據</td>
+        <td></td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/bad-product/get-stock-record-batch-by-sign-code</span></td>
+        <td>依單號取得庫存記錄</td>
+        <td>必填 signCode，可選 stockType</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method DELETE">DELETE</span></td>
+        <td><span class="endpoint">/whs/bad-product/delete</span></td>
+        <td>刪除不良品單據</td>
+        <td>必填 id</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Day Check -->
+  <div id="day-check" class="section">
+    <div class="section-header">
+      <span class="icon">📋</span>
+      <h2>每日盤點作業 (Daily Inventory)</h2>
+      <span class="impl-badge no">OA 未實作</span>
+    </div>
+
+    <p>每日對倉庫庫存進行盤點，結合當日產品銷售量進行差異計算。</p>
+    <p><strong>前端路由：</strong> <code>/stock/dayCheck</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/dayCheck/index.ts</code></p>
+
+    <table class="api-table">
+      <tr><th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th></tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/daily-inventory/page</span></td>
+        <td>每日盤點列表（分頁）</td>
+        <td>支援 signCode、area、warehouse、processStatus、日期範圍篩選</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/daily-inventory/todo-page</span></td>
+        <td>待辦每日盤點列表</td>
+        <td>簽核模式</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/daily-inventory/get</span></td>
+        <td>每日盤點詳情</td>
+        <td>必填 id</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/daily-inventory/daily-product-sales</span></td>
+        <td>取得每日產品銷量</td>
+        <td>必填 groupAreaId、date，可選 storeId</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/daily-inventory/ingredient-options</span></td>
+        <td>取得盤點食材選項</td>
+        <td>依 area/warehouse 篩選</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/daily-inventory/create</span></td>
+        <td>建立每日盤點單</td>
+        <td>含 dailyInventoryDetails[]</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/daily-inventory/update</span></td>
+        <td>更新每日盤點單</td>
+        <td></td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method DELETE">DELETE</span></td>
+        <td><span class="endpoint">/whs/daily-inventory/delete</span></td>
+        <td>刪除每日盤點單</td>
+        <td>必填 id</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Check Plan -->
+  <div id="check-plan" class="section">
+    <div class="section-header">
+      <span class="icon">📅</span>
+      <h2>盤點計劃製定 (Check Plan)</h2>
+      <span class="impl-badge no">OA 未實作</span>
+    </div>
+
+    <p>制定定期（每月/每季/每年）盤點計劃，為盤點執行任務的主計劃。</p>
+    <p><strong>前端路由：</strong> <code>/stock/checkPlan</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/check/plan/index.ts</code></p>
+
+    <table class="api-table">
+      <tr><th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th></tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/check-plan/page</span></td>
+        <td>盤點計劃列表（分頁）</td>
+        <td>支援 area、warehouse、periodicity、processStatus 篩選</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/check-plan/todo-page</span></td>
+        <td>待辦盤點計劃列表</td>
+        <td>簽核模式</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/check-plan/get</span></td>
+        <td>盤點計劃詳情</td>
+        <td>必填 id，含 checkPlanItems[]</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/check-plan/create</span></td>
+        <td>建立盤點計劃</td>
+        <td>periodicity: 每月/每季/每年</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/check-plan/update</span></td>
+        <td>修改盤點計劃</td>
+        <td></td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method DELETE">DELETE</span></td>
+        <td><span class="endpoint">/whs/check-plan/delete</span></td>
+        <td>刪除盤點計劃</td>
+        <td>必填 id</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method DELETE">DELETE</span></td>
+        <td><span class="endpoint">/whs/check-plan/deleteBatch</span></td>
+        <td>批量刪除盤點計劃</td>
+        <td>body: {ids: number[]}</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Check Execution -->
+  <div id="check-exec" class="section">
+    <div class="section-header">
+      <span class="icon">✅</span>
+      <h2>盤點計劃執行 (Check Execution)</h2>
+      <span class="impl-badge no">OA 未實作</span>
+    </div>
+
+    <p>執行已制定的盤點計劃，記錄實際盤點數量，計算帳面與實際差異後調整庫存。</p>
+    <p><strong>前端路由：</strong> <code>/stock/checkExecution</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/check/execution/index.ts</code></p>
+
+    <table class="api-table">
+      <tr><th>方法</th><th>端點</th><th>功能</th><th>說明</th><th>OA 實作</th></tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/check-plan-detail/page</span></td>
+        <td>盤點執行列表（分頁）</td>
+        <td></td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/check-plan-detail/todo-page</span></td>
+        <td>待辦盤點執行列表</td>
+        <td>簽核模式</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/check-plan-detail/get</span></td>
+        <td>盤點執行詳情</td>
+        <td>必填 id，含 checkTaskDetailList[]</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method PUT">PUT</span></td>
+        <td><span class="endpoint">/whs/check-plan-detail/update</span></td>
+        <td>更新盤點執行</td>
+        <td>記錄實際盤點數量</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/check-plan-detail/check-plan-item/list-by-plan-detail-id</span></td>
+        <td>取得盤點品項列表</td>
+        <td>必填 planId</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/check-plan-detail/get-by-opposite-stock-type</span></td>
+        <td>取得盤點來源單據</td>
+        <td>stockReason=SW03</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/whs/check-plan-detail/get-stock-record-batch-by-sign-code</span></td>
+        <td>依單號取得盤點記錄</td>
+        <td>用於入庫填充，含 accountQuantity/checkQuantity</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+
+    <h3>盤點差異計算欄位</h3>
+    <pre><span class="kw">interface</span> <span class="tp">CheckRecordItem</span> {
+  accountQuantity?: <span class="tp">number</span>;   <span class="cm">// 帳面數量（系統計算）</span>
+  checkQuantity?: <span class="tp">number</span>;     <span class="cm">// 盤點數量（實際清點）</span>
+  auditQuantity?: <span class="tp">number</span>;     <span class="cm">// 審核數量 = checkQuantity - accountQuantity</span>
+  zone?: <span class="tp">string</span>;              <span class="cm">// 儲區</span>
+  binCode?: <span class="tp">string</span>;           <span class="cm">// 儲位</span>
+  stockReason?: <span class="tp">string</span>;       <span class="cm">// 庫存原因（SW03=盤點）</span>
+}</pre>
+  </div>
+
+  <!-- PDM Related -->
+  <div id="pdm-related" class="section">
+    <div class="section-header">
+      <span class="icon">🔗</span>
+      <h2>PDM 相關 API（已實作）</h2>
+      <span class="impl-badge yes">OA 已實作</span>
+    </div>
+
+    <p>Stock 模組依賴以下 PDM 端點提供食材、食譜等基礎資料。這些 API 在後端已實作。</p>
+
+    <table class="api-table">
+      <tr><th>方法</th><th>端點</th><th>功能</th><th>OA 實作</th></tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/pdm/ingredient-specs/getAllIngredientPage</span></td>
+        <td>取得全部食材規格（分頁）</td>
+        <td class="oa-yes">✅ 已實作</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td><span class="endpoint">/pdm/recipe/allRecipe</span></td>
+        <td>取得全部食譜列表</td>
+        <td class="oa-yes">✅ 已實作</td>
+      </tr>
+      <tr>
+        <td><span class="method POST">POST</span></td>
+        <td><span class="endpoint">/whs/stock-record-head/create-stock-in-from-demand-details</span></td>
+        <td>從需求明細建立入庫單</td>
+        <td class="oa-no">❌ 未實作</td>
+      </tr>
+    </table>
+
+    <div class="alert success">
+      <strong>✅ 已實作的 PDM 端點：</strong> 食材規格（pdm/ingredient-specs）、食譜（pdm/recipe）、原物料需求（pdm/raw-material-demand-head）等均已在後端實作，可直接被 Stock 模組使用。
+    </div>
+  </div>
+
+  <!-- Implementation Summary -->
+  <div id="impl-summary" class="section">
+    <div class="section-header">
+      <span class="icon">📊</span>
+      <h2>實作狀態總覽與建議</h2>
+    </div>
+
+    <h3>全部 API 端點統計</h3>
+    <table class="api-table">
+      <tr>
+        <th>模組</th><th>前綴路由</th><th>API 數</th><th>OA 實作</th><th>優先級</th>
+      </tr>
+      <tr>
+        <td>倉庫基本設定</td>
+        <td><code>/whs/warehouse</code></td>
+        <td>10</td>
+        <td class="oa-no">0 / 10</td>
+        <td><span class="tag orange">P1 最高</span></td>
+      </tr>
+      <tr>
+        <td>入庫作業管理</td>
+        <td><code>/whs/stock-record-head + /whs/stock-record</code></td>
+        <td>7</td>
+        <td class="oa-no">0 / 7</td>
+        <td><span class="tag orange">P1 最高</span></td>
+      </tr>
+      <tr>
+        <td>倉儲查詢作業</td>
+        <td><code>/whs/stock + /whs/stock-record</code></td>
+        <td>2</td>
+        <td class="oa-no">0 / 2</td>
+        <td><span class="tag orange">P1 最高</span></td>
+      </tr>
+      <tr>
+        <td>出庫作業管理</td>
+        <td><code>/whs/stock-record-head（共用）</code></td>
+        <td>5</td>
+        <td class="oa-no">0 / 5</td>
+        <td><span class="tag blue">P2 高</span></td>
+      </tr>
+      <tr>
+        <td>安全存量設定</td>
+        <td><code>/whs/stock-safe</code></td>
+        <td>6</td>
+        <td class="oa-no">0 / 6</td>
+        <td><span class="tag blue">P2 高</span></td>
+      </tr>
+      <tr>
+        <td>門市調撥管理</td>
+        <td><code>/whs/stock-transfer(-detail)</code></td>
+        <td>9</td>
+        <td class="oa-no">0 / 9</td>
+        <td><span class="tag blue">P2 高</span></td>
+      </tr>
+      <tr>
+        <td>不良品管理</td>
+        <td><code>/whs/bad-product</code></td>
+        <td>9</td>
+        <td class="oa-no">0 / 9</td>
+        <td><span class="tag green">P3 中</span></td>
+      </tr>
+      <tr>
+        <td>每日盤點作業</td>
+        <td><code>/whs/daily-inventory</code></td>
+        <td>8</td>
+        <td class="oa-no">0 / 8</td>
+        <td><span class="tag green">P3 中</span></td>
+      </tr>
+      <tr>
+        <td>盤點計劃製定</td>
+        <td><code>/whs/check-plan</code></td>
+        <td>7</td>
+        <td class="oa-no">0 / 7</td>
+        <td><span class="tag green">P3 中</span></td>
+      </tr>
+      <tr>
+        <td>盤點計劃執行</td>
+        <td><code>/whs/check-plan-detail</code></td>
+        <td>7</td>
+        <td class="oa-no">0 / 7</td>
+        <td><span class="tag green">P3 中</span></td>
+      </tr>
+    </table>
+
+    <h3>建議實作順序</h3>
+    <div class="flow">
+      <div class="flow-box start">Phase 1<br><small>倉庫基礎設定</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Phase 2<br><small>入出庫作業</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Phase 3<br><small>調撥+安全存量</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box end">Phase 4<br><small>盤點+不良品</small></div>
+    </div>
+
+    <h3>共用設計模式</h3>
+    <div class="alert info">
+      <strong>所有異動單據均遵循相同模式：</strong>
+      <ul style="margin-top:8px;">
+        <li><strong>List API：</strong> <code>GET /page</code>（無簽核）或 <code>GET /todo-page</code>（簽核待辦）</li>
+        <li><strong>Detail API：</strong> <code>GET /get?id=X</code> 或 <code>GET /get-with-details?xId=X</code></li>
+        <li><strong>Create/Submit：</strong> <code>POST /batch-process</code>（含表頭與明細）</li>
+        <li><strong>Update：</strong> <code>PUT /edit-with-head</code>（含表頭與明細）</li>
+        <li><strong>Status：</strong> <code>PUT /update-process-status</code>（簽核流程）</li>
+        <li><strong>Delete：</strong> <code>DELETE /delete?id=X</code></li>
+      </ul>
+    </div>
+
+    <h3>stockReason 代碼說明</h3>
+    <table class="api-table">
+      <tr><th>代碼</th><th>用途</th><th>來源模組</th></tr>
+      <tr><td><code>SW01</code></td><td>一般入/出庫</td><td>入庫/出庫作業</td></tr>
+      <tr><td><code>SW02</code></td><td>調撥</td><td>門市調撥管理</td></tr>
+      <tr><td><code>SW03</code></td><td>盤點差異調整</td><td>盤點計劃執行</td></tr>
+      <tr><td><em>其他</em></td><td>待確認</td><td>不良品管理、每日盤點</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const parent = tab.closest('.tabs').parentElement;
+    parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    parent.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    const target = parent.querySelector('#' + tab.dataset.target);
+    if (target) target.classList.add('active');
+  });
+});
+
+// Scrollspy
+const sections = document.querySelectorAll('[id]');
+const navLinks = document.querySelectorAll('.sidebar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 100) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.remove('active');
+    if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

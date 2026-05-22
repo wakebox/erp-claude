@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>漢堡王中繼 API 文件</title>
+<style>
+  :root {
+    --primary:#f59e0b; --primary-dark:#d97706; --secondary:#0ea5e9;
+    --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --purple:#8b5cf6;
+    --bg:#0f172a; --bg2:#1e293b; --bg3:#334155; --text:#e2e8f0;
+    --text2:#94a3b8; --border:#334155; --code-bg:#0d1117;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+  /* Sidebar */
+  .sidebar{width:260px;min-width:260px;background:var(--bg2);border-right:1px solid var(--border);
+    position:sticky;top:0;height:100vh;overflow-y:auto;padding:20px 0}
+  .sidebar-brand{padding:0 20px 16px;border-bottom:1px solid var(--border);margin-bottom:12px}
+  .sidebar-brand .logo{font-size:20px;font-weight:800;color:var(--primary)}
+  .sidebar-brand .sub{font-size:11px;color:var(--text2);margin-top:2px}
+  .sidebar a{display:block;padding:7px 20px;color:var(--text2);text-decoration:none;font-size:13px;
+    border-left:3px solid transparent;transition:all .2s}
+  .sidebar a:hover,.sidebar a.active{color:var(--text);background:rgba(245,158,11,.1);border-left-color:var(--primary)}
+  .section-label{padding:12px 20px 4px;font-size:10px;text-transform:uppercase;color:var(--text2);letter-spacing:1px}
+
+  /* Main */
+  .main{flex:1;padding:40px 48px;max-width:1140px}
+  h1{font-size:30px;font-weight:800;color:#fff;margin-bottom:6px}
+  .subtitle{color:var(--text2);font-size:14px;margin-bottom:32px}
+  h2.st{font-size:20px;font-weight:700;color:#fff;margin:52px 0 16px;padding-top:52px;
+    border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+  h2.st:first-of-type{border-top:none;margin-top:0;padding-top:0}
+  h3{font-size:15px;font-weight:600;color:var(--text);margin:22px 0 10px}
+  p{color:var(--text2);line-height:1.75;margin-bottom:12px;font-size:14px}
+
+  /* Stats */
+  .stats{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:36px}
+  .stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 20px;flex:1;min-width:120px}
+  .stat .num{font-size:26px;font-weight:700;color:var(--primary)}
+  .stat .lbl{font-size:11px;color:var(--text2);margin-top:3px}
+
+  /* API Table */
+  .api-table{width:100%;border-collapse:collapse;margin:10px 0 20px;font-size:13px}
+  .api-table th{background:var(--bg3);color:var(--text2);text-align:left;padding:9px 13px;
+    font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .api-table td{padding:8px 13px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
+  .api-table tr:hover td{background:rgba(255,255,255,.02)}
+  .method{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+  .GET{background:#10b981;color:#000}.POST{background:#f59e0b;color:#000}
+  .PUT{background:#3b82f6;color:#fff}.DELETE{background:#ef4444;color:#fff}
+
+  /* Status badges */
+  .impl{color:#10b981;font-weight:600} .partial{color:#f59e0b;font-weight:600} .no{color:#ef4444;font-weight:600}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;margin:1px}
+  .badge.yes{background:rgba(16,185,129,.15);color:#6ee7b7;border:1px solid rgba(16,185,129,.3)}
+  .badge.warn{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+  .badge.red{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+
+  /* Code */
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;margin:10px 0 20px}
+  code{font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;color:#c9d1d9}
+  .kw{color:#ff7b72}.str{color:#a5d6ff}.fn{color:#d2a8ff}.cm{color:#8b949e;font-style:italic}
+  .num{color:#79c0ff}.an{color:#ffa657}.ty{color:#ffa657}
+
+  /* Flow */
+  .flow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:14px 0 22px}
+  .fb{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 13px;
+    font-size:13px;color:var(--text);text-align:center;min-width:90px}
+  .fb.start{background:rgba(245,158,11,.15);border-color:var(--primary);color:#fcd34d}
+  .fb.decision{background:rgba(139,92,246,.12);border-color:var(--purple);color:#c4b5fd}
+  .fb.action{background:rgba(14,165,233,.1);border-color:var(--secondary);color:#7dd3fc}
+  .fb.end{background:rgba(16,185,129,.1);border-color:var(--success);color:#6ee7b7}
+  .fb.error{background:rgba(239,68,68,.1);border-color:var(--danger);color:#fca5a5}
+  .fa{color:var(--text2);font-size:16px}
+  .fl{font-size:11px;color:var(--warning);margin:0 2px}
+
+  /* Model */
+  .model-grid{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 20px;align-items:flex-start}
+  .model-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;min-width:170px;overflow:hidden}
+  .model-header{padding:8px 12px;font-size:12px;font-weight:700;color:#fff}
+  .model-header.bk{background:linear-gradient(135deg,#d97706,#f59e0b)}
+  .model-header.inner{background:linear-gradient(135deg,#0ea5e9,#38bdf8)}
+  .model-header.result{background:linear-gradient(135deg,#8b5cf6,#a78bfa)}
+  .model-field{padding:5px 12px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border)}
+  .model-field:last-child{border-bottom:none}
+  .model-field .fname{color:var(--text);font-family:monospace}
+  .model-field .ftype{color:var(--secondary);font-size:11px;margin-left:4px}
+  .model-field .fdesc{font-size:11px;color:var(--text2);display:block;margin-top:1px}
+  .rel-arrow{display:flex;align-items:center;color:var(--text2);font-size:11px;padding:0 6px;flex-direction:column;gap:2px}
+
+  /* Note / Info */
+  .note{background:rgba(245,158,11,.08);border-left:4px solid var(--warning);padding:12px 16px;
+    border-radius:0 8px 8px 0;margin:10px 0 18px;font-size:13px;color:var(--text2)}
+  .note strong{color:var(--warning)}
+  .info{background:rgba(14,165,233,.08);border-left:4px solid var(--secondary);padding:12px 16px;
+    border-radius:0 8px 8px 0;margin:10px 0 18px;font-size:13px;color:var(--text2)}
+  .info strong{color:var(--secondary)}
+  .success-box{background:rgba(16,185,129,.08);border-left:4px solid var(--success);padding:12px 16px;
+    border-radius:0 8px 8px 0;margin:10px 0 18px;font-size:13px;color:var(--text2)}
+  .success-box strong{color:var(--success)}
+
+  /* API Card */
+  .api-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin:16px 0 28px;overflow:hidden}
+  .api-card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+  .api-card-header .endpoint{font-family:monospace;font-size:14px;color:#a5d6ff}
+  .api-card-body{padding:16px 18px}
+  .param-table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0 16px}
+  .param-table th{color:var(--text2);text-align:left;padding:6px 10px;font-size:11px;text-transform:uppercase;
+    background:rgba(255,255,255,.04);font-weight:600}
+  .param-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text2)}
+  .param-table td:first-child{color:var(--text);font-family:monospace}
+  .req{color:#fca5a5;font-size:11px} .opt{color:#94a3b8;font-size:11px}
+
+  /* Business logic section */
+  .biz-steps{counter-reset:step;margin:12px 0 20px}
+  .biz-step{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
+  .biz-step::before{counter-increment:step;content:counter(step);
+    background:var(--primary);color:#000;font-weight:700;font-size:12px;
+    width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;margin-top:1px}
+  .biz-step-content{flex:1}
+  .biz-step-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+  .biz-step-desc{font-size:13px;color:var(--text2);line-height:1.6}
+
+  /* Token flow */
+  .token-flow{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px;margin:12px 0 20px}
+  .token-flow h4{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+
+  /* Config */
+  .config-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin:12px 0 20px}
+  .config-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+  .config-key{font-family:monospace;font-size:12px;color:#fcd34d;margin-bottom:4px}
+  .config-val{font-size:12px;color:var(--text2)}
+  .config-val code{color:#a5d6ff;font-size:11px}
+
+  /* Endpoint route table */
+  .route-table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0 20px}
+  .route-table th{background:rgba(245,158,11,.12);color:#fcd34d;padding:8px 12px;text-align:left;
+    font-size:11px;font-weight:600;text-transform:uppercase}
+  .route-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text2)}
+  .route-table td:first-child{font-family:monospace;color:var(--text)}
+
+  .tag{display:inline-block;padding:2px 7px;border-radius:3px;font-size:11px;margin:1px}
+  .tag.biz{background:rgba(245,158,11,.15);color:#fcd34d}
+  .tag.test{background:rgba(139,92,246,.15);color:#c4b5fd}
+  .tag.proxy{background:rgba(14,165,233,.15);color:#7dd3fc}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">🍔 BurgerKing API</div>
+    <div class="sub">上游中繼 API 文件 · pdm-biz</div>
+  </div>
+  <div class="section-label">概覽</div>
+  <a href="#overview">系統定位</a>
+  <a href="#all-apis">API 總表</a>
+  <a href="#auth">JWT 認證機制</a>
+  <a href="#feign-config">Feign 設定</a>
+  <div class="section-label">核心 3 支 API</div>
+  <a href="#completed-filter">已完成訂單統計</a>
+  <a href="#daily-sales">日維度商品銷量</a>
+  <a href="#area-group">區域組及門店層級</a>
+  <div class="section-label">其他 API</div>
+  <a href="#store-inner">區域門店基礎資訊</a>
+  <a href="#near-twelve">近12個月銷量</a>
+  <div class="section-label">資料模型</div>
+  <a href="#vo-models">VO 模型總覽</a>
+  <a href="#product-sales-vo">ProductSalesStatisticsVO</a>
+  <a href="#area-hierarchy-vo">AreaGroupHierarchyVO</a>
+  <div class="section-label">商業邏輯</div>
+  <a href="#demand-forecast">需求預測核心流程</a>
+  <a href="#weekday-holiday">平日/假日計算規則</a>
+  <a href="#recipe-analysis">食材配方分析</a>
+  <div class="section-label">OA 對外路由</div>
+  <a href="#oa-routes">ERP 對外暴露端點</a>
+</nav>
+
+<main class="main">
+  <h1>🍔 漢堡王中繼 API 文件</h1>
+  <p class="subtitle">kingmaker-module-pdm-biz · BurgerKingStoreClient · 上游資料來源整合</p>
+
+  <div class="stats">
+    <div class="stat"><div class="num">9</div><div class="lbl">FeignClient 端點</div></div>
+    <div class="stat"><div class="num">55min</div><div class="lbl">JWT 有效期</div></div>
+    <div class="stat"><div class="num">3</div><div class="lbl">核心業務 API</div></div>
+    <div class="stat"><div class="num">✅</div><div class="lbl">全部已實作</div></div>
+    <div class="stat"><div class="num">61.218.209.215</div><div class="lbl">上游主機</div></div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <h2 class="st" id="overview">🗺 系統定位</h2>
+  <p>漢堡王（BurgerKing）API 是 ERP 系統的「上游資料來源」，透過 Spring Cloud OpenFeign 從外部漢堡王管理系統拉取訂單、銷量、門店與區域資料，作為 PDM 模組需求預測的輸入。</p>
+
+  <div class="token-flow">
+    <h4>整體資料流</h4>
+    <div class="flow">
+      <div class="fb start">BurgerKing<br>系統<br><span style="font-size:10px">61.218.209.215</span></div>
+      <div class="fa">→</div>
+      <div class="fb action">BurgerKingStoreClient<br><span style="font-size:10px">OpenFeign</span></div>
+      <div class="fa">→</div>
+      <div class="fb action">DemandForecastServiceImpl<br><span style="font-size:10px">業務邏輯層</span></div>
+      <div class="fa">→</div>
+      <div class="fb action">DemandForecastDetailController<br><span style="font-size:10px">/pdm/demand-forecast/detail/*</span></div>
+      <div class="fa">→</div>
+      <div class="fb end">前端<br>需求預測表單</div>
+    </div>
+  </div>
+
+  <!-- ALL APIs -->
+  <h2 class="st" id="all-apis">📋 API 總表</h2>
+  <table class="api-table">
+    <thead>
+      <tr>
+        <th>方法</th><th>上游路徑</th><th>回傳 VO</th><th>OA 使用狀態</th><th>說明</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td>/api/burgerking/admin/order/completed/filter</td>
+        <td>List&lt;StoreSalesStatisticsVO&gt;</td>
+        <td><span class="impl">✅ 業務核心</span></td>
+        <td>按區域+時間範圍取已完成訂單銷量（含平日/假日拆分）</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td>/api/burgerking/admin/order/daily/product-sales</td>
+        <td>List&lt;DailyProductSalesVO&gt;</td>
+        <td><span class="partial">⚠️ 測試端點</span></td>
+        <td>指定日期的商品銷量統計（目前僅在 PdmTestController 使用）</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td>/api/burgerking/admin/area-group/all-areas-with-stores</td>
+        <td>List&lt;AreaGroupHierarchyVO&gt;</td>
+        <td><span class="impl">✅ 業務核心</span></td>
+        <td>三層層級：區域組 → 區域 → 門店</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td>/api/burgerking/admin/store/group-with-stores/inner</td>
+        <td>List&lt;GroupWithStoresInnerVO&gt;</td>
+        <td><span class="impl">✅ 業務核心</span></td>
+        <td>區域及其門店基礎資訊（含門店代碼、地址、電話）</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td>/api/burgerking/admin/store/group-with-stores/inner/group-id</td>
+        <td>List&lt;GroupAndStoreVO&gt;</td>
+        <td><span class="impl">✅ 業務支援</span></td>
+        <td>查詢指定區域下的門店列表</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td>/api/burgerking/admin/order/completed/nearTwelveMonths</td>
+        <td>List&lt;ProductSalesStatisticsVO&gt;</td>
+        <td><span class="partial">⚠️ 測試端點</span></td>
+        <td>近 12 個月的商品銷量統計</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td>/api/burgerking/admin/area-group/one-areas-with-stores</td>
+        <td>List&lt;AreaStoreVO&gt;</td>
+        <td><span class="partial">⚠️ 已定義</span></td>
+        <td>查詢單一區域組的門店（含門店代碼）</td>
+      </tr>
+      <tr>
+        <td><span class="method GET">GET</span></td>
+        <td>/api/burgerking/admin/store/all-with-location</td>
+        <td>String (raw)</td>
+        <td><span class="partial">⚠️ 測試</span></td>
+        <td>含地理位置的門店列表（返回原始 JSON 字串）</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- JWT AUTH -->
+  <h2 class="st" id="auth">🔐 JWT 認證機制 — BurgerKingTokenManager</h2>
+  <p><code>BurgerKingTokenManager</code> 負責管理對上游系統的 JWT Token，支援自動登入、In-Memory 快取與 JWT exp 解析，避免每次 API 呼叫都重新登入。</p>
+
+  <h3>設定項（application.yml）</h3>
+  <div class="config-grid">
+    <div class="config-card">
+      <div class="config-key">burgerking.api.base-url</div>
+      <div class="config-val">預設：<code>http://61.218.209.215:80</code></div>
+    </div>
+    <div class="config-card">
+      <div class="config-key">burgerking.api.login-path</div>
+      <div class="config-val">預設：<code>/api/api/burgerking/admin/auth/login</code></div>
+    </div>
+    <div class="config-card">
+      <div class="config-key">burgerking.admin.username</div>
+      <div class="config-val">登入帳號（配置於環境變數）</div>
+    </div>
+    <div class="config-card">
+      <div class="config-key">burgerking.admin.password</div>
+      <div class="config-val">登入密碼（配置於環境變數）</div>
+    </div>
+  </div>
+
+  <h3>Token 取得流程</h3>
+  <div class="flow" style="flex-wrap:wrap;">
+    <div class="fb start">呼叫 getAuthorization()</div>
+    <div class="fa">→</div>
+    <div class="fb decision">請求頭含 Authorization?</div>
+    <div class="fa">→ <span class="fl">YES</span></div>
+    <div class="fb end">直接返回<br>Header Token</div>
+  </div>
+  <div class="flow" style="flex-wrap:wrap;margin-top:0;">
+    <div style="width:260px"></div>
+    <div class="fa">↓ NO</div>
+    <div class="fb decision">Cache 命中<br>且未過期?</div>
+    <div class="fa">→ <span class="fl">HIT</span></div>
+    <div class="fb end">返回快取 Token</div>
+  </div>
+  <div class="flow" style="flex-wrap:wrap;margin-top:0;">
+    <div style="width:350px"></div>
+    <div class="fa">↓ MISS</div>
+    <div class="fb action">POST /auth/login<br>{username, password}</div>
+    <div class="fa">→</div>
+    <div class="fb action">解析 JWT exp<br>（Base64 decode payload）</div>
+    <div class="fa">→</div>
+    <div class="fb action">Cache.put(username, token)<br>TTL = exp 或預設 55min</div>
+    <div class="fa">→</div>
+    <div class="fb end">返回 Bearer Token</div>
+  </div>
+
+  <pre><code><span class="cm">// Token 快取結構 (ConcurrentHashMap)</span>
+<span class="kw">private final</span> ConcurrentHashMap&lt;String, TokenHolder&gt; cache = <span class="kw">new</span> ConcurrentHashMap&lt;&gt;();
+<span class="kw">private record</span> TokenHolder(String authorization, <span class="kw">long</span> expiresAtMillis) {}
+
+<span class="cm">// 預留 60 秒緩衝，避免 Token 臨界過期</span>
+<span class="kw">if</span> (holder != <span class="kw">null</span> && holder.expiresAtMillis - <span class="num">60_000</span> &gt; now) {
+    <span class="kw">return</span> holder.authorization;  <span class="cm">// Cache HIT</span>
+}
+
+<span class="cm">// 解析 JWT exp：Base64 decode payload → 取 exp 欄位（秒 → 毫秒）</span>
+String payloadJson = <span class="kw">new</span> String(Base64.getUrlDecoder().decode(parts[<span class="num">1</span>]), StandardCharsets.UTF_8);
+<span class="cm">// 若無法解析，預設 55 分鐘有效</span>
+expiresAt = now + <span class="num">55L</span> * <span class="num">60_000</span>;</code></pre>
+
+  <h3>登入 API 回應格式（自動嘗試多種欄位名）</h3>
+  <pre><code><span class="cm">// extractTokenFromLoginResp() 依序嘗試以下欄位</span>
+{
+  <span class="str">"data"</span>: {
+    <span class="str">"token"</span>: <span class="str">"eyJ..."</span>,      <span class="cm">// 優先</span>
+    <span class="str">"accessToken"</span>: <span class="str">"..."</span>,  <span class="cm">// 次之</span>
+    <span class="str">"access_token"</span>: <span class="str">"..."</span> <span class="cm">// 再次</span>
+  }
+}
+<span class="cm">// 或直接在根層</span>
+{ <span class="str">"token"</span>: <span class="str">"..."</span> }</code></pre>
+
+  <!-- FEIGN CONFIG -->
+  <h2 class="st" id="feign-config">⚙️ Feign 設定 — BurgerKingFeignConfig</h2>
+  <p>所有通過 <code>BurgerKingStoreClient</code> 發出的請求，都會被 <code>RequestInterceptor</code> 自動附加 <code>Authorization: Bearer ...</code> Header，不需在每個方法上手動傳入 Token。</p>
+
+  <pre><code><span class="an">@FeignClient</span>(
+    name = <span class="str">"burgerkingStoreClient"</span>,
+    url  = <span class="str">"http://61.218.209.215:80/api"</span>,    <span class="cm">// 注意：url 已含 /api 前綴</span>
+    configuration = BurgerKingFeignConfig.class
+)
+<span class="kw">public interface</span> BurgerKingStoreClient { ... }
+
+<span class="cm">// Interceptor 邏輯</span>
+<span class="an">@Override</span>
+<span class="kw">public void</span> apply(RequestTemplate template) {
+    <span class="cm">// 僅當 Header 尚未含 Authorization 時才注入</span>
+    <span class="kw">if</span> (!headers.containsKey(<span class="str">"Authorization"</span>)) {
+        String auth = tokenManager.getAuthorization(<span class="kw">null</span>); <span class="cm">// 強制走遠端 BK 登入</span>
+        <span class="kw">if</span> (auth != <span class="kw">null</span>) template.header(<span class="str">"Authorization"</span>, auth);
+    }
+    <span class="cm">// 不透傳 tenant-id（目前不考慮多租戶）</span>
+}</code></pre>
+
+  <div class="note">
+    <strong>注意：</strong> <code>BurgerKingFeignConfig</code> 中 <code>tokenManager.getAuthorization(null)</code> 傳入 <code>null</code>，意即完全忽略當前使用者請求頭，只使用系統配置的帳密登入。這確保所有呼叫都使用同一組 BK 管理員憑證。
+  </div>
+
+  <!-- API 1: completed/filter -->
+  <h2 class="st" id="completed-filter">📊 API 1 — 已完成訂單統計</h2>
+
+  <div class="api-card">
+    <div class="api-card-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint">/api/burgerking/admin/order/completed/filter</span>
+      <span class="badge yes">✅ 業務核心</span>
+    </div>
+    <div class="api-card-body">
+      <h3>請求參數</h3>
+      <table class="param-table">
+        <thead><tr><th>參數</th><th>類型</th><th>必填</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr><td>groupAreaId</td><td>Integer</td><td><span class="req">必填</span></td><td>門店分組區域 ID</td></tr>
+          <tr><td>startTime</td><td>LocalDateTime</td><td><span class="req">必填</span></td><td>開始時間（格式：yyyy-MM-dd HH:mm:ss）</td></tr>
+          <tr><td>endTime</td><td>LocalDateTime</td><td><span class="req">必填</span></td><td>結束時間（格式：yyyy-MM-dd HH:mm:ss）</td></tr>
+          <tr><td>storeId</td><td>Integer</td><td><span class="opt">選填</span></td><td>門店 ID（不傳則統計區域下所有門店）</td></tr>
+        </tbody>
+      </table>
+
+      <h3>回傳資料結構</h3>
+      <div class="model-grid">
+        <div class="model-card">
+          <div class="model-header bk">StoreSalesStatisticsVO</div>
+          <div class="model-field"><span class="fname">storeId</span><span class="ftype">Integer</span><span class="fdesc">門店 ID</span></div>
+          <div class="model-field"><span class="fname">storeName</span><span class="ftype">String</span><span class="fdesc">門店名稱</span></div>
+          <div class="model-field"><span class="fname">products</span><span class="ftype">List&lt;...&gt;</span><span class="fdesc">↓ 商品銷量列表</span></div>
+        </div>
+        <div class="rel-arrow"><span style="font-size:20px">→</span><span>1:N</span></div>
+        <div class="model-card">
+          <div class="model-header bk">ProductSalesStatisticsVO</div>
+          <div class="model-field"><span class="fname">productId</span><span class="ftype">Integer</span></div>
+          <div class="model-field"><span class="fname">productName</span><span class="ftype">String</span></div>
+          <div class="model-field"><span class="fname">weekdayTotalSales</span><span class="ftype">Integer</span><span class="fdesc">平日總銷量</span></div>
+          <div class="model-field"><span class="fname">holidayTotalSales</span><span class="ftype">Integer</span><span class="fdesc">假日總銷量</span></div>
+          <div class="model-field"><span class="fname">weekdayAverageSales</span><span class="ftype">BigDecimal</span><span class="fdesc">平日日均銷量</span></div>
+          <div class="model-field"><span class="fname">holidayAverageSales</span><span class="ftype">BigDecimal</span><span class="fdesc">假日日均銷量</span></div>
+          <div class="model-field"><span class="fname">weekdayCount</span><span class="ftype">Integer</span><span class="fdesc">平日天數</span></div>
+          <div class="model-field"><span class="fname">holidayCount</span><span class="ftype">Integer</span><span class="fdesc">假日天數</span></div>
+          <div class="model-field"><span class="fname">totalSalesCount</span><span class="ftype">Integer</span><span class="fdesc">總銷量</span></div>
+          <div class="model-field"><span class="fname">dayAverageSales</span><span class="ftype">BigDecimal</span><span class="fdesc">日平均銷量</span></div>
+          <div class="model-field"><span class="fname">weekdayMultiplier</span><span class="ftype">BigDecimal</span><span class="fdesc">平日倍數（訂單金額/10000）</span></div>
+          <div class="model-field"><span class="fname">holidayMultiplier</span><span class="ftype">BigDecimal</span><span class="fdesc">假日倍數</span></div>
+          <div class="model-field"><span class="fname">weekdayAverageSalesPer10k</span><span class="ftype">BigDecimal</span><span class="fdesc">平日每日萬元均需量</span></div>
+          <div class="model-field"><span class="fname">holidayAverageSalesPer10k</span><span class="ftype">BigDecimal</span><span class="fdesc">假日每日萬元均需量</span></div>
+        </div>
+      </div>
+
+      <h3>在 ERP 中的使用方式</h3>
+      <pre><code><span class="cm">// DemandForecastServiceImpl.java</span>
+<span class="kw">public</span> List&lt;StoreSalesStatisticsVO&gt; getCompletedOrdersFilterCached(
+        Integer groupAreaId, LocalDateTime startTime, LocalDateTime endTime, Integer storeId) {
+
+    CommonResult&lt;List&lt;StoreSalesStatisticsVO&gt;&gt; result =
+        burgerKingStoreClient.getCompletedOrdersFilter(groupAreaId, startTime, endTime, storeId);
+    <span class="kw">return</span> result.getData();
+}
+
+<span class="cm">// 在 getProductRecipeAnalysis() 中作為第一步輸入</span>
+List&lt;StoreSalesStatisticsVO&gt; storeStatsList =
+    getCompletedOrdersFilterCached(groupAreaId, startCompletedTime, endCompletedTime, storeId);</code></pre>
+
+      <h3>ERP 對外暴露的代理端點</h3>
+      <pre><code><span class="cm">// PdmTestController.java — 測試端點</span>
+<span class="an">@GetMapping</span>(<span class="str">"/pdm/test/completed-orders-filter-service1"</span>)
+<span class="kw">public</span> CommonResult&lt;Object&gt; test01(
+    <span class="an">@RequestParam</span> Integer groupAreaId,
+    <span class="an">@RequestParam</span> LocalDateTime startTime,
+    <span class="an">@RequestParam</span> LocalDateTime endTime,
+    <span class="an">@RequestParam</span>(required = <span class="kw">false</span>) Integer storeId) {
+    <span class="kw">return</span> success(burgerKingStoreClient.getCompletedOrdersFilter(groupAreaId, startTime, endTime, storeId).getData());
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- API 2: daily/product-sales -->
+  <h2 class="st" id="daily-sales">📅 API 2 — 日維度商品銷量</h2>
+
+  <div class="api-card">
+    <div class="api-card-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint">/api/burgerking/admin/order/daily/product-sales</span>
+      <span class="badge warn">⚠️ 僅測試端點</span>
+    </div>
+    <div class="api-card-body">
+      <h3>請求參數</h3>
+      <table class="param-table">
+        <thead><tr><th>參數</th><th>類型</th><th>必填</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr><td>groupAreaId</td><td>Integer</td><td><span class="req">必填</span></td><td>門店分組區域 ID</td></tr>
+          <tr><td>storeId</td><td>Integer</td><td><span class="opt">選填</span></td><td>門店 ID（不傳則統計整個區域）</td></tr>
+          <tr><td>date</td><td>LocalDateTime</td><td><span class="req">必填</span></td><td>查詢日期（格式：yyyy-MM-dd HH:mm:ss）</td></tr>
+        </tbody>
+      </table>
+
+      <h3>回傳資料結構</h3>
+      <div class="model-grid">
+        <div class="model-card">
+          <div class="model-header inner">DailyProductSalesVO</div>
+          <div class="model-field"><span class="fname">productId</span><span class="ftype">Integer</span><span class="fdesc">商品 ID</span></div>
+          <div class="model-field"><span class="fname">productName</span><span class="ftype">String</span><span class="fdesc">商品名稱</span></div>
+          <div class="model-field"><span class="fname">salesCount</span><span class="ftype">Integer</span><span class="fdesc">當日銷售數量</span></div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>實作狀態：</strong>此 API 在 <code>BurgerKingStoreClient</code> 已定義，並在 <code>PdmTestController</code> 的 <code>/pdm/test/api/burgerking/admin/order/daily/product-sales-test03</code> 端點使用。尚未整合進需求預測主流程，目前屬測試/驗證用途。
+      </div>
+
+      <pre><code><span class="cm">// PdmTestController.java</span>
+<span class="an">@GetMapping</span>(<span class="str">"/api/burgerking/admin/order/daily/product-sales-test03"</span>)
+<span class="kw">public</span> CommonResult&lt;List&lt;DailyProductSalesVO&gt;&gt; test03(
+    <span class="an">@RequestParam</span> Integer groupAreaId,
+    <span class="an">@RequestParam</span>(required = <span class="kw">false</span>) Integer storeId,
+    <span class="an">@RequestParam @DateTimeFormat</span>(pattern = <span class="str">"yyyy-MM-dd HH:mm:ss"</span>) LocalDateTime date) {
+    <span class="kw">return</span> burgerKingStoreClient.getDailyProductSales(groupAreaId, storeId, date);
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- API 3: area-group -->
+  <h2 class="st" id="area-group">🗂 API 3 — 區域組及門店層級結構</h2>
+
+  <div class="api-card">
+    <div class="api-card-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint">/api/burgerking/admin/area-group/all-areas-with-stores</span>
+      <span class="badge yes">✅ 業務核心</span>
+    </div>
+    <div class="api-card-body">
+      <p>無請求參數。返回完整的三層層級結構：<strong>區域組 → 區域 → 門店</strong>。</p>
+
+      <h3>三層層級資料模型</h3>
+      <div class="model-grid">
+        <div class="model-card">
+          <div class="model-header bk">AreaGroupHierarchyVO<br><span style="font-size:10px;font-weight:400">第一層：區域組</span></div>
+          <div class="model-field"><span class="fname">id</span><span class="ftype">Integer</span><span class="fdesc">區域組 ID</span></div>
+          <div class="model-field"><span class="fname">groupName</span><span class="ftype">String</span><span class="fdesc">區域組名稱</span></div>
+          <div class="model-field"><span class="fname">areas</span><span class="ftype">List&lt;AreaInfo&gt;</span><span class="fdesc">↓ 區域列表</span></div>
+        </div>
+        <div class="rel-arrow"><span style="font-size:20px">→</span><span>1:N</span></div>
+        <div class="model-card">
+          <div class="model-header inner">AreaInfo<br><span style="font-size:10px;font-weight:400">第二層：區域</span></div>
+          <div class="model-field"><span class="fname">id</span><span class="ftype">Integer</span><span class="fdesc">區域 ID</span></div>
+          <div class="model-field"><span class="fname">groupName</span><span class="ftype">String</span><span class="fdesc">區域名稱</span></div>
+          <div class="model-field"><span class="fname">stores</span><span class="ftype">List&lt;StoreInfo&gt;</span><span class="fdesc">↓ 門店列表</span></div>
+        </div>
+        <div class="rel-arrow"><span style="font-size:20px">→</span><span>1:N</span></div>
+        <div class="model-card">
+          <div class="model-header result">StoreInfo<br><span style="font-size:10px;font-weight:400">第三層：門店</span></div>
+          <div class="model-field"><span class="fname">id</span><span class="ftype">Integer</span><span class="fdesc">門店 ID</span></div>
+          <div class="model-field"><span class="fname">storeName</span><span class="ftype">String</span><span class="fdesc">門店名稱</span></div>
+        </div>
+      </div>
+
+      <h3>回傳範例</h3>
+      <pre><code>[
+  {
+    <span class="str">"id"</span>: <span class="num">1</span>,
+    <span class="str">"groupName"</span>: <span class="str">"北部銷售組"</span>,
+    <span class="str">"areas"</span>: [
+      {
+        <span class="str">"id"</span>: <span class="num">3</span>,
+        <span class="str">"groupName"</span>: <span class="str">"北部地區"</span>,
+        <span class="str">"stores"</span>: [
+          { <span class="str">"id"</span>: <span class="num">12</span>, <span class="str">"storeName"</span>: <span class="str">"八德門市"</span> },
+          { <span class="str">"id"</span>: <span class="num">13</span>, <span class="str">"storeName"</span>: <span class="str">"七張門市"</span> }
+        ]
+      }
+    ]
+  }
+]</code></pre>
+
+      <h3>ERP 對外暴露的代理端點</h3>
+      <pre><code><span class="cm">// DemandForecastDetailController.java</span>
+<span class="an">@GetMapping</span>(<span class="str">"/pdm/demand-forecast/detail/bk/all-areas-with-stores"</span>)
+<span class="an">@PreAuthorize</span>(<span class="str">"@ss.hasPermission('pdm:demand-forecast:query')"</span>)
+<span class="kw">public</span> CommonResult&lt;List&lt;AreaGroupHierarchyVO&gt;&gt; getAllAreasWithStores() {
+    <span class="kw">return</span> CommonResult.success(demandForecastService.getAllAreasWithStores());
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- store-inner -->
+  <h2 class="st" id="store-inner">🏪 其他 API — 區域門店基礎資訊</h2>
+
+  <div class="api-card">
+    <div class="api-card-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint">/api/burgerking/admin/store/group-with-stores/inner</span>
+      <span class="badge yes">✅ 業務核心</span>
+    </div>
+    <div class="api-card-body">
+      <p>返回區域及其門店基礎資訊（兩層：區域組 → 門店），是 ERP 中使用最頻繁的門店清單來源。</p>
+
+      <div class="model-grid">
+        <div class="model-card">
+          <div class="model-header bk">GroupWithStoresInnerVO</div>
+          <div class="model-field"><span class="fname">id</span><span class="ftype">Integer</span><span class="fdesc">分組區域 ID</span></div>
+          <div class="model-field"><span class="fname">groupName</span><span class="ftype">String</span><span class="fdesc">分組名稱（如：華南區）</span></div>
+          <div class="model-field"><span class="fname">description</span><span class="ftype">String</span><span class="fdesc">分組描述</span></div>
+          <div class="model-field"><span class="fname">stores</span><span class="ftype">List&lt;StoreBasicVO&gt;</span><span class="fdesc">↓ 門店列表</span></div>
+        </div>
+        <div class="rel-arrow"><span style="font-size:20px">→</span></div>
+        <div class="model-card">
+          <div class="model-header inner">StoreBasicVO</div>
+          <div class="model-field"><span class="fname">id</span><span class="ftype">Integer</span><span class="fdesc">門店 ID</span></div>
+          <div class="model-field"><span class="fname">storeCode</span><span class="ftype">String</span><span class="fdesc">門店代碼（如：BK001）</span></div>
+          <div class="model-field"><span class="fname">storeName</span><span class="ftype">String</span><span class="fdesc">門店名稱</span></div>
+          <div class="model-field"><span class="fname">address</span><span class="ftype">String</span><span class="fdesc">詳細地址</span></div>
+          <div class="model-field"><span class="fname">phone</span><span class="ftype">String</span><span class="fdesc">門店電話</span></div>
+        </div>
+      </div>
+
+      <h3>ERP 業務邏輯中的使用</h3>
+      <pre><code><span class="cm">// 1. 有使用者區域/門店權限時，自動過濾資料</span>
+<span class="kw">public</span> List&lt;GroupWithStoresInnerVO&gt; getRemoteGroupWithStoresInner() {
+    CommonResult&lt;List&lt;GroupWithStoresInnerVO&gt;&gt; remote =
+        burgerKingStoreClient.getGroupWithStoresInner();
+
+    Integer loginUserAreaId  = SecurityFrameworkUtils.getLoginUserAreaId();
+    Integer loginUserStoreId = SecurityFrameworkUtils.getLoginUserStoreId();
+
+    <span class="cm">// 無任何限制 → 全量返回</span>
+    <span class="kw">if</span> (loginUserAreaId == <span class="kw">null</span> && loginUserStoreId == <span class="kw">null</span>) <span class="kw">return</span> remote.getData();
+
+    <span class="cm">// 有區域限制 → 過濾區域</span>
+    <span class="cm">// 有區域+門店限制 → 再過濾門店</span>
+    <span class="kw">return</span> remote.getData().stream()
+        .filter(group -&gt; loginUserAreaId == <span class="kw">null</span> || loginUserAreaId.equals(group.getId()))
+        .map(group -&gt; {
+            <span class="kw">if</span> (loginUserAreaId != <span class="kw">null</span> && loginUserStoreId != <span class="kw">null</span>) {
+                group.setStores(group.getStores().stream()
+                    .filter(s -&gt; loginUserStoreId.equals(s.getId()))
+                    .collect(Collectors.toList()));
+            }
+            <span class="kw">return</span> group;
+        }).collect(Collectors.toList());
+}</code></pre>
+
+      <div class="success-box">
+        <strong>關鍵設計：</strong>ERP 實作了「依登入使用者的 areaId / storeId 自動過濾」機制，確保區域主管只看到自己負責區域的門店，門店人員只看到自己門店的資料。資料來源仍是 BurgerKing 全量 API，過濾在 ERP 層完成。
+      </div>
+    </div>
+  </div>
+
+  <!-- VO Models -->
+  <h2 class="st" id="vo-models">📐 VO 模型總覽</h2>
+  <table class="api-table">
+    <thead><tr><th>VO 類別</th><th>對應 API</th><th>關鍵欄位</th></tr></thead>
+    <tbody>
+      <tr><td>StoreSalesStatisticsVO</td><td>completed/filter</td><td>storeId, storeName, products(List)</td></tr>
+      <tr><td>ProductSalesStatisticsVO</td><td>completed/filter (嵌套)</td><td>平日/假日總量、均量、天數、倍數、萬元均量 (14個欄位)</td></tr>
+      <tr><td>DailyProductSalesVO</td><td>daily/product-sales</td><td>productId, productName, salesCount</td></tr>
+      <tr><td>AreaGroupHierarchyVO</td><td>all-areas-with-stores</td><td>三層：id, groupName → areas → stores</td></tr>
+      <tr><td>GroupWithStoresInnerVO</td><td>group-with-stores/inner</td><td>id, groupName, stores(StoreBasicVO)</td></tr>
+      <tr><td>StoreBasicVO (inner)</td><td>group-with-stores/inner</td><td>id, storeCode, storeName, address, phone</td></tr>
+      <tr><td>GroupAndStoreVO</td><td>group-with-stores/inner/group-id</td><td>groupAreaId, storeId, storeName</td></tr>
+      <tr><td>AreaStoreVO</td><td>one-areas-with-stores</td><td>groupId, groupName, area, storeId, name, storeCode</td></tr>
+      <tr><td>OrderCompletedFilterVO</td><td>（原始訂單，已棄用）</td><td>orderNumber, completedTime, productsList(JSON), combinationQuantity</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ProductSalesStatisticsVO detail -->
+  <h2 class="st" id="product-sales-vo">🔢 ProductSalesStatisticsVO 詳解</h2>
+  <p>此 VO 是需求預測的核心資料結構，BurgerKing 後端已預先計算好平日/假日拆分統計，ERP 直接使用。</p>
+
+  <table class="api-table">
+    <thead><tr><th>欄位</th><th>類型</th><th>說明</th><th>計算說明</th></tr></thead>
+    <tbody>
+      <tr><td>productId</td><td>Integer</td><td>商品 ID</td><td></td></tr>
+      <tr><td>productName</td><td>String</td><td>商品名稱</td><td></td></tr>
+      <tr><td>weekdayTotalSales</td><td>Integer</td><td>平日總銷量</td><td>週一至週四訂單中商品數量加總</td></tr>
+      <tr><td>holidayTotalSales</td><td>Integer</td><td>假日總銷量</td><td>週五至週日訂單中商品數量加總</td></tr>
+      <tr><td>weekdayAverageSales</td><td>BigDecimal</td><td>平日日均銷量</td><td>weekdayTotalSales ÷ weekdayCount，保留2位小數</td></tr>
+      <tr><td>holidayAverageSales</td><td>BigDecimal</td><td>假日日均銷量</td><td>holidayTotalSales ÷ holidayCount，保留2位小數</td></tr>
+      <tr><td>weekdayCount</td><td>Integer</td><td>統計期內平日天數</td><td></td></tr>
+      <tr><td>holidayCount</td><td>Integer</td><td>統計期內假日天數</td><td></td></tr>
+      <tr><td>totalSalesCount</td><td>Integer</td><td>總銷量</td><td>平日 + 假日</td></tr>
+      <tr><td>dayAverageSales</td><td>BigDecimal</td><td>日均銷量（不分平假日）</td><td>totalSalesCount ÷ 總天數</td></tr>
+      <tr><td>weekdayMultiplier</td><td>BigDecimal</td><td>平日倍數</td><td>平日訂單金額累加 ÷ 10000</td></tr>
+      <tr><td>holidayMultiplier</td><td>BigDecimal</td><td>假日倍數</td><td>假日訂單金額累加 ÷ 10000</td></tr>
+      <tr><td>weekdayAverageSalesPer10k</td><td>BigDecimal</td><td>平日每日萬元均需量</td><td>weekdayAverageSales ÷ weekdayMultiplier × 天數因子</td></tr>
+      <tr><td>holidayAverageSalesPer10k</td><td>BigDecimal</td><td>假日每日萬元均需量</td><td>holidayAverageSales ÷ holidayMultiplier × 天數因子</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Demand Forecast business logic -->
+  <h2 class="st" id="demand-forecast">🧮 需求預測核心流程</h2>
+  <p>ERP 的需求預測主流程 <code>getProductRecipeAnalysis()</code> 整合了 BurgerKing 上游 API 與本地資料庫，計算每個門店、每個商品對應食材的需求量預測。</p>
+
+  <div class="biz-steps">
+    <div class="biz-step">
+      <div class="biz-step-content">
+        <div class="biz-step-title">呼叫 BK API 取得銷量統計</div>
+        <div class="biz-step-desc">呼叫 <code>getCompletedOrdersFilterCached(groupAreaId, startTime, endTime, storeId)</code>，取得指定區域、時間範圍內各門店各商品的銷量（已含平日/假日拆分）。</div>
+      </div>
+    </div>
+    <div class="biz-step">
+      <div class="biz-step-content">
+        <div class="biz-step-title">提取商品 ID，批量查詢食材配方</div>
+        <div class="biz-step-desc">從銷量資料中提取所有 <code>productId</code>（去重），一次性查詢本地 DB（<code>pdmProductRecipeRelMapper</code>）取得各商品對應的食材配方，建立 <code>productId → List&lt;配方&gt;</code> 的 Map。</div>
+      </div>
+    </div>
+    <div class="biz-step">
+      <div class="biz-step-content">
+        <div class="biz-step-title">LONG 儲存類型食材：預載安全存量與門市庫存</div>
+        <div class="biz-step-desc">篩選儲存類型為「LONG + 食材小類」的食材，批量查詢安全存量（<code>whs_stock_safe</code>）和門市現有庫存（<code>whs_stock</code>），避免後續逐筆查詢。</div>
+      </div>
+    </div>
+    <div class="biz-step">
+      <div class="biz-step-content">
+        <div class="biz-step-title">查詢廠商報價（有指定門店時）</div>
+        <div class="biz-step-desc">若 <code>storeId != null</code>，查詢各食材對應的最新廠商報價（<code>pmm_vendor_quote</code>），建立 <code>prodCode → 報價</code> 的 Map，用於計算預測成本。</div>
+      </div>
+    </div>
+    <div class="biz-step">
+      <div class="biz-step-content">
+        <div class="biz-step-title">獲取區域名稱</div>
+        <div class="biz-step-desc">呼叫 <code>getGroupSummaries()</code>（內部再次呼叫 BK API <code>group-with-stores/inner</code>）取得區域名稱，填入預測結果中。</div>
+      </div>
+    </div>
+    <div class="biz-step">
+      <div class="biz-step-content">
+        <div class="biz-step-title">逐門店、逐商品建構需求預測明細</div>
+        <div class="biz-step-desc">對每個門店的每個商品，結合銷量統計（平日/假日均量）× 食材配方標準用量 × 預測加成倍數，計算每種食材的預測需求量（<code>projected</code>），輸出 <code>StoreDemandForecastVO</code> 結構。</div>
+      </div>
+    </div>
+  </div>
+
+  <pre><code><span class="cm">// DemandForecastDetailController.java — 觸發入口</span>
+<span class="an">@GetMapping</span>(<span class="str">"/pdm/demand-forecast/detail/product-recipe-analysis"</span>)
+<span class="an">@PreAuthorize</span>(<span class="str">"@ss.hasPermission('pdm:demand-forecast:query')"</span>)
+<span class="kw">public</span> CommonResult&lt;List&lt;StoreDemandForecastVO&gt;&gt; getProductRecipeAnalysis(
+    <span class="an">@RequestParam</span> Integer groupAreaId,       <span class="cm">// BK 區域 ID</span>
+    <span class="an">@RequestParam</span>(required=<span class="kw">false</span>) Integer storeId,
+    <span class="an">@RequestParam</span> LocalDateTime startCompletedTime,  <span class="cm">// 歷史訂單起始時間</span>
+    <span class="an">@RequestParam</span> LocalDateTime endCompletedTime,
+    <span class="an">@RequestParam</span> LocalDateTime demandWeekStartTime, <span class="cm">// 需求周別</span>
+    <span class="an">@RequestParam</span> LocalDateTime demandWeekEndTime,
+    <span class="an">@RequestParam</span> BigDecimal forecastIncrementPercent <span class="cm">// 預測加成萬元倍數</span>
+) {
+    <span class="kw">return</span> success(demandForecastService.getProductRecipeAnalysis(...));
+}</code></pre>
+
+  <!-- Weekday/Holiday logic -->
+  <h2 class="st" id="weekday-holiday">📅 平日 / 假日計算規則</h2>
+  <p>BurgerKing 後端已根據以下規則計算好平日/假日拆分，ERP 直接使用回傳的統計欄位。</p>
+
+  <div style="display:flex;gap:20px;flex-wrap:wrap;margin:12px 0 20px">
+    <div style="background:rgba(14,165,233,.1);border:1px solid var(--secondary);border-radius:8px;padding:16px 24px;flex:1;min-width:160px">
+      <div style="font-size:13px;color:var(--secondary);font-weight:700;margin-bottom:8px">📅 平日（Weekday）</div>
+      <div style="font-size:14px;color:var(--text)">週一 ～ 週四</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">一般客流量較平穩</div>
+    </div>
+    <div style="background:rgba(245,158,11,.1);border:1px solid var(--warning);border-radius:8px;padding:16px 24px;flex:1;min-width:160px">
+      <div style="font-size:13px;color:var(--warning);font-weight:700;margin-bottom:8px">🎉 假日（Holiday）</div>
+      <div style="font-size:14px;color:var(--text)">週五 ～ 週日</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">客流量通常高於平日</div>
+    </div>
+  </div>
+
+  <div class="info">
+    <strong>設計說明：</strong><code>OrderCompletedFilterVO.productsList</code> 原本是 JSON 字串（<code>[{"productId":2,"ProductTasteId":3},...]</code>），需要在 ERP 端解析後結合 <code>combinationQuantity</code> 計算商品實際數量，再依 <code>completedTime</code> 的星期幾分入平日或假日桶。目前此邏輯已由 BurgerKing 後端直接處理並回傳 <code>ProductSalesStatisticsVO</code> 格式，ERP 不需再重複計算。
+  </div>
+
+  <!-- Recipe Analysis -->
+  <h2 class="st" id="recipe-analysis">🧪 食材配方分析計算說明</h2>
+
+  <pre><code><span class="cm">// 每日萬元平均需求量計算（平日/假日各算一次）</span>
+<span class="cm">// BK 回傳：weekdayAverageSalesPer10k（平日每日萬元均需量）</span>
+<span class="cm">// ERP 計算預測：</span>
+
+avgSales       = weekdayTotalSales / weekdayCount       <span class="cm">// 平日日均銷量</span>
+avgPer10k      = avgSales * 10000 / weekdayOrderAmount  <span class="cm">// 每萬元訂單的商品數</span>
+projected      = avgPer10k * standardQuantity           <span class="cm">// × 配方標準用量</span>
+
+<span class="cm">// 預測值 = 每日萬元均需量 × 預測加成倍數（forecastIncrementPercent）</span>
+<span class="cm">// forecastIncrementPercent 由前端輸入，表示下週預期銷售倍數</span></code></pre>
+
+  <!-- OA Routes -->
+  <h2 class="st" id="oa-routes">🌐 ERP 對外暴露端點（代理 BK API）</h2>
+  <p>ERP 對前端暴露以下端點，統一在伺服器端加上 BurgerKing JWT 後轉發：</p>
+
+  <table class="route-table">
+    <thead><tr><th>ERP 端點（前端呼叫）</th><th>對應 BK API</th><th>Controller</th><th>用途分類</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>GET /pdm/demand-forecast/detail/bk/group-with-stores-inner</td>
+        <td>/store/group-with-stores/inner</td>
+        <td>DemandForecastDetailController</td>
+        <td><span class="tag biz">業務</span></td>
+      </tr>
+      <tr>
+        <td>GET /pdm/demand-forecast/detail/bk/all-areas-with-stores</td>
+        <td>/area-group/all-areas-with-stores</td>
+        <td>DemandForecastDetailController</td>
+        <td><span class="tag biz">業務</span></td>
+      </tr>
+      <tr>
+        <td>GET /pdm/demand-forecast/detail/bk/group-summaries</td>
+        <td>/store/group-with-stores/inner</td>
+        <td>DemandForecastDetailController</td>
+        <td><span class="tag biz">業務</span></td>
+      </tr>
+      <tr>
+        <td>GET /pdm/demand-forecast/detail/bk/stores-by-group</td>
+        <td>/store/group-with-stores/inner</td>
+        <td>DemandForecastDetailController</td>
+        <td><span class="tag biz">業務</span></td>
+      </tr>
+      <tr>
+        <td>GET /pdm/demand-forecast/detail/product-recipe-analysis</td>
+        <td>/order/completed/filter (+ 本地DB)</td>
+        <td>DemandForecastDetailController</td>
+        <td><span class="tag biz">業務</span></td>
+      </tr>
+      <tr>
+        <td>POST /pdm/demand-forecast/detail/calculate-projected-sales</td>
+        <td>（純本地計算）</td>
+        <td>DemandForecastDetailController</td>
+        <td><span class="tag biz">業務</span></td>
+      </tr>
+      <tr>
+        <td>GET /pdm/test/completed-orders-filter-service1</td>
+        <td>/order/completed/filter</td>
+        <td>PdmTestController</td>
+        <td><span class="tag test">測試</span></td>
+      </tr>
+      <tr>
+        <td>GET /pdm/test/completed-orders-filter-service2</td>
+        <td>/store/group-with-stores/inner</td>
+        <td>PdmTestController</td>
+        <td><span class="tag test">測試</span></td>
+      </tr>
+      <tr>
+        <td>GET /pdm/test/api/burgerking/admin/order/daily/product-sales-test03</td>
+        <td>/order/daily/product-sales</td>
+        <td>PdmTestController</td>
+        <td><span class="tag test">測試</span></td>
+      </tr>
+      <tr>
+        <td>GET /pdm/test/api/burgerking/admin/order/daily/product-sales-test04</td>
+        <td>/area-group/all-areas-with-stores</td>
+        <td>PdmTestController</td>
+        <td><span class="tag test">測試</span></td>
+      </tr>
+      <tr>
+        <td>GET /pdm/test/login-remote</td>
+        <td>/auth/login（強制遠端登入）</td>
+        <td>PdmTestController</td>
+        <td><span class="tag test">測試</span></td>
+      </tr>
+      <tr>
+        <td>GET /pdm/test/group-with-stores-feign</td>
+        <td>/store/all-with-location</td>
+        <td>PdmTestController</td>
+        <td><span class="tag test">測試</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top:40px;font-size:12px;color:var(--text2);text-align:center;">
+    Generated by Claude Code — BurgerKing 上游 API 文件 · kingmaker-module-pdm-biz
+  </p>
+</main>
+
+<script>
+const links = document.querySelectorAll('.sidebar a');
+const sections = [];
+links.forEach(l => {
+  const id = l.getAttribute('href').slice(1);
+  const el = document.getElementById(id);
+  if (el) sections.push({ el, link: l });
+});
+window.addEventListener('scroll', () => {
+  const y = window.scrollY + 100;
+  let active = sections[0];
+  for (const s of sections) { if (s.el.offsetTop <= y) active = s; }
+  links.forEach(l => l.classList.remove('active'));
+  if (active) active.link.classList.add('active');
+}, { passive: true });
+</script>
+</body>
+</html>

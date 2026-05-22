@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vite HMR Server 完整解說 — 漢堡王 ERP</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --orange: #ffa657;
+    --teal: #39d353;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,17,23,.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex; align-items: center; gap: 8px;
+    height: 52px; overflow-x: auto;
+  }
+  nav a {
+    color: var(--text2); text-decoration: none;
+    font-size: 13px; white-space: nowrap;
+    padding: 4px 10px; border-radius: 6px;
+    transition: all .2s;
+  }
+  nav a:hover { color: var(--text); background: var(--bg3); }
+  nav .logo { font-weight: 700; color: var(--accent); margin-right: 16px; font-size: 14px; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ── SECTION ── */
+  section { margin-bottom: 64px; }
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    background: var(--accent);
+    color: #000; font-weight: 800;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  h1 { font-size: 32px; font-weight: 800; }
+  h2 { font-size: 22px; font-weight: 700; color: var(--text); }
+  h3 { font-size: 17px; font-weight: 600; color: var(--accent); margin: 24px 0 10px; }
+  h4 { font-size: 14px; font-weight: 600; color: var(--orange); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: .05em; }
+  p { margin-bottom: 12px; color: var(--text2); }
+  p strong { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 40px;
+    margin-bottom: 48px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(88,166,255,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero h1 { margin-bottom: 12px; }
+  .hero p { font-size: 17px; color: var(--text2); max-width: 600px; }
+  .hero-meta { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid;
+  }
+  .badge-blue { color: var(--accent); border-color: rgba(88,166,255,.3); background: rgba(88,166,255,.08); }
+  .badge-green { color: var(--green); border-color: rgba(63,185,80,.3); background: rgba(63,185,80,.08); }
+  .badge-yellow { color: var(--yellow); border-color: rgba(210,153,34,.3); background: rgba(210,153,34,.08); }
+  .badge-purple { color: var(--purple); border-color: rgba(188,140,255,.3); background: rgba(188,140,255,.08); }
+  .badge-red { color: var(--red); border-color: rgba(248,81,73,.3); background: rgba(248,81,73,.08); }
+  .badge-orange { color: var(--orange); border-color: rgba(255,166,87,.3); background: rgba(255,166,87,.08); }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .tab {
+    padding: 8px 16px; border-radius: 6px 6px 0 0;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    border: 1px solid transparent; border-bottom: none;
+    color: var(--text2); background: transparent;
+    transition: all .2s;
+  }
+  .tab.active {
+    color: var(--accent);
+    background: var(--bg2);
+    border-color: var(--border);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── CODE ── */
+  .code-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+  .code-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .code-filename { color: var(--text); font-weight: 600; }
+  .code-lang { color: var(--text2); }
+  .code-block pre {
+    margin: 0; padding: 20px;
+    overflow-x: auto; font-size: 13px;
+    line-height: 1.6;
+  }
+  .code-block code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--bg3); }
+  th { padding: 10px 16px; text-align: left; font-weight: 600; color: var(--text2); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 16px; border-bottom: 1px solid rgba(48,54,61,.5); color: var(--text2); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(48,54,61,.3); }
+  td strong { color: var(--text); }
+  td .yes { color: var(--green); font-weight: 700; }
+  td .no { color: var(--red); font-weight: 700; }
+  td .partial { color: var(--yellow); font-weight: 700; }
+
+  /* ── DIAGRAM ── */
+  .diagram-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  .diagram-wrap .mermaid { display: flex; justify-content: center; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    display: flex; gap: 12px;
+    padding: 16px 20px;
+    border-radius: 10px;
+    margin: 16px 0;
+    border-left: 3px solid;
+  }
+  .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .callout-body { flex: 1; }
+  .callout-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .callout-text { font-size: 13px; color: var(--text2); }
+  .callout-text code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  .callout.info { background: rgba(88,166,255,.07); border-color: var(--accent); }
+  .callout.info .callout-title { color: var(--accent); }
+  .callout.success { background: rgba(63,185,80,.07); border-color: var(--green); }
+  .callout.success .callout-title { color: var(--green); }
+  .callout.warning { background: rgba(210,153,34,.07); border-color: var(--yellow); }
+  .callout.warning .callout-title { color: var(--yellow); }
+  .callout.danger { background: rgba(248,81,73,.07); border-color: var(--red); }
+  .callout.danger .callout-title { color: var(--red); }
+
+  /* ── CARD GRID ── */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin: 16px 0; }
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color .2s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card-icon { font-size: 24px; margin-bottom: 12px; }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .card-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .card-tag { display: inline-block; margin-top: 10px; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+
+  /* ── OA IMPL ── */
+  .oa-section {
+    background: linear-gradient(135deg, rgba(88,166,255,.05), rgba(63,185,80,.05));
+    border: 1px solid rgba(88,166,255,.25);
+    border-radius: 12px;
+    padding: 28px;
+    margin: 24px 0;
+  }
+  .oa-title {
+    font-size: 16px; font-weight: 700; color: var(--accent);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .oa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .oa-grid { grid-template-columns: 1fr; } }
+  .oa-item {
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .oa-item-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .oa-item-desc { font-size: 12px; color: var(--text2); line-height: 1.6; }
+  .dot-green { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .dot-yellow { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); flex-shrink: 0; }
+  .dot-red { width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+
+  /* ── STEP ── */
+  .steps { margin: 16px 0; }
+  .step {
+    display: flex; gap: 16px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .step::before {
+    content: '';
+    position: absolute;
+    left: 19px; top: 40px;
+    bottom: -20px;
+    width: 2px;
+    background: var(--border);
+  }
+  .step:last-child::before { display: none; }
+  .step-num {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--bg3); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--accent);
+    flex-shrink: 0; z-index: 1;
+  }
+  .step-body { flex: 1; padding-top: 6px; }
+  .step-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .step-desc { font-size: 13px; color: var(--text2); }
+
+  /* ── QUOTE ── */
+  blockquote {
+    border-left: 3px solid var(--purple);
+    background: rgba(188,140,255,.07);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 20px;
+    margin: 16px 0;
+    font-style: italic;
+    color: var(--text2);
+    font-size: 14px;
+  }
+  blockquote cite { display: block; margin-top: 8px; font-style: normal; font-size: 12px; color: var(--purple); }
+
+  /* ── INLINE CODE ── */
+  code:not(.hljs) {
+    background: rgba(255,255,255,.08);
+    padding: 1px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--orange);
+  }
+
+  /* ── TIMELINE ── */
+  .timeline { margin: 16px 0; }
+  .tl-item { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+  .tl-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex-shrink: 0; }
+  .tl-time { font-size: 12px; color: var(--text2); width: 80px; flex-shrink: 0; }
+  .tl-text { font-size: 13px; color: var(--text2); }
+  .tl-text strong { color: var(--text); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── UTIL ── */
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .mt16 { margin-top: 16px; }
+  .mb8 { margin-bottom: 8px; }
+  ul.list { list-style: none; padding: 0; }
+  ul.list li { padding: 4px 0 4px 20px; position: relative; font-size: 13px; color: var(--text2); }
+  ul.list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">⚡ Vite HMR</span>
+  <a href="#overview">概覽</a>
+  <a href="#architecture">架構</a>
+  <a href="#lifecycle">生命週期</a>
+  <a href="#boundary">HMR Boundary</a>
+  <a href="#protocol">WebSocket Protocol</a>
+  <a href="#plugins">Plugin 系統</a>
+  <a href="#oa">OA 實作狀況</a>
+  <a href="#compare">vs Webpack</a>
+  <a href="#config">本機設定</a>
+  <a href="#troubleshoot">排障</a>
+</nav>
+
+<div class="container">
+
+<!-- HERO -->
+<div class="hero">
+  <h1>⚡ Vite HMR Server</h1>
+  <p>完整技術解說 — 從 WebSocket 協議、模組圖、Boundary 邊界到漢堡王 ERP 專案實際設定</p>
+  <div class="hero-meta">
+    <span class="badge badge-blue">Vite 6.x</span>
+    <span class="badge badge-green">Vue 3 SFC</span>
+    <span class="badge badge-purple">TypeScript</span>
+    <span class="badge badge-yellow">pnpm Monorepo</span>
+    <span class="badge badge-orange">@vben/burger-king</span>
+    <span class="badge badge-red">Port :5173</span>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<!-- 1. 概覽 -->
+<!-- ─────────────────────────────────────── -->
+<section id="overview">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <h2>什麼是 HMR？</h2>
+  </div>
+
+  <blockquote>
+    Hot Module Replacement (HMR) is a mechanism that allows modules to be updated at runtime without a full page refresh. It dramatically improves the development experience by preserving application state during updates.
+    <cite>— Vite 官方文件</cite>
+  </blockquote>
+
+  <p>HMR 解決的核心問題：</p>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">🔄</div>
+      <div class="card-title">無需整頁重載</div>
+      <div class="card-desc">修改一個 Button 元件，只更新那個元件，其他頁面狀態（表單輸入、捲軸位置、store 資料）完全保留。</div>
+      <span class="badge badge-green card-tag">狀態保留</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">毫秒級回饋</div>
+      <div class="card-desc">不需重新打包整個 bundle，只針對變更模組做 ESM 動態 import，更新時間通常 &lt; 100ms。</div>
+      <span class="badge badge-blue card-tag">效能</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">🧩</div>
+      <div class="card-title">模組粒度更新</div>
+      <div class="card-desc">以單一 ES Module 為單位更新，透過 Module Graph 精確計算最小影響範圍。</div>
+      <span class="badge badge-purple card-tag">精確性</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎨</div>
+      <div class="card-title">CSS 即時注入</div>
+      <div class="card-desc">CSS/SCSS 修改直接替換 &lt;style&gt; tag，不產生任何 JS 更新，無 FOUC（樣式閃爍）。</div>
+      <span class="badge badge-yellow card-tag">UX</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── -->
+<!-- 2. 整體架構 -->
+<!-- ─────────────────────────────────────── -->
+<section id="architecture">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <h2>整體架構</h2>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+graph TB
+    subgraph SERVER["🖥️ Vite Dev Server (Node.js) — Port 5173"]
+        A[HTTP Server\nConnect middleware]
+        B[WebSocket Server\nws://localhost:5173]
+        C[Module Graph\n模組依賴圖]
+        D[chokidar\n檔案監控]
+        E[Transform Pipeline\nESBuild / Rollup]
+        F[Plugin System\nVue / i18n / Mock]
+    end
+
+    subgraph BROWSER["🌐 瀏覽器"]
+        G["@vite/client\n(自動注入)"]
+        H[ES Module Import\n原生 ESM]
+        I[Vue Runtime\n元件狀態]
+    end
+
+    subgraph FS["📁 檔案系統"]
+        J[.vue / .ts / .tsx]
+        K[.scss / .css]
+        L[.env.development]
+    end
+
+    D -->|偵測變更| C
+    C -->|計算影響範圍| B
+    B -->|WS push update| G
+    G -->|動態 import| H
+    H -->|ESM request| A
+    A -->|transform| E
+    E -->|編譯結果| H
+    F --> E
+    J --> D
+    K --> D
+    L --> SERVER
+
+    style SERVER fill:#161b22,stroke:#30363d,color:#e6edf3
+    style BROWSER fill:#0d1f0d,stroke:#3fb950,color:#e6edf3
+    style FS fill:#1a1000,stroke:#d29922,color:#e6edf3
+    </div>
+  </div>
+
+  <h3>核心元件說明</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>元件</th>
+          <th>類型</th>
+          <th>職責</th>
+          <th>技術實作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>HTTP Server</strong></td>
+          <td><span class="badge badge-blue">Server</span></td>
+          <td>接收瀏覽器的 ESM import 請求，回傳轉換後的模組</td>
+          <td>Node.js <code>http</code> + Connect</td>
+        </tr>
+        <tr>
+          <td><strong>WebSocket Server</strong></td>
+          <td><span class="badge badge-blue">Server</span></td>
+          <td>推送 HMR 更新通知給瀏覽器（<em>非</em>傳輸模組內容）</td>
+          <td><code>ws</code> 套件，共用 5173 port</td>
+        </tr>
+        <tr>
+          <td><strong>Module Graph</strong></td>
+          <td><span class="badge badge-purple">核心</span></td>
+          <td>追蹤所有模組的 import 關係，找出 HMR 影響鏈</td>
+          <td><code>Map&lt;string, ModuleNode&gt;</code></td>
+        </tr>
+        <tr>
+          <td><strong>chokidar</strong></td>
+          <td><span class="badge badge-yellow">觸發</span></td>
+          <td>監控檔案系統變更，觸發 HMR 流程</td>
+          <td>Node.js FSEvents / inotify</td>
+        </tr>
+        <tr>
+          <td><strong>Transform Pipeline</strong></td>
+          <td><span class="badge badge-orange">編譯</span></td>
+          <td>將 <code>.vue</code>/<code>.ts</code> 轉成瀏覽器可執行的 ESM</td>
+          <td>ESBuild (JS) + Rollup plugins</td>
+        </tr>
+        <tr>
+          <td><strong>@vite/client</strong></td>
+          <td><span class="badge badge-green">瀏覽器</span></td>
+          <td>建立 WS 連線，接收通知，執行模組熱替換</td>
+          <td>自動注入進 <code>index.html</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── -->
+<!-- 3. 完整生命週期 -->
+<!-- ─────────────────────────────────────── -->
+<section id="lifecycle">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <h2>完整生命週期</h2>
+  </div>
+
+  <div class="tabs" id="lifecycle-tabs">
+    <div class="tab active" onclick="switchTab('lifecycle-tabs','startup')">啟動階段</div>
+    <div class="tab" onclick="switchTab('lifecycle-tabs','request')">請求階段</div>
+    <div class="tab" onclick="switchTab('lifecycle-tabs','update')">更新階段</div>
+    <div class="tab" onclick="switchTab('lifecycle-tabs','css')">CSS 更新</div>
+  </div>
+
+  <div id="lifecycle-tabs-startup" class="tab-content active">
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">讀取設定 + 載入 Plugin</div>
+          <div class="step-desc">讀取 <code>vite.config.mts</code>，依序載入 vue、vue-jsx、i18n、nitroMock、vueDevTools 等 plugins。本專案由 <code>defineApplicationConfig()</code> 統一管理，根據 <code>isBuild</code> flag 條件啟用各 plugin。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">載入 .env 環境變數</div>
+          <div class="step-desc">依序讀取 <code>.env</code> → <code>.env.local</code> → <code>.env.development</code> → <code>.env.development.local</code>，注入 <code>VITE_</code> 前綴的環境變數。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">建立 Module Graph（空的）</div>
+          <div class="step-desc">初始化模組依賴圖，此時是空的。模組節點在瀏覽器第一次 import 時才建立。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">啟動 HTTP + WebSocket Server</div>
+          <div class="step-desc">同一個 port (5173) 同時接受 HTTP 和 WebSocket 請求。HTTP Upgrade header 決定是否升級為 WS 連線。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Warmup 預熱</div>
+          <div class="step-desc">本專案設定了 <code>warmup.clientFiles</code>，Vite 啟動後主動預先 transform <code>index.html</code>、<code>bootstrap.ts</code>、<code>views/</code>、<code>layouts/</code> 等檔案，減少首次瀏覽器請求的等待時間。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-title">chokidar 開始監控</div>
+          <div class="step-desc">監控 <code>src/</code> 目錄及 <code>vite.config.mts</code> 本身，排除 <code>node_modules</code>。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="lifecycle-tabs-request" class="tab-content">
+    <div class="diagram-wrap">
+      <div class="mermaid">
+sequenceDiagram
+    participant B as 瀏覽器
+    participant V as Vite HTTP Server
+    participant MG as Module Graph
+    participant TP as Transform Pipeline
+
+    B->>V: GET / (index.html)
+    V->>V: transformIndexHtml hooks<br/>(inject @vite/client, inject loading)
+    V->>B: index.html (含 @vite/client script)
+
+    B->>V: GET /@vite/client
+    V->>B: @vite/client.js (建立 WebSocket)
+
+    B->>V: GET /src/main.ts (ESM import)
+    V->>MG: 建立 ModuleNode
+    V->>TP: transform (esbuild + vue plugin)
+    TP->>V: 編譯後的 JS (ESM)
+    V->>B: 回傳模組內容
+
+    Note over B,V: 後續 import 依此類推，每個模組各自請求
+      </div>
+    </div>
+    <div class="callout info">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <div class="callout-title">原生 ESM 的關鍵差異</div>
+        <div class="callout-text">Webpack 在啟動時就將所有模組打包成一個 bundle。Vite 完全不打包，每個 <code>import</code> 語句就是一個獨立的 HTTP 請求。瀏覽器本身負責模組的依賴解析和載入，Vite 只負責轉換和提供。</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="lifecycle-tabs-update" class="tab-content">
+    <div class="diagram-wrap">
+      <div class="mermaid">
+sequenceDiagram
+    participant FS as 檔案系統
+    participant CK as chokidar
+    participant MG as Module Graph
+    participant WS as WebSocket Server
+    participant BR as 瀏覽器 (@vite/client)
+    participant VR as Vue Runtime
+
+    FS->>CK: Button.vue 變更
+    CK->>MG: onFileChange('Button.vue')
+    MG->>MG: 往上遍歷依賴鏈<br/>找 HMR boundary
+    MG->>MG: 使已接受 HMR 的模組失效<br/>(invalidateModule)
+
+    alt 找到 HMR boundary
+        MG->>WS: 產生 update payload
+        WS->>BR: WebSocket message<br/>{ type: "update", ... }
+        BR->>BR: dynamic import<br/>/src/Button.vue?t=timestamp
+        BR->>VR: 呼叫 import.meta.hot.accept() callback
+        VR->>VR: 替換元件定義<br/>保留元件 state
+    else 找不到 boundary
+        WS->>BR: { type: "full-reload" }
+        BR->>BR: location.reload()
+    end
+      </div>
+    </div>
+  </div>
+
+  <div id="lifecycle-tabs-css" class="tab-content">
+    <div class="diagram-wrap">
+      <div class="mermaid">
+sequenceDiagram
+    participant FS as 檔案系統
+    participant CK as chokidar
+    participant WS as WebSocket Server
+    participant BR as 瀏覽器
+
+    FS->>CK: styles.scss 變更
+    CK->>WS: CSS 變更通知
+    WS->>BR: { type: "update", updates: [{ type: "css-update" }] }
+
+    alt 有對應的 &lt;link&gt; tag
+        BR->>BR: 找到舊的 &lt;link&gt; tag
+        BR->>BR: 新增新的 &lt;link href="styles.scss?t=新時間戳"&gt;
+        BR->>BR: 等新 CSS 載入後移除舊 &lt;link&gt;
+    else Vue SFC &lt;style&gt;
+        BR->>BR: 替換 &lt;style&gt; tag 內容
+    end
+
+    Note over BR: 完全不觸發 JS HMR<br/>也不 full reload
+      </div>
+    </div>
+    <div class="callout success">
+      <div class="callout-icon">✨</div>
+      <div class="callout-body">
+        <div class="callout-title">CSS 更新是最快的 HMR</div>
+        <div class="callout-text">CSS 檔案沒有「模組狀態」問題，不需要 HMR boundary，直接替換 <code>&lt;link&gt;</code> tag 即可。這也是為什麼在 Vite 開發時改 SCSS 幾乎是瞬間生效。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── -->
+<!-- 4. HMR Boundary -->
+<!-- ─────────────────────────────────────── -->
+<section id="boundary">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <h2>HMR Boundary — 邊界概念</h2>
+  </div>
+
+  <p>HMR Boundary 是 HMR 最關鍵也最容易被誤解的概念。它決定了「更新要傳播到哪裡為止」。</p>
+
+  <h3>什麼是 Boundary？</h3>
+  <p>一個模組如果呼叫了 <code>import.meta.hot.accept()</code>，它就是一個 <strong>HMR Boundary</strong>（邊界）。當這個模組或其子依賴變更時，更新會在這裡「被吸收」，不再往上傳播。</p>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+graph BT
+    A["App.vue\n(無 accept)"] --> B["Layout.vue\n(無 accept)"]
+    B --> C["Sidebar.vue\n(有 accept ✓)"]
+    C --> D["NavItem.vue\n(有 accept ✓)"]
+    D --> E["Icon.vue\n修改這個！"]
+
+    style E fill:#f85149,stroke:#f85149,color:#fff
+    style D fill:#3fb950,stroke:#3fb950,color:#000
+    style C fill:#58a6ff,stroke:#58a6ff,color:#000
+    style B fill:#21262d,stroke:#30363d,color:#8b949e
+    style A fill:#21262d,stroke:#30363d,color:#8b949e
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">🔍</div>
+    <div class="callout-body">
+      <div class="callout-title">傳播邏輯</div>
+      <div class="callout-text">
+        修改 <code>Icon.vue</code> → 往上找 boundary → <code>NavItem.vue</code> 有 <code>accept()</code> → <strong>在這裡停止</strong>，只更新 NavItem.vue 及其子樹。<br/>
+        如果 NavItem.vue 也沒有 accept，則繼續往上找 Sidebar.vue，它有 accept，在此停止。<br/>
+        如果一直找到根都沒有 accept → <strong>full page reload</strong>。
+      </div>
+    </div>
+  </div>
+
+  <h3>Vue Plugin 自動注入 accept()</h3>
+  <p>Vue 的 Vite plugin (<code>@vitejs/plugin-vue</code>) 會自動為每個 <code>.vue</code> 檔案末尾注入 HMR 代碼，所以開發者通常不需要手動寫：</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">編譯後的 Button.vue（簡化）</span>
+      <span class="code-lang">JavaScript</span>
+    </div>
+    <pre><code class="language-javascript">// 你寫的 SFC 內容（編譯後）
+const __default__ = {
+  setup() { /* ... */ }
+}
+
+// @vitejs/plugin-vue 自動注入的 HMR 代碼 ↓
+if (import.meta.hot) {
+  __default__.__hmrId = "7ba5bd90"  // 元件唯一 ID
+
+  // 在全域 HMR 系統註冊這個元件
+  __VUE_HMR_RUNTIME__.createRecord(__default__.__hmrId, __default__)
+
+  // 宣告這個模組接受自身更新（self-accepting）
+  import.meta.hot.accept((mod) => {
+    if (!mod) return  // 模組被刪除
+
+    const { default: updated } = mod
+
+    // 通知 Vue runtime 更新這個元件的定義
+    // Vue 會保留所有 reactive state，只替換 render/setup
+    __VUE_HMR_RUNTIME__.rerender(updated.__hmrId, updated.render)
+    __VUE_HMR_RUNTIME__.reload(updated.__hmrId, updated)
+  })
+}</code></pre>
+  </div>
+
+  <h3>手動宣告 accept — 純 JS/TS 模組</h3>
+  <p>對於非 Vue SFC 的模組（如 Pinia store、utils），需要手動宣告：</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">src/store/user.ts</span>
+      <span class="code-lang">TypeScript</span>
+    </div>
+    <pre><code class="language-typescript">export const useUserStore = defineStore('user', {
+  state: () => ({ name: 'admin', role: 'manager' }),
+  // ...
+})
+
+// 手動宣告這個 store 接受 HMR
+if (import.meta.hot) {
+  // accept() 不傳 deps 參數 = self-accepting（接受自身更新）
+  import.meta.hot.accept()
+
+  // dispose() = 在舊模組被替換前做清理
+  import.meta.hot.dispose(() => {
+    // 清除 Pinia store，讓新模組重新初始化
+    useUserStore().$dispose()
+  })
+}</code></pre>
+  </div>
+
+  <h3>accept() 的三種形式</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>寫法</th><th>意義</th><th>適用場景</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>hot.accept(cb)</code></td>
+          <td>Self-accepting，模組接受自己的更新</td>
+          <td>Vue SFC（自動注入）、Pinia store</td>
+        </tr>
+        <tr>
+          <td><code>hot.accept('./dep', cb)</code></td>
+          <td>接受特定依賴的更新</td>
+          <td>需要對特定子模組更新作出反應</td>
+        </tr>
+        <tr>
+          <td><code>hot.accept(['./a','./b'], cb)</code></td>
+          <td>接受多個依賴的更新</td>
+          <td>聚合多個子模組的模組</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── -->
+<!-- 5. WebSocket Protocol -->
+<!-- ─────────────────────────────────────── -->
+<section id="protocol">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <h2>WebSocket 通訊協議</h2>
+  </div>
+
+  <p>Vite 的 HMR 完全靠 WebSocket 推送通知，不是傳模組內容，只傳「要去重新 import 哪個 URL」。</p>
+
+  <h3>訊息格式</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">HMR WebSocket 訊息結構（TypeScript 型別）</span>
+      <span class="code-lang">TypeScript</span>
+    </div>
+    <pre><code class="language-typescript">// Server → Client 的訊息類型
+type HMRPayload =
+  | ConnectedPayload       // 連線建立
+  | UpdatePayload          // 模組更新（最常見）
+  | FullReloadPayload      // 整頁重載
+  | CustomPayload          // plugin 自定義事件
+  | ErrorPayload           // 編譯錯誤覆蓋層
+  | PrunePayload           // 模組被刪除
+
+interface UpdatePayload {
+  type: 'update'
+  updates: Update[]
+}
+
+interface Update {
+  type: 'js-update' | 'css-update'
+  path: string            // 模組路徑，如 /src/components/Button.vue
+  acceptedPath: string    // 接受 HMR 的 boundary 路徑
+  timestamp: number       // 用於 cache-busting，加在 import URL 後面
+  explicitImportRequired?: boolean
+}
+
+interface FullReloadPayload {
+  type: 'full-reload'
+  path?: string           // 觸發 reload 的檔案路徑（debug 用）
+}
+
+interface ErrorPayload {
+  type: 'error'
+  err: {
+    message: string
+    stack: string
+    id?: string
+    frame?: string        // 錯誤的代碼框架（紅色高亮顯示在瀏覽器上）
+    plugin?: string
+    loc?: { line: number; column: number; file?: string }
+  }
+}</code></pre>
+  </div>
+
+  <h3>實際 WebSocket 訊息範例</h3>
+  <div class="two-col">
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-filename">修改 .vue 元件</span>
+        <span class="code-lang">JSON</span>
+      </div>
+      <pre><code class="language-json">{
+  "type": "update",
+  "updates": [{
+    "type": "js-update",
+    "path": "/src/components/Button.vue",
+    "acceptedPath": "/src/components/Button.vue",
+    "timestamp": 1716345600123,
+    "explicitImportRequired": false
+  }]
+}</code></pre>
+    </div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-filename">修改 .scss 樣式</span>
+        <span class="code-lang">JSON</span>
+      </div>
+      <pre><code class="language-json">{
+  "type": "update",
+  "updates": [{
+    "type": "css-update",
+    "path": "/src/styles/vars.scss",
+    "acceptedPath": "/src/styles/vars.scss",
+    "timestamp": 1716345612456
+  }]
+}</code></pre>
+    </div>
+  </div>
+
+  <h3>@vite/client 收到訊息後的處理邏輯</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">@vite/client 核心邏輯（簡化）</span>
+      <span class="code-lang">JavaScript</span>
+    </div>
+    <pre><code class="language-javascript">// WebSocket 訊息處理器（@vite/client 內部邏輯）
+socket.addEventListener('message', async ({ data }) => {
+  const payload = JSON.parse(data)
+
+  switch (payload.type) {
+    case 'connected':
+      console.debug('[vite] connected.')
+      // 啟動心跳 ping
+      setInterval(() => socket.send('{"type":"ping"}'), __HMR_TIMEOUT__)
+      break
+
+    case 'update':
+      // 通知所有監聽器（如 vite-plugin-vue-devtools）
+      notifyListeners('vite:beforeUpdate', payload)
+
+      await Promise.all(
+        payload.updates.map(async (update) => {
+          if (update.type === 'js-update') {
+            return await fetchUpdate(update)  // 動態 import 新模組
+          } else {
+            // CSS update：直接操作 DOM 的 <link> tag
+            const el = document.querySelector(`link[href="${update.path}"]`)
+            if (el) {
+              el.href = `${update.path}?t=${update.timestamp}`
+            }
+          }
+        })
+      )
+
+      notifyListeners('vite:afterUpdate', payload)
+      break
+
+    case 'full-reload':
+      notifyListeners('vite:beforeFullReload', payload)
+      location.reload()
+      break
+
+    case 'error':
+      // 在頁面上顯示紅色錯誤覆蓋層
+      createErrorOverlay(payload.err)
+      break
+  }
+})
+
+// 動態 import 更新後的模組
+async function fetchUpdate({ path, acceptedPath, timestamp }) {
+  const mod = hotModulesMap.get(path)  // 找到這個模組的 HMR 資訊
+  if (!mod) return  // 尚未 accept，會觸發 full-reload
+
+  const moduleMap = new Map()
+  const isSelfUpdate = path === acceptedPath
+
+  // 加上時間戳 → 繞過 HTTP cache
+  const [acceptedPathWithoutQuery] = acceptedPath.split('?')
+  const newMod = await import(
+    `${acceptedPathWithoutQuery}?t=${timestamp}`
+  )
+
+  // 呼叫所有已登記的 accept callback
+  for (const { deps, fn } of mod.callbacks) {
+    if (deps.includes(acceptedPath) || isSelfUpdate) {
+      fn([newMod])  // 傳入新模組，讓 callback 更新 UI
+    }
+  }
+}</code></pre>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── -->
+<!-- 6. Plugin 系統 -->
+<!-- ─────────────────────────────────────── -->
+<section id="plugins">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <h2>Plugin 系統與 HMR Hook</h2>
+  </div>
+
+  <p>Vite Plugin 可以透過 <code>handleHotUpdate</code> hook 介入 HMR 流程，自訂哪些模組需要更新。</p>
+
+  <h3>Plugin HMR Hook</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">Plugin handleHotUpdate Hook 介面</span>
+      <span class="code-lang">TypeScript</span>
+    </div>
+    <pre><code class="language-typescript">interface Plugin {
+  name: string
+
+  // 當檔案變更時呼叫，可以：
+  // 1. 回傳 undefined → 讓 Vite 按預設處理
+  // 2. 回傳空陣列 [] → 阻止任何 HMR 更新
+  // 3. 回傳 ModuleNode[] → 指定要更新的模組
+  handleHotUpdate?(ctx: HmrContext): Array<ModuleNode> | void | Promise<Array<ModuleNode> | void>
+}
+
+interface HmrContext {
+  file: string            // 變更的檔案絕對路徑
+  timestamp: number       // 變更時間戳
+  modules: Array<ModuleNode>  // 受影響的模組
+  read: () => string | Promise<string>  // 讀取變更後的內容
+  server: ViteDevServer
+}</code></pre>
+  </div>
+
+  <h3>本專案實際載入的 Plugins（開發模式）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Plugin</th>
+          <th>來源</th>
+          <th>HMR 相關行為</th>
+          <th>啟用條件</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>@vitejs/plugin-vue</strong></td>
+          <td>Vite 官方</td>
+          <td>為每個 <code>.vue</code> 自動注入 <code>import.meta.hot.accept()</code>，支援 SFC 的 script/template/style 分離 HMR</td>
+          <td><span class="yes">✓ 永遠</span></td>
+        </tr>
+        <tr>
+          <td><strong>@vitejs/plugin-vue-jsx</strong></td>
+          <td>Vite 官方</td>
+          <td>支援 <code>.tsx</code> 檔案的 HMR</td>
+          <td><span class="yes">✓ 永遠</span></td>
+        </tr>
+        <tr>
+          <td><strong>vite-plugin-vue-devtools</strong></td>
+          <td>社群</td>
+          <td>監聽 HMR 事件，在 DevTools 面板顯示更新記錄</td>
+          <td><span class="partial">開發模式 + VITE_DEVTOOLS=true</span></td>
+        </tr>
+        <tr>
+          <td><strong>viteNitroMockPlugin</strong></td>
+          <td>@vben 自製</td>
+          <td>使用 Nitro 的 HMR 機制，監控 mock 檔案變更並重啟 mock server（本專案設定為 <code>VITE_NITRO_MOCK=false</code>，停用）</td>
+          <td><span class="no">✗ 已停用</span></td>
+        </tr>
+        <tr>
+          <td><strong>viteInjectAppLoadingPlugin</strong></td>
+          <td>@vben 自製</td>
+          <td>修改 <code>transformIndexHtml</code>，注入 loading 動畫 HTML；本身不影響 HMR</td>
+          <td><span class="yes">✓ VITE_INJECT_APP_LOADING=true</span></td>
+        </tr>
+        <tr>
+          <td><strong>@intlify/unplugin-vue-i18n</strong></td>
+          <td>Vue i18n</td>
+          <td>監控 <code>.json</code> 語言包變更，觸發相關元件重新 render</td>
+          <td><span class="yes">✓ i18n=true</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── -->
+<!-- 7. OA 實作狀況 -->
+<!-- ─────────────────────────────────────── -->
+<section id="oa">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <h2>OA（漢堡王 ERP）實作狀況</h2>
+  </div>
+
+  <div class="oa-section">
+    <div class="oa-title">📋 OA 專案 HMR 功能實作檢查</div>
+    <div class="oa-grid">
+
+      <div class="oa-item">
+        <div class="oa-item-title"><span class="dot-green"></span> Vite Dev Server — 已實作 ✓</div>
+        <div class="oa-item-desc">
+          目前以 <code>pnpm run dev:bk</code> 啟動，監聽 <strong>port 5173</strong>，使用 Vite 原生 HMR。
+          <br><br>
+          <code>/data/burgerking/erp-kingmaker/apps/burger-king/vite.config.mts</code>
+        </div>
+      </div>
+
+      <div class="oa-item">
+        <div class="oa-item-title"><span class="dot-green"></span> API 反向代理 — 已實作 ✓</div>
+        <div class="oa-item-desc">
+          <code>/admin-api</code> → <code>http://10.65.163.6:48080</code>，設定了 <code>ws: true</code> 支援 WebSocket 代理（Laravel Reverb）。
+          <br><br>
+          路徑 rewrite：<code>/admin-api/xxx</code> → <code>/xxx</code>
+        </div>
+      </div>
+
+      <div class="oa-item">
+        <div class="oa-item-title"><span class="dot-green"></span> Server Warmup 預熱 — 已實作 ✓</div>
+        <div class="oa-item-desc">
+          預熱 <code>index.html</code>、<code>bootstrap.ts</code>、<code>views/</code>、<code>layouts/</code>、<code>router/</code>、<code>store/</code>、<code>api/</code>、<code>adapter/</code>，
+          減少首次載入等待時間。
+        </div>
+      </div>
+
+      <div class="oa-item">
+        <div class="oa-item-title"><span class="dot-green"></span> App Loading 注入 — 已實作 ✓</div>
+        <div class="oa-item-desc">
+          <code>VITE_INJECT_APP_LOADING=true</code>，自動在 <code>&lt;body&gt;</code> 注入 loading 動畫 HTML，並讀取 localStorage 主題決定深色/淺色 loading。
+        </div>
+      </div>
+
+      <div class="oa-item">
+        <div class="oa-item-title"><span class="dot-green"></span> 主題 HMR — 已實作 ✓</div>
+        <div class="oa-item-desc">
+          <code>App.vue</code> 使用 <code>useAntdDesignTokens()</code> + <code>usePreferences()</code>，都是 Vue Reactive，主題變更時 Vue 的 reactivity system 自動更新，無需 full reload。
+        </div>
+      </div>
+
+      <div class="oa-item">
+        <div class="oa-item-title"><span class="dot-yellow"></span> Nitro Mock Server — 停用</div>
+        <div class="oa-item-desc">
+          <code>VITE_NITRO_MOCK=false</code> — Mock server 已停用，API 請求直接代理到後端 <code>10.65.163.6:48080</code>，不使用本機 mock 資料。
+        </div>
+      </div>
+
+      <div class="oa-item">
+        <div class="oa-item-title"><span class="dot-yellow"></span> Vue DevTools — 停用</div>
+        <div class="oa-item-desc">
+          <code>VITE_DEVTOOLS=false</code> — vite-plugin-vue-devtools 未啟用，若需要調試元件可以改為 <code>true</code>。
+        </div>
+      </div>
+
+      <div class="oa-item">
+        <div class="oa-item-title"><span class="dot-red"></span> Nginx 未反代 HMR</div>
+        <div class="oa-item-desc">
+          Nginx 目前 <strong>inactive (dead)</strong>，外部需直連 <code>:5173</code>。若未來啟用 Nginx 代理，需確保 WebSocket (<code>ws://</code>) 也有正確代理，否則 HMR 會斷線。
+          <br><br>
+          需在 nginx location 加：<code>proxy_set_header Upgrade $http_upgrade;</code>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <h3>本機實際設定檔彙整</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">apps/burger-king/vite.config.mts</span>
+      <span class="code-lang">TypeScript</span>
+    </div>
+    <pre><code class="language-typescript">import { defineConfig } from '@vben/vite-config';
+
+export default defineConfig(async () => {
+  return {
+    application: {},   // 使用 @vben/vite-config 預設值
+    vite: {
+      server: {
+        // 唯一自訂項：API 反向代理
+        proxy: {
+          '/admin-api': {
+            changeOrigin: true,
+            rewrite: (path) => path.replace(/^\/admin-api/, ''),
+            target: 'http://10.65.163.6:48080',  // 漢堡王後端 API
+            ws: true,   // WebSocket 代理（支援 Laravel Reverb）
+          },
+        },
+      },
+    },
+  };
+});</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">apps/burger-king/.env.development</span>
+      <span class="code-lang">dotenv</span>
+    </div>
+    <pre><code class="language-bash">VITE_BASE_URL=http://10.65.164.192
+VITE_GLOB_API_URL=http://10.65.164.192/api/erp
+
+VITE_UPLOAD_TYPE=server
+VITE_INJECT_APP_LOADING=true   # Loading 動畫
+VITE_DEVTOOLS=false            # Vue DevTools 停用
+VITE_APP_DEFAULT_USERNAME=admin
+VITE_APP_DEFAULT_PASSWORD=admin123</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">apps/burger-king/.env（通用設定）</span>
+      <span class="code-lang">dotenv</span>
+    </div>
+    <pre><code class="language-bash">VITE_APP_TITLE=漢堡王ERP管理系統
+VITE_BASE=/
+VITE_APP_NAMESPACE=burger-king-antd
+VITE_NITRO_MOCK=false           # Mock Server 停用，使用真實 API
+VITE_APP_TENANT_ENABLE=true     # 多租戶
+VITE_APP_CAPTCHA_ENABLE=false   # 驗證碼關閉
+VITE_APP_API_ENCRYPT_ENABLE=true  # API 加解密</code></pre>
+  </div>
+
+  <h3>internal/vite-config 統一設定的 HMR 相關項目</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">internal/vite-config/src/config/application.ts（節錄關鍵部分）</span>
+      <span class="code-lang">TypeScript</span>
+    </div>
+    <pre><code class="language-typescript">// Server 設定（HMR 相關）
+server: {
+  host: true,      // 監聽所有網路介面（0.0.0.0）→ 允許 10.65.164.192:5173 外部訪問
+  port,            // 從 VITE_PORT 讀取，預設 5173
+  warmup: {
+    clientFiles: [
+      './index.html',
+      './src/bootstrap.ts',
+      './src/{views,layouts,router,store,api,adapter}/*',
+    ],
+  },
+},
+
+// Build 設定（dev 模式不影響 HMR，但影響整體 pipeline）
+esbuild: {
+  drop: isBuild ? ['debugger'] : [],  // 開發模式保留所有 console 和 debugger
+  legalComments: 'none',
+},</code></pre>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── -->
+<!-- 8. Vite vs Webpack -->
+<!-- ─────────────────────────────────────── -->
+<section id="compare">
+  <div class="section-header">
+    <div class="section-num">8</div>
+    <h2>Vite HMR vs Webpack HMR 比較</h2>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+graph LR
+    subgraph WEBPACK["Webpack Dev Server"]
+        WA[所有模組] -->|bundle| WB[bundle.js]
+        WB -->|HMR chunk| WC[瀏覽器]
+        WD[檔案變更] -->|rebuild chunk| WB
+    end
+
+    subgraph VITE["Vite Dev Server"]
+        VA[模組A] -->|ESM| VC[瀏覽器]
+        VB[模組B] -->|ESM| VC
+        VX[模組X] -->|ESM| VC
+        VD[檔案變更] -->|WS 通知| VC
+        VC -->|re-import 單一模組| VX
+    end
+
+    style WEBPACK fill:#1a0000,stroke:#f85149,color:#e6edf3
+    style VITE fill:#001a00,stroke:#3fb950,color:#e6edf3
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>比較項目</th>
+          <th>Vite</th>
+          <th>Webpack</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>冷啟動</strong></td>
+          <td><span class="yes">極快 (&lt;1s)</span> — 不打包，直接啟動</td>
+          <td><span class="no">慢 (10s–60s)</span> — 需先打包全部</td>
+        </tr>
+        <tr>
+          <td><strong>HMR 速度</strong></td>
+          <td><span class="yes">固定 &lt;100ms</span> — 只更新一個模組</td>
+          <td><span class="partial">O(n)</span> — 隨專案變大而變慢</td>
+        </tr>
+        <tr>
+          <td><strong>模組格式</strong></td>
+          <td>原生 ESM（瀏覽器直接解析）</td>
+          <td>CommonJS/AMD bundle</td>
+        </tr>
+        <tr>
+          <td><strong>HMR 傳輸</strong></td>
+          <td>只傳模組 URL（讓瀏覽器重新 import）</td>
+          <td>傳 HMR chunk（更新後的 bundle 片段）</td>
+        </tr>
+        <tr>
+          <td><strong>CSS HMR</strong></td>
+          <td><span class="yes">替換 &lt;link&gt; tag，無 FOUC</span></td>
+          <td>透過 style-loader 注入，可能閃爍</td>
+        </tr>
+        <tr>
+          <td><strong>大型專案</strong></td>
+          <td><span class="yes">規模不影響 HMR 速度</span></td>
+          <td><span class="no">專案越大越慢</span></td>
+        </tr>
+        <tr>
+          <td><strong>Source Map</strong></td>
+          <td>每個模組獨立，精確</td>
+          <td>整個 bundle 共用，對應複雜</td>
+        </tr>
+        <tr>
+          <td><strong>首次請求</strong></td>
+          <td><span class="partial">需要時間（多個 HTTP 請求）</span></td>
+          <td><span class="partial">需要時間（bundle 很大）</span></td>
+        </tr>
+        <tr>
+          <td><strong>Production Build</strong></td>
+          <td>使用 Rollup 打包（非 Vite dev server）</td>
+          <td>使用 Webpack 打包</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <blockquote>
+    The main difference is that in Webpack, HMR propagates up through the module tree and may require a full reload if the update bubble can't be handled. In Vite, HMR is performed over native ESM, so Vite only needs to precisely invalidate the chain between the edited module and its closest HMR boundary.
+    <cite>— Vite 官方文件</cite>
+  </blockquote>
+</section>
+
+<!-- ─────────────────────────────────────── -->
+<!-- 9. 本機設定 -->
+<!-- ─────────────────────────────────────── -->
+<section id="config">
+  <div class="section-header">
+    <div class="section-num">9</div>
+    <h2>本機環境設定總覽</h2>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+graph TB
+    subgraph INTERNET["外部訪問"]
+        U["瀏覽器\nhttp://10.65.164.192:5173"]
+    end
+
+    subgraph SERVER["伺服器 10.65.164.192"]
+        subgraph VITE["Vite Dev Server (port 5173)"]
+            V1["HTTP: index.html\n+ ESM modules"]
+            V2["WebSocket: HMR\nws://10.65.164.192:5173"]
+            V3["Proxy: /admin-api/*\n→ 10.65.163.6:48080"]
+        end
+
+        subgraph APACHE["Apache httpd (port 80)"]
+            A1["VirtualHost: 10.65.164.192\n→ /data/newprooa/public"]
+            A2["VirtualHost: snkey.wilson\n→ /data/snkey/public"]
+            A3["VirtualHost: pc.wilson\n→ /data/newprooa_pc_wilson/public"]
+            A4["VirtualHost: as.wilson\n→ /data/as-schedule/public"]
+        end
+
+        subgraph LARAVEL["Laravel 服務"]
+            L1["Reverb WebSocket\nphp artisan reverb:start (port 8080)"]
+            L2["Queue Worker\nphp artisan queue:work"]
+            L3["Schedule Worker\nphp artisan schedule:work"]
+        end
+
+        DB["MySQL :3306"]
+    end
+
+    subgraph BACKEND["後端伺服器 10.65.163.6"]
+        B1["後端 API :48080"]
+    end
+
+    U -->|HTTP/WS| VITE
+    V3 -->|反向代理| B1
+    VITE -->|API 請求（開發）| V3
+    APACHE --> LARAVEL
+    LARAVEL --> DB
+
+    style INTERNET fill:#0d1117,stroke:#58a6ff,color:#e6edf3
+    style VITE fill:#001a00,stroke:#3fb950,color:#e6edf3
+    style APACHE fill:#1a0d00,stroke:#ffa657,color:#e6edf3
+    style LARAVEL fill:#160022,stroke:#bc8cff,color:#e6edf3
+    </div>
+  </div>
+
+  <h3>啟動指令鏈</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">Process Tree (ps aux)</span>
+      <span class="code-lang">bash</span>
+    </div>
+    <pre><code class="language-bash">PID 1377  /bin/sh -c pnpm --dir /data/burgerking/erp-kingmaker run dev:bk
+  └─ PID 1378  node pnpm --dir /data/burgerking/erp-kingmaker run dev:bk
+       └─ PID 1653  node pnpm -F @vben/burger-king run dev
+            └─ PID 1776  node pnpm vite --mode development
+                 └─ PID 1815  node vite.js --mode development  ← 實際監聽 :5173</code></pre>
+  </div>
+
+  <h3>Vite 設定最終合併順序</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">設定合併優先序（後者覆蓋前者）</span>
+      <span class="code-lang">TypeScript</span>
+    </div>
+    <pre><code class="language-typescript">// 1. common config（最低優先）
+const commonConfig = {
+  build: { chunkSizeWarningLimit: 2000, sourcemap: false }
+}
+
+// 2. applicationConfig（@vben/vite-config 預設）
+const applicationConfig = {
+  base: '/',
+  server: { host: true, port: 5173, warmup: { ... } },
+  plugins: [vue(), vueJsx(), i18n(), injectLoading(), ...],
+  build: { rollupOptions: { output: { ... } }, target: 'es2015' },
+  esbuild: { drop: [], legalComments: 'none' },
+  css: { preprocessorOptions: { scss: { ... } } }
+}
+
+// 3. 使用者 vite config（最高優先，覆蓋上面的）
+const userConfig = {
+  server: {
+    proxy: {
+      '/admin-api': {
+        target: 'http://10.65.163.6:48080',
+        changeOrigin: true,
+        ws: true,
+        rewrite: (path) => path.replace(/^\/admin-api/, '')
+      }
+    }
+  }
+}
+
+// mergeConfig(mergeConfig(commonConfig, applicationConfig), userConfig)</code></pre>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── -->
+<!-- 10. 排障 -->
+<!-- ─────────────────────────────────────── -->
+<section id="troubleshoot">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <h2>HMR 常見問題排障</h2>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>症狀</th>
+          <th>原因</th>
+          <th>解法</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>改了檔案但頁面沒更新</strong></td>
+          <td>WebSocket 斷線</td>
+          <td>開 DevTools Network → WS tab，確認 <code>ws://5173</code> 有連線</td>
+        </tr>
+        <tr>
+          <td><strong>每次都 full reload 而非 HMR</strong></td>
+          <td>找不到 HMR boundary</td>
+          <td>確認 <code>.vue</code> 有被 <code>@vitejs/plugin-vue</code> 正確處理；檢查 console 的 <code>[vite] invalidate</code> 訊息</td>
+        </tr>
+        <tr>
+          <td><strong>console 有 [vite] connecting...</strong></td>
+          <td>WS 連線中斷後重試</td>
+          <td>通常是伺服器重啟，@vite/client 會自動重連，屬於正常</td>
+        </tr>
+        <tr>
+          <td><strong>CSS 改了沒反應</strong></td>
+          <td>SCSS 全域注入問題</td>
+          <td>檢查 <code>additionalData</code> SCSS 設定是否造成 transform 錯誤</td>
+        </tr>
+        <tr>
+          <td><strong>透過 Nginx 代理後 HMR 失效</strong></td>
+          <td>Nginx 沒有代理 WebSocket</td>
+          <td>在 location 加上：<br><code>proxy_set_header Upgrade $http_upgrade;</code><br><code>proxy_set_header Connection "upgrade";</code></td>
+        </tr>
+        <tr>
+          <td><strong>Pinia store 更新後狀態消失</strong></td>
+          <td>Store 沒有 HMR dispose 處理</td>
+          <td>在 store 末尾加 <code>import.meta.hot?.accept(acceptHMRUpdate(useStore, import.meta.hot))</code></td>
+        </tr>
+        <tr>
+          <td><strong>大量 vite: invalidate 造成慢</strong></td>
+          <td>index file (barrel) 重新匯出太多模組</td>
+          <td>減少 <code>index.ts</code> 中的 re-export；或用 <code>optimizeDeps.include</code> 預先打包</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Nginx + WebSocket 代理設定（未來啟用 Nginx 時）</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">/etc/nginx/conf.d/erp-kingmaker.conf（修改建議）</span>
+      <span class="code-lang">nginx</span>
+    </div>
+    <pre><code class="language-nginx">server {
+    listen 8080;
+    server_name _;
+
+    # Production: 靜態檔案
+    root /data/burgerking/erp-kingmaker/apps/burger-king/dist;
+
+    # Development: 反代 Vite Dev Server（含 HMR WebSocket）
+    # location / {
+    #     proxy_pass http://127.0.0.1:5173;
+    #     proxy_http_version 1.1;
+    #
+    #     # 關鍵：讓 WebSocket 升級通過 ↓
+    #     proxy_set_header Upgrade $http_upgrade;
+    #     proxy_set_header Connection "upgrade";
+    #
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     proxy_cache_bypass $http_upgrade;
+    # }
+
+    location /admin-api/ {
+        proxy_pass http://127.0.0.1:80/admin-api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Connection        "upgrade";
+        proxy_read_timeout 300s;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}</code></pre>
+  </div>
+</section>
+
+</div>
+
+<!-- FOOTER -->
+<div style="text-align:center;padding:32px;color:#8b949e;font-size:12px;border-top:1px solid #30363d;">
+  漢堡王 ERP — Vite HMR 技術文件 ｜ 2026-05-22 ｜ @vben/burger-king port 5173
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#161b22',
+      primaryTextColor: '#e6edf3',
+      primaryBorderColor: '#30363d',
+      lineColor: '#58a6ff',
+      secondaryColor: '#21262d',
+      tertiaryColor: '#0d1117',
+      background: '#0f1117',
+      mainBkg: '#161b22',
+      nodeBorder: '#30363d',
+      clusterBkg: '#0d1117',
+      titleColor: '#e6edf3',
+      edgeLabelBackground: '#161b22',
+      actorBkg: '#161b22',
+      actorBorder: '#30363d',
+      actorTextColor: '#e6edf3',
+      signalColor: '#58a6ff',
+      signalTextColor: '#e6edf3',
+    },
+    sequence: { actorMargin: 50 },
+    flowchart: { htmlLabels: true, curve: 'basis' },
+  });
+
+  hljs.highlightAll();
+
+  function switchTab(groupId, tabName) {
+    // hide all content
+    document.querySelectorAll(`[id^="${groupId}-"]`).forEach(el => el.classList.remove('active'));
+    // remove active from all tabs in this group
+    document.getElementById(groupId).querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+    // activate selected
+    document.getElementById(`${groupId}-${tabName}`).classList.add('active');
+    // activate tab button
+    const tabs = document.getElementById(groupId).querySelectorAll('.tab');
+    const names = ['startup','request','update','css'];
+    const idx = names.indexOf(tabName);
+    if (idx >= 0) tabs[idx].classList.add('active');
+  }
+</script>
+</body>
+</html>

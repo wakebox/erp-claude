@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>食材維護 API 分析 — /pdm/dataSettings/ingredients</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; padding: 24px; }
+
+    h1 { font-size: 22px; font-weight: 700; color: #0a1628; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #666; margin-bottom: 28px; }
+    .subtitle code { background: #e6eaf0; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+
+    /* Summary cards */
+    .summary { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 28px; }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px 22px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      min-width: 130px;
+      text-align: center;
+    }
+    .card .num { font-size: 32px; font-weight: 800; line-height: 1.1; }
+    .card .lbl { font-size: 11px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+    .card.blue  .num { color: #1677ff; }
+    .card.green .num { color: #52c41a; }
+    .card.orange .num { color: #fa8c16; }
+    .card.red   .num { color: #ff4d4f; }
+    .card.purple .num { color: #722ed1; }
+
+    /* Section */
+    .section { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.07); margin-bottom: 22px; overflow: hidden; }
+    .section-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      background: #fafafa;
+    }
+    .section-icon { font-size: 16px; }
+    .section-title { font-size: 15px; font-weight: 700; color: #0a1628; }
+    .section-desc { font-size: 12px; color: #999; margin-left: auto; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      background: #f5f7fa;
+      padding: 10px 14px;
+      font-weight: 600;
+      text-align: left;
+      color: #555;
+      border-bottom: 1px solid #eee;
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid #f5f5f5; transition: background .15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fafcff; }
+    tbody td { padding: 10px 14px; vertical-align: top; line-height: 1.5; }
+    tbody td.num-cell { color: #aaa; font-size: 11px; padding-top: 13px; width: 32px; }
+
+    /* Method badges */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; font-weight: 700; letter-spacing: .5px; white-space: nowrap;
+    }
+    .get    { background: #e6f4ff; color: #0958d9; }
+    .post   { background: #f6ffed; color: #237804; }
+    .put    { background: #fff7e6; color: #d46b08; }
+    .delete { background: #fff1f0; color: #cf1322; }
+
+    /* Endpoint */
+    .endpoint { font-family: 'Consolas', monospace; font-size: 12.5px; color: #1a1a2e; }
+    .endpoint em { color: #999; font-style: normal; }
+
+    /* Params */
+    .params { font-size: 11.5px; color: #666; margin-top: 3px; }
+    .params span { background: #f5f5f5; border-radius: 3px; padding: 1px 5px; margin: 1px 2px 1px 0; display: inline-block; }
+
+    /* Trigger */
+    .trigger { font-size: 11px; color: #888; white-space: nowrap; }
+    .trigger.conditional { color: #d46b08; }
+
+    /* Legend */
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 14px 20px; border-top: 1px solid #f0f0f0; background: #fafafa; font-size: 12px; color: #888; }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+
+    /* Note */
+    .note { font-size: 12px; color: #888; padding: 10px 20px 14px; }
+  </style>
+</head>
+<body>
+
+<h1>食材維護 API 分析</h1>
+<p class="subtitle">
+  頁面路由：<code>http://10.65.163.46/pdm/dataSettings/ingredients?pageKey=ingredients</code>
+  &nbsp;·&nbsp; 分析時間：2026-05-20
+</p>
+
+<!-- Summary -->
+<div class="summary">
+  <div class="card blue">  <div class="num">26</div><div class="lbl">API 呼叫次數</div></div>
+  <div class="card green"><div class="num">20</div><div class="lbl">唯一端點</div></div>
+  <div class="card blue"> <div class="num">14</div><div class="lbl">GET</div></div>
+  <div class="card green"><div class="num">2</div> <div class="lbl">POST</div></div>
+  <div class="card orange"><div class="num">3</div><div class="lbl">PUT</div></div>
+  <div class="card red">  <div class="num">1</div> <div class="lbl">DELETE</div></div>
+  <div class="card purple"><div class="num">5</div><div class="lbl">BPM（條件）</div></div>
+</div>
+
+<!-- ===== A: 列表頁 ===== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">📋</span>
+    <span class="section-title">A. 列表頁</span>
+    <span class="section-desc">views/pdm/dataSettings/Ingredients/codebom/index.vue</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Method</th><th>Endpoint / Params</th><th>用途</th><th>觸發時機</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="num-cell">A1</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/system/menu/get-by-flow-key</div>
+          <div class="params"><span>flowKey=ingredients</span></div>
+        </td>
+        <td>取簽核開關設定（isFlowOpen）</td>
+        <td class="trigger">onMounted</td>
+      </tr>
+      <tr>
+        <td class="num-cell">A2</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/bpm/model/getByKey</div>
+          <div class="params"><span>key=ingredients</span></div>
+        </td>
+        <td>取流程節點清單，組工具列篩選標籤</td>
+        <td class="trigger conditional">onMounted（簽核開啟時）</td>
+      </tr>
+      <tr>
+        <td class="num-cell">A3</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/system/sidebar/getAllTodoList</div>
+        </td>
+        <td>取各流程節點待辦數量，顯示在篩選標籤旁</td>
+        <td class="trigger">onMounted / 刷新</td>
+      </tr>
+      <tr>
+        <td class="num-cell">A4</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/system/user/simple-list</div>
+        </td>
+        <td>取使用者清單，用於顯示建立人/修改人姓名</td>
+        <td class="trigger">首次查詢時（懶加載）</td>
+      </tr>
+      <tr>
+        <td class="num-cell">A5</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/ingredient/page</div>
+          <div class="params">
+            <span>pageNo</span><span>pageSize</span><span>processStatus</span>
+            <span>category</span><span>subcategory</span><span>source</span><span>signCode</span>
+          </div>
+        </td>
+        <td>食材主類分頁列表（非簽核模式）</td>
+        <td class="trigger">查詢 / 刷新</td>
+      </tr>
+      <tr>
+        <td class="num-cell">A5b</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/ingredient/todo-page</div>
+          <div class="params">
+            <span>pageNo</span><span>pageSize</span><span>processInstanceStatus</span>
+            <span>processStatus</span><span>taskIds[]</span>
+          </div>
+        </td>
+        <td>食材主類分頁列表（簽核模式，含待辦篩選）</td>
+        <td class="trigger conditional">查詢 / 刷新（簽核開啟時）</td>
+      </tr>
+      <tr>
+        <td class="num-cell">A6</td>
+        <td><span class="badge post">POST</span></td>
+        <td>
+          <div class="endpoint">/pdm/ingredient/create</div>
+          <div class="params"><span>body: {}</span></div>
+        </td>
+        <td>建立空白草稿，取得 id 後導覽至詳情頁</td>
+        <td class="trigger">點擊「新增」按鈕</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== B: 詳細頁 ===== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">📝</span>
+    <span class="section-title">B. 詳細／編輯頁</span>
+    <span class="section-desc">views/pdm/dataSettings/Ingredients/detail/index.vue</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Method</th><th>Endpoint / Params</th><th>用途</th><th>觸發時機</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="num-cell">B1</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/system/menu/get-by-flow-key</div>
+          <div class="params"><span>flowKey=ingredients</span></div>
+        </td>
+        <td>取簽核開關設定</td>
+        <td class="trigger">onMounted</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B2</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/system/user/simple-list</div>
+        </td>
+        <td>取使用者清單（申請人、建立人顯示用）</td>
+        <td class="trigger">onMounted</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B3</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/code-category/page <em>× 4</em></div>
+          <div class="params">
+            <span>pageNo=1</span><span>pageSize=-1</span>
+            <span>code=01</span><span>code=02</span><span>code=03</span><span>code=04</span>
+          </div>
+        </td>
+        <td>並行取大類 / 食材中類 / 食材小類 / 原型食材分類定義</td>
+        <td class="trigger">onMounted</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B4</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/code-item/page <em>× 4</em></div>
+          <div class="params">
+            <span>pageNo=1</span><span>pageSize=-1</span><span>category=&lt;id&gt;</span>
+          </div>
+        </td>
+        <td>各分類下的細項選項（大類/中類/小類/原型食材）</td>
+        <td class="trigger">onMounted（B3 完成後）</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B5</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/ingredient/getOne</div>
+          <div class="params"><span>id=&lt;ingredientId&gt;</span></div>
+        </td>
+        <td>取單筆食材詳情，填入表單欄位</td>
+        <td class="trigger">onMounted（有 id 時）</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B6</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/ingredient-specs/getList</div>
+          <div class="params"><span>ingredientId=&lt;id&gt;</span></div>
+        </td>
+        <td>取食材規格清單（Tab 1 資料來源）</td>
+        <td class="trigger">B5 完成後</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B7</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/ingredient-compat/getList</div>
+          <div class="params"><span>ingredientId=&lt;id&gt;</span></div>
+        </td>
+        <td>取相生相剋清單（Tab 2 資料來源）</td>
+        <td class="trigger">B5 完成後</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B8</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/ingredient-nutrition/getList</div>
+          <div class="params"><span>ingredientId=&lt;id&gt;</span></div>
+        </td>
+        <td>取營養成分清單（Tab 3 資料來源）</td>
+        <td class="trigger">B5 完成後</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B9</td>
+        <td><span class="badge put">PUT</span></td>
+        <td>
+          <div class="endpoint">/pdm/ingredient/update</div>
+          <div class="params">
+            <span>id</span><span>category</span><span>subcategory</span><span>source</span>
+            <span>subject</span><span>season</span><span>processStatus</span>
+            <span>ingredientSpecsSaveReqVOList[]</span>
+            <span>ingredientCompatSaveReqVOList[]</span>
+            <span>inutritionalContentsSaveReqVOList[]</span>
+          </div>
+        </td>
+        <td>暫存 / 遞交 / 作廢時更新食材主表及三個子表</td>
+        <td class="trigger">點擊暫存 / 遞交 / 作廢</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- BPM sub-table -->
+  <div class="section-header" style="background:#fffbe6; border-top:1px solid #ffe58f; border-bottom:1px solid #ffe58f; padding:10px 20px;">
+    <span style="font-size:13px; color:#d46b08; font-weight:600;">🔐 BPM 簽核 API（簽核開啟時才呼叫）</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Method</th><th>Endpoint / Params</th><th>用途</th><th>觸發時機</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="num-cell">B10</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/bpm/process-instance/get-approval-detail</div>
+          <div class="params"><span>processInstanceId=&lt;pid&gt;</span></div>
+        </td>
+        <td>取簽核流程詳情（含 activityNodes 時間軸）</td>
+        <td class="trigger conditional">載入詳情後（有 processInstanceId 時）</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B11</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/bpm/task/list-by-return</div>
+          <div class="params"><span>id=&lt;taskId&gt;</span></div>
+        </td>
+        <td>取可退回的流程節點清單</td>
+        <td class="trigger conditional">點擊「退回」按鈕</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B12</td>
+        <td><span class="badge put">PUT</span></td>
+        <td>
+          <div class="endpoint">/bpm/task/approve</div>
+          <div class="params"><span>id</span><span>comment</span></div>
+        </td>
+        <td>審批通過（含先執行 updateIngredient 更新狀態）</td>
+        <td class="trigger conditional">點擊「審批通過」</td>
+      </tr>
+      <tr>
+        <td class="num-cell">B13</td>
+        <td><span class="badge put">PUT</span></td>
+        <td>
+          <div class="endpoint">/bpm/task/return</div>
+          <div class="params"><span>id</span><span>targetTaskDefinitionKey</span><span>comment</span></div>
+        </td>
+        <td>退回至指定節點</td>
+        <td class="trigger conditional">確認退回彈窗</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== C: Tab 1 食材規格 ===== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">⚙️</span>
+    <span class="section-title">C. Tab 1 — 食材規格</span>
+    <span class="section-desc">detail/components/Specifications.vue</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Method</th><th>Endpoint / Params</th><th>用途</th><th>觸發時機</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="num-cell">C1</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/system/user/simple-list</div>
+        </td>
+        <td>取使用者清單（修改人欄位顯示用）</td>
+        <td class="trigger">onMounted</td>
+      </tr>
+      <tr>
+        <td class="num-cell">C2</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/code-category/page <em>× 5</em></div>
+          <div class="params">
+            <span>pageNo=1</span><span>pageSize=-1</span>
+            <span>code=05</span><span>code=06</span><span>code=07</span><span>code=08</span><span>code=09</span>
+          </div>
+        </td>
+        <td>取食材狀態 / 加工方式 / 儲存方式 / 單品類別 / 單品 分類</td>
+        <td class="trigger">onMounted</td>
+      </tr>
+      <tr>
+        <td class="num-cell">C3</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/code-item/page <em>× 5</em></div>
+          <div class="params">
+            <span>pageNo=1</span><span>pageSize=-1</span><span>category=&lt;id&gt;</span>
+          </div>
+        </td>
+        <td>各規格分類的下拉選項</td>
+        <td class="trigger">onMounted（C2 完成後）</td>
+      </tr>
+      <tr>
+        <td class="num-cell">C4</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/udf/page</div>
+          <div class="params"><span>pageNo=1</span><span>pageSize=-1</span><span>status=true</span></div>
+        </td>
+        <td>取單位定義清單（規格欄的單位欄位）</td>
+        <td class="trigger">onMounted</td>
+      </tr>
+      <tr>
+        <td class="num-cell">C5</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pmm/vqm/vendor-quote-by-product-page</div>
+          <div class="params"><span>pageNo=1</span><span>pageSize=-1</span><span>prodCode=&lt;code&gt;</span></div>
+        </td>
+        <td>取貨源報價明細（「貨源明細」彈窗）</td>
+        <td class="trigger">點擊貨源明細按鈕</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== D: Tab 2 食材特性 ===== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">🌿</span>
+    <span class="section-title">D. Tab 2 — 食材特性</span>
+    <span class="section-desc">detail/components/Nutrients.vue</span>
+  </div>
+  <div class="note">
+    ℹ️ 此 Tab 不發出額外 API 請求。<br>
+    • 產季月份：純前端 checkbox 選取，儲存時隨 <code>PUT /pdm/ingredient/update</code> 的 <code>season</code> 欄位一起送出。<br>
+    • 相生相剋清單：資料由詳細頁 <code>GET /pdm/ingredient-compat/getList</code>（B7）載入，在 Tab 內直接操作陣列，儲存時隨 B9 送出。
+  </div>
+</div>
+
+<!-- ===== E: Tab 3 營養成分含量 ===== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">🧪</span>
+    <span class="section-title">E. Tab 3 — 營養成分含量</span>
+    <span class="section-desc">detail/components/Feature.vue</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Method</th><th>Endpoint / Params</th><th>用途</th><th>觸發時機</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="num-cell">E1</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/nutritional-definitions/page</div>
+          <div class="params"><span>pageNo=1</span><span>pageSize=-1</span></div>
+        </td>
+        <td>取營養成分定義清單（行內編輯下拉）</td>
+        <td class="trigger">onMounted</td>
+      </tr>
+      <tr>
+        <td class="num-cell">E2</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/pdm/udf/page</div>
+          <div class="params"><span>pageNo=1</span><span>pageSize=-1</span><span>status=true</span></div>
+        </td>
+        <td>取單位定義清單（攝取量單位欄位）</td>
+        <td class="trigger">onMounted</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== F: 全域框架 ===== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">🗂️</span>
+    <span class="section-title">F. 全域框架 API（所有頁面共用）</span>
+    <span class="section-desc">layouts / auth store</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Method</th><th>Endpoint / Params</th><th>用途</th><th>觸發時機</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="num-cell">F1</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/system/auth/get-permission-info</div>
+        </td>
+        <td>取登入使用者資訊 + 選單 + 權限碼（JWT）</td>
+        <td class="trigger">頁面初始化 / 刷新</td>
+      </tr>
+      <tr>
+        <td class="num-cell">F2</td>
+        <td><span class="badge get">GET</span></td>
+        <td>
+          <div class="endpoint">/system/notify-message/get-unread-count</div>
+        </td>
+        <td>頂欄未讀通知數量</td>
+        <td class="trigger">頁面初始化（定時輪詢）</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Legend -->
+<div class="section">
+  <div class="legend">
+    <div class="legend-item"><span class="badge get">GET</span> 讀取資料</div>
+    <div class="legend-item"><span class="badge post">POST</span> 新增資料</div>
+    <div class="legend-item"><span class="badge put">PUT</span> 更新資料</div>
+    <div class="legend-item"><span class="badge delete">DELETE</span> 刪除資料</div>
+    <div class="legend-item" style="color:#d46b08;">⚠ 橙色觸發時機 = 僅在簽核功能開啟時呼叫</div>
+  </div>
+</div>
+
+<!-- 唯一端點彙整 -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">📊</span>
+    <span class="section-title">唯一端點彙整（20 個）</span>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Endpoint</th><th>所屬模組</th><th>OA 已實作</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/system/menu/get-by-flow-key</td><td>System</td><td>✅</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/system/user/simple-list</td><td>System</td><td>✅</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/system/sidebar/getAllTodoList</td><td>System</td><td>✅</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/system/auth/get-permission-info</td><td>System</td><td>✅</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/system/notify-message/get-unread-count</td><td>System</td><td>✅</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pdm/ingredient/page</td><td>PDM</td><td>✅ 本次實作</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pdm/ingredient/todo-page</td><td>PDM</td><td>❌ 待實作</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pdm/ingredient/getOne</td><td>PDM</td><td>✅ 本次實作</td></tr>
+      <tr><td><span class="badge post">POST</span></td><td class="endpoint">/pdm/ingredient/create</td><td>PDM</td><td>✅ 本次實作</td></tr>
+      <tr><td><span class="badge put">PUT</span></td><td class="endpoint">/pdm/ingredient/update</td><td>PDM</td><td>✅ 本次實作</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pdm/ingredient-specs/getList</td><td>PDM</td><td>❌ 待實作</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pdm/ingredient-compat/getList</td><td>PDM</td><td>❌ 待實作</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pdm/ingredient-nutrition/getList</td><td>PDM</td><td>❌ 待實作</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pdm/code-category/page</td><td>PDM</td><td>✅</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pdm/code-item/page</td><td>PDM</td><td>✅</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pdm/udf/page</td><td>PDM</td><td>❌ 待實作</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pdm/nutritional-definitions/page</td><td>PDM</td><td>❌ 待實作</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/pmm/vqm/vendor-quote-by-product-page</td><td>PMM</td><td>❌ 待實作</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/bpm/model/getByKey</td><td>BPM</td><td>❌ 待實作（簽核用）</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/bpm/process-instance/get-approval-detail</td><td>BPM</td><td>❌ 待實作（簽核用）</td></tr>
+      <tr><td><span class="badge get">GET</span></td><td class="endpoint">/bpm/task/list-by-return</td><td>BPM</td><td>❌ 待實作（簽核用）</td></tr>
+      <tr><td><span class="badge put">PUT</span></td><td class="endpoint">/bpm/task/approve</td><td>BPM</td><td>❌ 待實作（簽核用）</td></tr>
+      <tr><td><span class="badge put">PUT</span></td><td class="endpoint">/bpm/task/return</td><td>BPM</td><td>❌ 待實作（簽核用）</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

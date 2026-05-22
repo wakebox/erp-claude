@@ -1,0 +1,1 @@
+從 erp api  -- {api} ，根據 ERP 對應的程式碼分析 flow ,商業邏輯,ER Mode,db schema ，因此產生OA的程式碼 crud , service(商業邏輯)，migration，seeder 資料，seeder寫在migration中，執行migrate時，一併建立表格並寫入資料。
