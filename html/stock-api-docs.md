@@ -47,8 +47,8 @@
 
 | 方法 | 端點 | 功能 | 說明 | OA實作 |
 |:----:|------|------|------|:------:|
-| GET | `/whs/stock/currentPage` | 查詢當前庫存（分頁） | 支援品號、倉庫、區域、物料大類/中類、安全存量等篩選 | [ ] |
-| GET | `/whs/stock-record/pageHis` | 查詢出入庫明細（分頁） | 必填 prodCode 和 warehouseId | [ ] |
+| GET | `/whs/stock/currentPage` | 查詢當前庫存（分頁） | 支援品號、倉庫、區域、物料大類/中類、安全存量等篩選 | [x] |
+| GET | `/whs/stock-record/pageHis` | 查詢出入庫明細（分頁） | 必填 prodCode 和 warehouseId | [x] |
 
 ---
 
