@@ -122,7 +122,7 @@
   <a href="#safety-stock">🛡 ️ 安全存量設定 <span class="badge no">未實作</span></a>
   <a href="#warehouse">🏭 倉庫基本設定 <span class="badge yes">已實作</span></a>
   <a href="#stock-query">🔍 倉儲查詢作業 <span class="badge yes">已實作</span></a>
-  <a href="#stock-in">📥 入庫作業管理 <span class="badge no">未實作</span></a>
+  <a href="#stock-in">📥 入庫作業管理 <span class="badge yes">已實作</span></a>
   <a href="#stock-out">📤 出庫作業管理 <span class="badge no">未實作</span></a>
   <a href="#transfer">🔄 門市調撥管理 <span class="badge no">未實作</span></a>
   <a href="#bad-product">🚫 不良品管理 <span class="badge no">未實作</span></a>
@@ -143,13 +143,13 @@
     <div class="stats">
       <div class="stat"><div class="num">10</div><div class="label">功能模組</div></div>
       <div class="stat"><div class="num">75</div><div class="label">API 端點</div></div>
-      <div class="stat"><div class="num">15</div><div class="label">OA 已實作</div></div>
-      <div class="stat"><div class="num">60</div><div class="label">待實作</div></div>
+      <div class="stat"><div class="num">22</div><div class="label">OA 已實作</div></div>
+      <div class="stat"><div class="num">53</div><div class="label">待實作</div></div>
     </div>
   </div>
 
   <div class="alert warning">
-    <strong>⚠️ 實作進度：</strong> 共 75 個 API 端點，已實作 15 個，尚有 60 個待實作。
+    <strong>⚠️ 實作進度：</strong> 共 75 個 API 端點，已實作 22 個，尚有 53 個待實作。
   </div>
 
   <div id="overview" class="section">
@@ -181,7 +181,7 @@
     <div class="title">📥 入庫作業管理</div>
     <div class="path">/stock/in</div>
     <div class="count">7 個 API 端點</div>
-    <div class="status"><span class="impl-badge no">OA 未實作</span></div>
+    <div class="status"><span class="impl-badge yes">OA 已實作</span></div>
   </div>
   <div class="module-card" onclick="location.href='#stock-out'">
     <div class="title">📤 出庫作業管理</div>
@@ -620,7 +620,7 @@ whs_check_plan (盤點計劃主表)
     <div class="section-header">
       <span class="icon">📥</span>
       <h2>入庫作業管理 (Stock In)</h2>
-      <span class="impl-badge no">OA 未實作</span>
+      <span class="impl-badge yes">OA 已實作</span>
     </div>
     <p><strong>前端路由：</strong> <code>/stock/in</code> &nbsp; <strong>API 檔案：</strong> <code>src/api/stock/in/index.ts</code></p>
 <table class="api-table">
@@ -630,49 +630,49 @@ whs_check_plan (盤點計劃主表)
     <td><span class="endpoint">/whs/stock-record-head/page</span></td>
     <td>入庫列表（分頁）</td>
     <td>需帶 stockType=1 篩選入庫</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/stock-record-head/todo-page</span></td>
     <td>待辦入庫列表</td>
     <td>簽核模式下使用，顯示待審核單據</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method GET">GET</span></td>
     <td><span class="endpoint">/whs/stock-record/get-with-details</span></td>
     <td>取得入庫單詳情（含明細）</td>
     <td>必填 recordId，回傳表頭+stockRecordList</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method POST">POST</span></td>
     <td><span class="endpoint">/whs/stock-record/batch-process</span></td>
     <td>批量處理（暫存/提交）</td>
     <td>建立表頭+明細，stockType=1，回傳 id</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method PUT">PUT</span></td>
     <td><span class="endpoint">/whs/stock-record/edit-with-head</span></td>
     <td>編輯入庫單（含明細）</td>
     <td>更新表頭與明細列表</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method PUT">PUT</span></td>
     <td><span class="endpoint">/whs/stock-in/update-process-status</span></td>
     <td>更新入庫流程狀態</td>
     <td>審核用，含 approvalComments</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
   <tr>
     <td><span class="method DELETE">DELETE</span></td>
     <td><span class="endpoint">/whs/stock-record-head/delete</span></td>
     <td>批量刪除表頭</td>
     <td>params ids 陣列</td>
-    <td class="oa-no">❌ 未實作</td>
+    <td class="oa-yes">✅ 已實作</td>
   </tr>
 </table>
 
@@ -1196,7 +1196,7 @@ whs_check_plan (盤點計劃主表)
     <td>📥 入庫作業管理</td>
     <td><code>/whs/stock-record-head</code></td>
     <td>7</td>
-    <td class="oa-no">0 / 7</td>
+    <td class="oa-yes">7 / 7</td>
     <td><span class="tag orange">P1 最高</span></td>
   </tr>
   <tr>

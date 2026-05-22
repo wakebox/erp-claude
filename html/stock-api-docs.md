@@ -58,13 +58,13 @@
 
 | 方法 | 端點 | 功能 | 說明 | OA實作 |
 |:----:|------|------|------|:------:|
-| GET | `/whs/stock-record-head/page` | 入庫列表（分頁） | 需帶 stockType=1 篩選入庫 | [ ] |
-| GET | `/whs/stock-record-head/todo-page` | 待辦入庫列表 | 簽核模式下使用，顯示待審核單據 | [ ] |
-| GET | `/whs/stock-record/get-with-details` | 取得入庫單詳情（含明細） | 必填 recordId，回傳表頭+stockRecordList | [ ] |
-| POST | `/whs/stock-record/batch-process` | 批量處理（暫存/提交） | 建立表頭+明細，stockType=1，回傳 id | [ ] |
-| PUT | `/whs/stock-record/edit-with-head` | 編輯入庫單（含明細） | 更新表頭與明細列表 | [ ] |
-| PUT | `/whs/stock-in/update-process-status` | 更新入庫流程狀態 | 審核用，含 approvalComments | [ ] |
-| DELETE | `/whs/stock-record-head/delete` | 批量刪除表頭 | params ids 陣列 | [ ] |
+| GET | `/whs/stock-record-head/page` | 入庫列表（分頁） | 需帶 stockType=1 篩選入庫 | [x] |
+| GET | `/whs/stock-record-head/todo-page` | 待辦入庫列表 | 簽核模式下使用，顯示待審核單據 | [x] |
+| GET | `/whs/stock-record/get-with-details` | 取得入庫單詳情（含明細） | 必填 recordId，回傳表頭+stockRecordList | [x] |
+| POST | `/whs/stock-record/batch-process` | 批量處理（暫存/提交） | 建立表頭+明細，stockType=1，回傳 id | [x] |
+| PUT | `/whs/stock-record/edit-with-head` | 編輯入庫單（含明細） | 更新表頭與明細列表 | [x] |
+| PUT | `/whs/stock-in/update-process-status` | 更新入庫流程狀態 | 審核用，含 approvalComments | [x] |
+| DELETE | `/whs/stock-record-head/delete` | 批量刪除表頭 | params ids 陣列 | [x] |
 
 ---
 
