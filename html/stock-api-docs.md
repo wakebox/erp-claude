@@ -76,12 +76,12 @@
 
 | 方法 | 端點 | 功能 | 說明 | OA實作 |
 |:----:|------|------|------|:------:|
-| GET | `/whs/stock-record-head/page` | 出庫列表（分頁） | 需帶 stockType=0 | [ ] |
-| GET | `/whs/stock-record-head/todo-page` | 待辦出庫列表 | 簽核模式，stockType=0 | [ ] |
-| GET | `/whs/stock-record/get-with-details` | 取得出庫單詳情 | 必填 recordId | [ ] |
-| POST | `/whs/stock-record/batch-process` | 批量處理出庫 | stockType=0 | [ ] |
-| PUT | `/whs/stock-record/edit-with-head` | 編輯出庫單 | | [ ] |
-| PUT | `/whs/stock-in/update-process-status` | 更新出庫流程狀態 | 注意：出庫也沿用 stock-in 路徑 | [ ] |
+| GET | `/whs/stock-record-head/page` | 出庫列表（分頁） | 需帶 stockType=0 | [x] |
+| GET | `/whs/stock-record-head/todo-page` | 待辦出庫列表 | 簽核模式，stockType=0 | [x] |
+| GET | `/whs/stock-record/get-with-details` | 取得出庫單詳情 | 必填 recordId | [x] |
+| POST | `/whs/stock-record/batch-process` | 批量處理出庫 | stockType=0，自動生成 SO 單號，明細存負值 | [x] |
+| PUT | `/whs/stock-record/edit-with-head` | 編輯出庫單 | 已歸檔觸發庫存扣減 | [x] |
+| PUT | `/whs/stock-in/update-process-status` | 更新出庫流程狀態 | 注意：出庫也沿用 stock-in 路徑 | [x] |
 
 ---
 
@@ -98,8 +98,8 @@
 | POST | `/whs/stock-transfer-detail/batch-process` | 建立調撥批次（表頭+明細） | 含 stockTransferDetailList | [ ] |
 | PUT | `/whs/stock-transfer-detail/edit-with-head` | 編輯調撥單（含明細） | | [ ] |
 | GET | `/whs/stock-transfer-detail/get-with-details` | 取得調撥單詳情 | 必填 transferId | [ ] |
-| POST | `/whs/stock-transfer-detail/get-by-opposite-stock-type` | 取得調撥來源單據 | 用於入/出庫單選擇來源，stockReason=SW02 | [ ] |
-| GET | `/whs/stock-transfer-detail/record-batch-by-sign-code` | 依單號取得調撥記錄 | 用於入庫單填充明細 | [ ] |
+| POST | `/whs/stock-transfer-detail/get-by-opposite-stock-type` | 取得調撥來源單據 | 用於入/出庫單選擇來源，stockReason=SW02 | [x] |
+| GET | `/whs/stock-transfer-detail/record-batch-by-sign-code` | 依單號取得調撥記錄 | 用於入庫單填充明細 | [x] |
 
 ---
 
@@ -114,9 +114,9 @@
 | GET | `/whs/bad-product/get` | 不良品詳情 | 必填 id，回傳 BadProductAndDetailVO（主+子） | [ ] |
 | POST | `/whs/bad-product/create` | 建立不良品單據 | 含 badProductDetails[]，支援 pictureUrl 圖片附件 | [ ] |
 | PUT | `/whs/bad-product/update` | 更新不良品單據 | | [ ] |
-| POST | `/whs/bad-product/get-outbound-source-list` | 取得出庫來源單據 | 必填 area/warehouse/stockReason | [ ] |
-| POST | `/whs/bad-product/get-inbound-source-list` | 取得入庫來源單據 | | [ ] |
-| GET | `/whs/bad-product/get-stock-record-batch-by-sign-code` | 依單號取得庫存記錄 | 必填 signCode，可選 stockType | [ ] |
+| POST | `/whs/bad-product/get-outbound-source-list` | 取得出庫來源單據 | 必填 area/warehouse/stockReason | [x] |
+| POST | `/whs/bad-product/get-inbound-source-list` | 取得入庫來源單據 | | [x] |
+| GET | `/whs/bad-product/get-stock-record-batch-by-sign-code` | 依單號取得庫存記錄 | 必填 signCode，可選 stockType | [x] |
 | DELETE | `/whs/bad-product/delete` | 刪除不良品單據 | 必填 id | [ ] |
 
 ---
@@ -165,8 +165,8 @@
 | GET | `/whs/check-plan-detail/get` | 盤點執行詳情 | 必填 id，含 checkTaskDetailList[] | [ ] |
 | PUT | `/whs/check-plan-detail/update` | 更新盤點執行 | 記錄實際盤點數量 | [ ] |
 | GET | `/whs/check-plan-detail/check-plan-item/list-by-plan-detail-id` | 取得盤點品項列表 | 必填 planId | [ ] |
-| POST | `/whs/check-plan-detail/get-by-opposite-stock-type` | 取得盤點來源單據 | stockReason=SW03 | [ ] |
-| GET | `/whs/check-plan-detail/get-stock-record-batch-by-sign-code` | 依單號取得盤點記錄 | 用於入庫填充，含 accountQuantity/checkQuantity | [ ] |
+| POST | `/whs/check-plan-detail/get-by-opposite-stock-type` | 取得盤點來源單據 | stockReason=SW03 | [x] |
+| GET | `/whs/check-plan-detail/get-stock-record-batch-by-sign-code` | 依單號取得盤點記錄 | 用於入庫填充，含 accountQuantity/checkQuantity | [x] |
 
 ---
 

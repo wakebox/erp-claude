@@ -39,3 +39,12 @@ FeignClient 類：BurgerKingStoreClient
 @stock-api-docs.md   重構 ERP BK , 倉儲查詢作業 ，完成後修正 OA實做內容
 
 @stock-api-docs.md   重構 ERP BK , 入庫作業管理 ，完成後修正 OA實做內容
+
+---
+
+重構 erp bk ,  /data/erp-claude/html/stock-api-docs.md 出庫作業管理 (Stock Out)
+
+---
+
+
+重構 erp bk , http:10.65.163.46/stock/out api
