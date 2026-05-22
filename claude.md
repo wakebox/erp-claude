@@ -31,3 +31,4 @@ password: Newsoft_0255
 商業邏輯分離 實做於 servce ,使用 model , repository 處理資料庫
 
 model 用中文解釋欄位名稱，確保程式碼的可讀性和易於理解。
+使用最少的程式達成功能，決不額外寫不需要的程式

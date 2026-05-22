@@ -32,3 +32,7 @@ FeignClient 類：BurgerKingStoreClient
 # 觸發中繼 API 的流程
 
 
+# 執行重構動作
+
+@stock-api-docs.html ,重構 erp bk , 倉庫基本設定 
+
