@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>需求集合 × 天心財務串接 — 整合變更說明 v2.3</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    margin: 0; padding: 0;
+    background: linear-gradient(135deg, #f0f4f8 0%, #e1e8f0 100%);
+    color: #2c3e50;
+    line-height: 1.7;
+  }
+  .hero {
+    background: linear-gradient(135deg, #1a237e 0%, #d32f2f 50%, #f57c00 100%);
+    color: white;
+    padding: 60px 40px 80px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "⚙️";
+    position: absolute;
+    font-size: 280px;
+    opacity: 0.08;
+    right: -20px;
+    top: -40px;
+    transform: rotate(15deg);
+  }
+  .hero h1 {
+    font-size: 2.4em;
+    margin: 0 0 12px;
+    font-weight: 700;
+    position: relative;
+  }
+  .hero .subtitle {
+    font-size: 1.1em;
+    opacity: 0.95;
+    margin-bottom: 25px;
+  }
+  .hero .meta {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    font-size: 0.95em;
+  }
+  .hero .meta span {
+    background: rgba(255,255,255,0.2);
+    padding: 6px 14px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+  }
+  .container {
+    max-width: 1320px;
+    margin: -40px auto 40px;
+    padding: 0 20px;
+    position: relative;
+  }
+  .nav-pills {
+    background: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+    position: sticky;
+    top: 10px;
+    z-index: 100;
+  }
+  .nav-pills a {
+    text-decoration: none;
+    color: #555;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.88em;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+  .nav-pills a:hover {
+    background: #e8eaf6;
+    color: #1a237e;
+  }
+  .section {
+    background: white;
+    border-radius: 16px;
+    padding: 36px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .section h2 {
+    color: #1a237e;
+    border-bottom: 3px solid #e8eaf6;
+    padding-bottom: 12px;
+    margin-top: 0;
+    font-size: 1.7em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section h2 .icon {
+    display: inline-flex;
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, #1a237e, #d32f2f);
+    color: white;
+    border-radius: 10px;
+    align-items: center; justify-content: center;
+    font-size: 1.2em;
+  }
+  .section h3 {
+    color: #d32f2f;
+    margin-top: 32px;
+    font-size: 1.3em;
+    border-left: 4px solid #d32f2f;
+    padding-left: 12px;
+  }
+  .section h4 {
+    color: #5d4037;
+    margin-top: 24px;
+    font-size: 1.08em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    font-size: 0.94em;
+  }
+  th {
+    background: linear-gradient(135deg, #1a237e, #3949ab);
+    color: white;
+    text-align: left;
+    padding: 12px 14px;
+    font-weight: 600;
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: top;
+  }
+  tr:hover td {
+    background: #f5f7fa;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  code {
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #c2185b;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #263238;
+    color: #aed581;
+    padding: 16px 20px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.5;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+  }
+
+  .req-card {
+    border-radius: 14px;
+    padding: 24px;
+    margin: 20px 0;
+    border-left: 6px solid;
+    background: linear-gradient(135deg, #fff, #fafbfc);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+  }
+  .req-card:hover { transform: translateX(4px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+  .req-card.modify { border-color: #d32f2f; }
+  .req-card.no-modify { border-color: #757575; opacity: 0.85; }
+  .req-card.coord { border-color: #f57c00; }
+  .req-card.fix { border-color: #1976d2; }
+  .req-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .req-number {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #1a237e, #3949ab);
+    color: white;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 1.1em;
+    flex-shrink: 0;
+  }
+  .req-number.no-mod { background: linear-gradient(135deg, #757575, #9e9e9e); }
+  .req-number.coord { background: linear-gradient(135deg, #f57c00, #ffb74d); }
+  .req-number.fix { background: linear-gradient(135deg, #1976d2, #42a5f5); }
+  .req-title { font-size: 1.15em; font-weight: 600; color: #1a237e; flex: 1; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.78em;
+    font-weight: 600;
+    margin: 0 4px;
+    white-space: nowrap;
+  }
+  .badge-modify { background: #ffebee; color: #c62828; }
+  .badge-no { background: #f5f5f5; color: #616161; }
+  .badge-coord { background: #fff3e0; color: #e65100; }
+  .badge-fix { background: #e3f2fd; color: #1565c0; }
+  .badge-short { background: #ffebee; color: #c62828; }
+  .badge-long { background: #e8f5e9; color: #2e7d32; }
+  .badge-new { background: #fff3e0; color: #e65100; }
+  .badge-todo { background: #f3e5f5; color: #6a1b9a; }
+  .badge-pri-high { background: #ffcdd2; color: #b71c1c; font-weight: 700; }
+  .badge-pri-mid { background: #fff9c4; color: #f57f17; }
+
+  .mermaid {
+    background: #fafbfc;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    text-align: center;
+    border: 1px solid #eef0f3;
+  }
+  .chart-container {
+    background: #fafbfc;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    border: 1px solid #eef0f3;
+  }
+
+  .alert {
+    padding: 16px 20px;
+    border-radius: 10px;
+    margin: 16px 0;
+    border-left: 4px solid;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .alert .ico { font-size: 1.4em; }
+  .alert-info { background: #e3f2fd; border-color: #1976d2; color: #0d47a1; }
+  .alert-warn { background: #fff8e1; border-color: #f57c00; color: #e65100; }
+  .alert-danger { background: #ffebee; border-color: #d32f2f; color: #b71c1c; }
+  .alert-success { background: #e8f5e9; border-color: #388e3c; color: #1b5e20; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid #f0f0f0;
+    transition: all 0.3s;
+  }
+  .stat-card:hover {
+    border-color: #1a237e;
+    transform: translateY(-2px);
+  }
+  .stat-card .num {
+    font-size: 2.4em;
+    font-weight: 700;
+    background: linear-gradient(135deg, #1a237e, #d32f2f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-card .lbl { color: #666; font-size: 0.9em; margin-top: 4px; }
+
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .module-card {
+    background: linear-gradient(135deg, #fff, #fafbfc);
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 18px;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .module-card:hover {
+    border-color: #d32f2f;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(211,47,47,0.12);
+  }
+  .module-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #1a237e, #d32f2f);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78em;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .module-title { font-weight: 600; color: #1a237e; margin-bottom: 6px; }
+  .module-desc { font-size: 0.9em; color: #555; }
+
+  .formula {
+    background: linear-gradient(135deg, #fff8e1, #fff3e0);
+    border: 2px dashed #f57c00;
+    padding: 18px 22px;
+    border-radius: 12px;
+    margin: 16px 0;
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #e65100;
+    font-size: 1.05em;
+  }
+
+  details {
+    background: #fafbfc;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    border: 1px solid #eef0f3;
+  }
+  details summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #1565c0;
+    user-select: none;
+  }
+  details[open] summary { margin-bottom: 12px; }
+
+  .timeline-h {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 20px 0;
+    margin: 20px 0;
+  }
+  .timeline-h .step {
+    flex: 1;
+    min-width: 180px;
+    background: linear-gradient(135deg, #fff, #fafbfc);
+    border: 2px solid #e8eaf6;
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+  }
+  .timeline-h .step::after {
+    content: "→";
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #1a237e;
+    font-size: 1.4em;
+    font-weight: bold;
+    z-index: 10;
+  }
+  .timeline-h .step:last-child::after { display: none; }
+  .timeline-h .step .num {
+    display: inline-block;
+    width: 28px; height: 28px;
+    background: #1a237e;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .timeline-h .step .title { font-weight: 600; color: #1a237e; margin-bottom: 4px; font-size: 0.95em; }
+  .timeline-h .step .desc { font-size: 0.85em; color: #555; }
+
+  .schema-table th { background: linear-gradient(135deg, #5d4037, #795548); }
+  .schema-table code { background: #fff8e1; color: #c2185b; }
+
+  @media (max-width: 768px) {
+    .hero { padding: 40px 20px 60px; }
+    .hero h1 { font-size: 1.6em; }
+    .section { padding: 20px; }
+    table { font-size: 0.85em; }
+    th, td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>⚙️ 需求集合 × 天心財務串接</h1>
+  <div class="subtitle">整合變更說明 — BK 使用者需求 + 天心串接技術規格</div>
+  <div class="meta">
+    <span>📄 文件版本 v2.3</span>
+    <span>📅 2026-05-26</span>
+    <span>🎯 BK 需求 11 項</span>
+    <span>🔗 天心串接 6 大模組</span>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="nav-pills">
+  <a href="#overview">📊 總覽</a>
+  <a href="#part1">第一部分：BK 需求</a>
+  <a href="#req1">需求1</a>
+  <a href="#req3">需求3</a>
+  <a href="#req5">需求5</a>
+  <a href="#req6">需求6</a>
+  <a href="#req7">需求7</a>
+  <a href="#req8">需求8</a>
+  <a href="#req9">需求9-11</a>
+  <a href="#part2">第二部分：天心串接</a>
+  <a href="#L0">L0 物流</a>
+  <a href="#T1">T1 對應表</a>
+  <a href="#T2">T2 主資料</a>
+  <a href="#T3">T3 進貨單</a>
+  <a href="#T4">T4 銷貨單</a>
+  <a href="#T5">T5 串接記錄</a>
+  <a href="#todo">待確認</a>
+</div>
+
+<!-- 總覽 -->
+<div class="section" id="overview">
+  <h2><span class="icon">📊</span>文件總覽</h2>
+  <p>本文件整合 <strong>BK 使用者需求變更（11 項）</strong> 與 <strong>天心財務系統串接技術規格</strong>，是 v2.2 使用者情境說明的技術依據。</p>
+
+  <div class="stats">
+    <div class="stat-card"><div class="num">11</div><div class="lbl">BK 需求項目</div></div>
+    <div class="stat-card"><div class="num">9</div><div class="lbl">需修改項目</div></div>
+    <div class="stat-card"><div class="num">2</div><div class="lbl">不修改項目</div></div>
+    <div class="stat-card"><div class="num">6</div><div class="lbl">天心串接模組</div></div>
+    <div class="stat-card"><div class="num">5</div><div class="lbl">新增/異動資料表</div></div>
+    <div class="stat-card"><div class="num">5</div><div class="lbl">待確認議題</div></div>
+  </div>
+
+  <h3>📌 BK 需求處理方式分布</h3>
+  <div class="chart-container">
+    <canvas id="reqChart" height="80"></canvas>
+  </div>
+
+  <h3>🗺️ 文件結構地圖</h3>
+  <div class="mermaid">
+mindmap
+  root((整合變更<br/>v2.3))
+    第一部分 BK 需求
+      需求1 庫存類型 SHORT/LONG
+      需求2 維持現況
+      需求3 萬元拆員工餐
+      需求4 多廠商說明
+      需求5 建議訂貨量公式
+      需求6 防呆色塊
+      需求7 無廠商不過濾
+      需求8 單位統一換算
+      需求9 用量表下載
+      需求10 單號跳轉
+      需求11 臨時加單不漏
+    第二部分 天心串接
+      L0-1 收貨優化
+      L0-2 當日入帳
+      L0 在途量定義
+      T1 品號對應表
+      T2 基礎主資料
+      T3 進貨單
+      T4 銷貨單+組合單
+      T5 串接記錄
+    第三部分 待確認
+      BK3-02 中繼拆分
+      T4-01 套餐拆分
+      T4-02 銷售粒度
+      T4-03 推送時間
+      T4-04 員工餐標記
+  </div>
+</div>
+
+<!-- 第一部分 -->
+<div class="section" id="part1">
+  <h2><span class="icon">📋</span>第一部分：BK 使用者需求變更（11 項）</h2>
+
+  <h3>📊 需求總覽表</h3>
+  <table>
+    <tr>
+      <th width="5%">#</th>
+      <th width="38%">BK 需求內容</th>
+      <th width="37%">處理方式</th>
+      <th width="20%">狀態</th>
+    </tr>
+    <tr><td><strong>1</strong></td><td>短效期用萬元預測；長效期以安全存量判斷，快用完再叫貨</td><td>PDM 食材主檔新增庫存類型欄位；BOM 試算前端補顯示</td><td><span class="badge badge-modify">需修改</span></td></tr>
+    <tr><td><strong>2</strong></td><td>直接以食材/庫存單位（箱）呈現，避免小用量物料顯示為 0</td><td>維持現況</td><td><span class="badge badge-no">不修改</span></td></tr>
+    <tr><td><strong>3</strong></td><td>萬元用量應只計算銷售，排除損耗和員工餐</td><td>POS 端標記員工餐，新零售端拆分；力新端補欄位</td><td><span class="badge badge-modify">需修改</span><span class="badge badge-coord">中繼協調</span></td></tr>
+    <tr><td><strong>4</strong></td><td>一個物料對多家廠商，門市無法判斷</td><td>廠商報價適用門市設定已解決，補使用說明</td><td><span class="badge badge-no">不修改</span></td></tr>
+    <tr><td><strong>5</strong></td><td>建議訂貨量公式，門市可微調</td><td>後端新增計算邏輯，微調上下限改為系統參數</td><td><span class="badge badge-modify">需修改</span></td></tr>
+    <tr><td><strong>6</strong></td><td>防呆/提醒：訂貨數量異常要明顯標註（色塊）</td><td>系統預設閾值，後端旗標+前端色塊；LONG/SHORT 分開判斷</td><td><span class="badge badge-modify">需修改</span></td></tr>
+    <tr><td><strong>7</strong></td><td>所有供應商訂單都在訂貨系統下單（無廠商不可靜默過濾）</td><td>後端改為保留並標記，前端補警示</td><td><span class="badge badge-modify">需修改</span></td></tr>
+    <tr><td><strong>8</strong></td><td>盤點/訂貨單位不一應統一</td><td>使用廠商報價既有 <code>singlePackCount</code>，走 <code>pdm_unit_conv</code></td><td><span class="badge badge-modify">需修改</span></td></tr>
+    <tr><td><strong>9</strong></td><td>用量表 CSV 下載（FE 補按鈕）</td><td>後端已有 <code>/generateCsv</code> 端點，前端補按鈕</td><td><span class="badge badge-fix">FE 補功能</span></td></tr>
+    <tr><td><strong>10</strong></td><td>原物料需求行事曆單號點擊跳轉</td><td>FE 補跳轉邏輯</td><td><span class="badge badge-fix">FE 修復</span></td></tr>
+    <tr><td><strong>11</strong></td><td>臨時加單食材不漏掉</td><td>BE 補 <code>tempRelationDoc</code> 分支邏輯</td><td><span class="badge badge-fix">BE 缺陷修復</span></td></tr>
+  </table>
+</div>
+
+<!-- 需求 1 -->
+<div class="section" id="req1">
+  <h2><span class="icon">①</span>需求 1：食材庫存類型管理與前端顯示補齊</h2>
+
+  <div class="req-card modify">
+    <div class="req-header">
+      <div class="req-number">1</div>
+      <div class="req-title">SHORT / LONG 庫存類型雙軌制</div>
+    </div>
+    <p>食材依儲存特性分為兩類，是食材本身的固有特性，由食材主檔統一管理。</p>
+  </div>
+
+  <div class="module-grid">
+    <div class="module-card">
+      <span class="badge badge-short">SHORT</span>
+      <div class="module-title">短效期食材</div>
+      <div class="module-desc">麵包、生鮮蔬菜<br/>每次都需根據銷售預測補貨</div>
+    </div>
+    <div class="module-card">
+      <span class="badge badge-long">LONG</span>
+      <div class="module-title">長效期食材</div>
+      <div class="module-desc">冷凍肉品、醬料桶<br/>庫存低於安全存量才補貨</div>
+    </div>
+  </div>
+
+  <h3>🗃️ 修改一：PDM 食材維護作業</h3>
+  <table>
+    <tr><th width="30%">修改項目</th><th>說明</th></tr>
+    <tr><td><span class="badge badge-new">NEW</span>「庫存類型」欄位</td><td>下拉選單，選項：SHORT（短效期）/ LONG（長效期）</td></tr>
+    <tr><td>欄位為必填</td><td>每筆食材主檔都必須設定庫存類型，不允許空值</td></tr>
+    <tr><td>列表頁新增顯示</td><td>食材列表補顯示庫存類型，方便批量確認</td></tr>
+  </table>
+
+  <h3>🖥️ 修改二：BOM 試算明細頁顯示邏輯</h3>
+  <div class="mermaid">
+flowchart TD
+    A[BOM 試算] --> B{storageType?}
+    B -->|SHORT| C[顯示建議訂貨量數字]
+    B -->|LONG| D{庫存判斷}
+    D -->|庫存充足| E[🔘 灰色「判斷庫存」<br/>取代數字]
+    D -->|庫存不足| F[🟠 橘色警示圖示<br/>+ 當前庫存數值]
+
+    style C fill:#ffebee
+    style E fill:#f5f5f5
+    style F fill:#fff3e0
+  </div>
+
+  <table>
+    <tr><th>修改項目</th><th>顯示條件</th><th>說明</th></tr>
+    <tr><td>庫存類型標籤</td><td>所有食材</td><td>顯示 <code>SHORT</code> / <code>LONG</code> 標籤</td></tr>
+    <tr><td>「判斷庫存」標示</td><td><code>storageType = LONG</code> 且庫存充足</td><td>灰色文字取代數字</td></tr>
+    <tr><td>安全存量警示圖示</td><td><code>storageType = LONG</code> 且庫存不足</td><td>橘色警示+當前庫存</td></tr>
+  </table>
+</div>
+
+<!-- 需求 3 -->
+<div class="section" id="req3">
+  <h2><span class="icon">③</span>需求 3：萬元用量拆分員工餐</h2>
+
+  <div class="alert alert-warn">
+    <span class="ico">⚠️</span>
+    <div><strong>現行問題：</strong>歷史銷售資料混入損耗與員工餐消耗量，萬元用量偏高，無法正確反映純銷售行為所需的食材用量。</div>
+  </div>
+
+  <h3>🔄 修改方向</h3>
+  <div class="timeline-h">
+    <div class="step">
+      <div class="num">1</div>
+      <div class="title">POS 端標記</div>
+      <div class="desc">收單時標記員工餐</div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div class="title">新零售端拆分</div>
+      <div class="desc">傳入時拆一般銷售 / 員工餐</div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div class="title">力新後端落 DB</div>
+      <div class="desc">新增 employee_meal 欄位</div>
+    </div>
+    <div class="step">
+      <div class="num">4</div>
+      <div class="title">前端唯讀顯示</div>
+      <div class="desc">員工餐用量獨立欄位</div>
+    </div>
+  </div>
+
+  <h3>🗃️ 後端新增欄位（<code>crg_demand_forecast_detail</code>）</h3>
+  <table class="schema-table">
+    <tr><th>新增欄位</th><th>型別</th><th>說明</th></tr>
+    <tr><td><code>employee_meal_weekday</code></td><td>DECIMAL(15,4)</td><td>平日員工餐萬元用量</td></tr>
+    <tr><td><code>employee_meal_holiday</code></td><td>DECIMAL(15,4)</td><td>假日員工餐萬元用量</td></tr>
+  </table>
+
+  <div class="key-point alert alert-info">
+    <span class="ico">📌</span>
+    <div><strong>計算規則：</strong>萬元預測的計算基礎改為 <strong>只使用一般銷售數量</strong>，員工餐用量僅供顯示參考，不納入計算。</div>
+  </div>
+</div>
+
+<!-- 需求 5 -->
+<div class="section" id="req5">
+  <h2><span class="icon">⑤</span>需求 5：建議訂貨量計算公式</h2>
+
+  <h3>🧮 公式</h3>
+  <div class="formula">
+    建議訂貨量 = (萬元需求量 × 預估營業額) − 盤點量 − 在途量<br/>
+    建議訂貨量最小值 = 0（不允許負數）
+  </div>
+
+  <h3>🚚 在途量定義（依使用者角色）</h3>
+  <table>
+    <tr><th width="15%">使用者角色</th><th width="45%">在途量定義</th><th>資料來源</th></tr>
+    <tr><td>🏪 門市</td><td>已向倉儲（MSS）下物流單，但貨物尚未到達門市的數量</td><td>物流模組，已有物流單但 <code>actual_arrival_date</code> 尚未填入的明細數量加總</td></tr>
+    <tr><td>🏢 總部</td><td>已向供應商下採購單，但貨物尚未送達（含尚未驗收入庫）的數量</td><td>採購模組，結轉驗收單明細的 <code>transit_qty</code></td></tr>
+  </table>
+
+  <h3>⚙️ 門市微調系統參數</h3>
+  <table class="schema-table">
+    <tr><th>參數名稱</th><th>說明</th><th>建議預設值</th></tr>
+    <tr><td><code>ORDER_QTY_ADJUST_MAX_RATIO</code></td><td>最終訂貨量不得超過建議量的倍數</td><td>1.5（150%）</td></tr>
+    <tr><td><code>ORDER_QTY_ADJUST_MIN</code></td><td>最終訂貨量最小值</td><td>0</td></tr>
+  </table>
+
+  <h3>🗃️ 資料表新增欄位（<code>pdm_raw_material_demand_detail</code>）</h3>
+  <table class="schema-table">
+    <tr><th>欄位</th><th>型別</th><th>說明</th></tr>
+    <tr><td><code>stock_qty</code></td><td>DECIMAL(15,4)</td><td>試算當下盤點量（snapshot）</td></tr>
+    <tr><td><code>transit_qty</code></td><td>DECIMAL(15,4)</td><td>試算當下在途量（snapshot）</td></tr>
+    <tr><td><code>suggested_order_qty</code></td><td>DECIMAL(15,4)</td><td>系統建議訂貨量</td></tr>
+    <tr><td><code>manual_order_qty</code></td><td>DECIMAL(15,4)</td><td>門市人工微調後最終訂貨量（null = 採用建議值）</td></tr>
+  </table>
+
+  <h3>🖥️ 前端新增欄位</h3>
+  <table>
+    <tr><th>欄位</th><th>顯示名</th><th>編輯態</th><th>備註</th></tr>
+    <tr><td><code>stockQty</code></td><td>盤點量</td><td>唯讀</td><td></td></tr>
+    <tr><td><code>transitQty</code></td><td>在途量</td><td>唯讀</td><td></td></tr>
+    <tr><td><code>suggestedOrderQty</code></td><td>建議訂貨量</td><td>唯讀</td><td></td></tr>
+    <tr><td><code>manualOrderQty</code></td><td>最終訂貨量</td><td>可編輯</td><td>上下限由系統參數控制，超出時觸發防呆提示</td></tr>
+  </table>
+</div>
+
+<!-- 需求 6 -->
+<div class="section" id="req6">
+  <h2><span class="icon">⑥</span>需求 6：防呆色塊標示</h2>
+
+  <h3>🚦 異常旗標判斷邏輯</h3>
+  <div class="mermaid">
+flowchart TD
+    A[計算結果] --> B{食材類型}
+    B -->|LONG| C[ZERO 不觸發<br/>由「判斷庫存」處理]
+    B -->|SHORT| D{建議量 = 0?}
+    D -->|Yes| E[🟡 abnormalFlag = ZERO<br/>黃色底色]
+    D -->|No| F{超過歷史均值<br/>×3 倍?}
+    F -->|Yes| G[🔴 abnormalFlag = HIGH<br/>紅色底色]
+    F -->|No| H[正常 abnormalFlag = null]
+
+    style E fill:#fff9c4
+    style G fill:#ffcdd2
+    style H fill:#e8f5e9
+  </div>
+
+  <h3>📊 異常旗標對照</h3>
+  <table>
+    <tr><th>食材類型</th><th>ZERO 觸發條件</th><th>說明</th></tr>
+    <tr><td>LONG</td><td>不觸發</td><td>庫存充足時建議量為 0 屬正常，已由「判斷庫存」標示處理</td></tr>
+    <tr><td>SHORT</td><td>計算後建議量 = 0</td><td>短效期食材預測量為 0 屬異常，需提醒確認</td></tr>
+  </table>
+
+  <h3>⚙️ 新增系統參數</h3>
+  <table class="schema-table">
+    <tr><th>參數名稱</th><th>說明</th><th>建議預設值</th></tr>
+    <tr><td><code>ORDER_QTY_HIGH_THRESHOLD_RATIO</code></td><td>建議量超過歷史均值的倍數即標記 HIGH</td><td>3（3 倍）</td></tr>
+  </table>
+
+  <h3>🎨 前端視覺規則</h3>
+  <table>
+    <tr><th><code>abnormalFlag</code></th><th>顯示方式</th></tr>
+    <tr><td>ZERO</td><td>🟡 黃色底色，tooltip「請確認是否需要訂貨」</td></tr>
+    <tr><td>HIGH</td><td>🔴 紅色底色，tooltip「建議量異常偏高，請確認後調整」</td></tr>
+    <tr><td>null</td><td>無標記</td></tr>
+  </table>
+</div>
+
+<!-- 需求 7 -->
+<div class="section" id="req7">
+  <h2><span class="icon">⑦</span>需求 7：無廠商食材不可靜默過濾</h2>
+
+  <h3>🔧 後端修改</h3>
+  <p>從「靜默移除」改為「保留並標記」：</p>
+  <pre><code>// 舊：直接 filter
+.filter(detail -> detail.getMfrName() != null)
+
+// 新：保留，設旗標
+if (detail.getMfrName() == null) {
+    detail.setNoVendorFlag(true);
+}</code></pre>
+
+  <h3>🗃️ 資料表新增欄位</h3>
+  <table class="schema-table">
+    <tr><th>欄位</th><th>型別</th><th>說明</th></tr>
+    <tr><td><code>no_vendor_flag</code></td><td>TINYINT(1)</td><td>1 = 查無廠商報價</td></tr>
+  </table>
+
+  <h3>🖥️ 前端規則</h3>
+  <div class="alert alert-warn">
+    <span class="ico">🟠</span>
+    <div>
+      <strong>試算完成後若有無廠商品號：</strong>
+      <ul style="margin: 8px 0;">
+        <li>頁面頂部顯示橘色警示橫幅，提示有 N 筆食材查無廠商報價</li>
+        <li>明細列以橘色底色標示，廠商欄顯示「無報價」</li>
+        <li>操作者確認後 <strong>可繼續使用試算結果，不強制阻擋</strong></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 需求 8 -->
+<div class="section" id="req8">
+  <h2><span class="icon">⑧</span>需求 8：盤點/訂貨單位統一換算</h2>
+
+  <div class="alert alert-info">
+    <span class="ico">💡</span>
+    <div>系統已有廠商報價維護（#28）的 <code>singlePackCount</code>（箱規）與 <code>pdm_unit_conv</code>（單位換算表），<strong>不需在食材主檔另外新增欄位</strong>，直接使用既有資料。</div>
+  </div>
+
+  <h3>🧮 門市操作量計算公式</h3>
+  <div class="formula">
+    <strong>基本換算（箱）：</strong><br/>
+    門市操作量（箱）= suggestedOrderQty ÷ singlePackCount（四捨五入至整數）<br/><br/>
+    <strong>細部換算（走 pdm_unit_conv）：</strong><br/>
+    門市操作量（其他單位）= suggestedOrderQty × unit_conv_ratio ÷ singlePackCount
+  </div>
+
+  <h3>🖥️ 前端新增欄位</h3>
+  <table>
+    <tr><th>欄位</th><th>顯示名</th><th>編輯態</th><th>說明</th></tr>
+    <tr><td><code>operationQty</code></td><td>門市操作量</td><td>唯讀</td><td>顯示換算後數量 + 單位（如：5 箱）</td></tr>
+  </table>
+</div>
+
+<!-- 需求 9-11 -->
+<div class="section" id="req9">
+  <h2><span class="icon">🔧</span>需求 9-11：FE / BE 補功能</h2>
+
+  <div class="req-card fix">
+    <div class="req-header">
+      <div class="req-number fix">9</div>
+      <div class="req-title">用量表 CSV 下載（FE 補按鈕）</div>
+    </div>
+    <p>後端已有 <code>/generateCsv</code> 端點，前端未掛載對應的下載按鈕。修改：在「物料需求預測試算表 非BOM 查詢頁」新增「下載用量表」按鈕。</p>
+  </div>
+
+  <div class="req-card fix">
+    <div class="req-header">
+      <div class="req-number fix">10</div>
+      <div class="req-title">原物料需求行事曆單號跳轉修復</div>
+    </div>
+    <p>單號目前已有超連結樣式但點擊無反應（dead link）。修改：</p>
+    <ul>
+      <li>點擊預測單號 → 跳轉至「食材需求預測試算表 BOM」對應單據</li>
+      <li>點擊臨時需求單號 → 跳轉至「臨時需求審核」對應單據</li>
+    </ul>
+  </div>
+
+  <div class="req-card fix">
+    <div class="req-header">
+      <div class="req-number fix">11</div>
+      <div class="req-title">臨時加單食材不漏掉（BE 已知缺陷）</div>
+    </div>
+    <p><code>tempRelationDoc</code> 分支邏輯後端尚未實作，導致同一需求日臨時加單食材在行事曆明細中被漏掉。修改：</p>
+    <ul>
+      <li>查詢明細時，同時合併預測單食材與臨時加單食材</li>
+      <li>同一品號數量加總後合併顯示</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 第二部分 天心串接 -->
+<div class="section" id="part2">
+  <h2><span class="icon">🔗</span>第二部分：天心財務系統串接</h2>
+
+  <h3>🏗️ 串接架構說明</h3>
+  <p>天心財務系統負責成本計算與產出門市損益表。力新 ERP 需向天心輸出三類資料：</p>
+
+  <table>
+    <tr><th>資料類型</th><th>觸發時機</th><th>力新來源</th><th>天心用途</th></tr>
+    <tr><td>🔵 基礎主資料（品號+門市）</td><td>新增/停用時</td><td>PDM 食材主檔、門市主檔</td><td>建立貨品與部門主檔</td></tr>
+    <tr><td>🟠 進貨單 / 調撥單</td><td>驗收確認歸檔後</td><td>PMM 驗收確認 → WHS 入庫</td><td>計算進貨成本</td></tr>
+    <tr><td>🟣 銷貨單 + 組合單（BOM）</td><td>每日批次</td><td>POS 中繼系統 + PDM BOM 主檔</td><td>扣庫存並計算銷貨成本</td></tr>
+  </table>
+
+  <h3>✅ 天心已確認事項（2026-05-14 會議 + 後續回覆）</h3>
+  <div class="alert alert-success">
+    <span class="ico">✅</span>
+    <div>
+      <ul style="margin: 0;">
+        <li>天心建議貨品代號與力新品號一致</li>
+        <li>即使代號一致，仍建議維護品號對應表，為未來擴充預留彈性</li>
+        <li>每張銷貨單品項需附對應組合單（BOM）</li>
+        <li>基礎資料需串接同步</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>🧩 天心串接 6 大模組地圖</h3>
+  <div class="module-grid">
+    <div class="module-card">
+      <span class="module-tag">L0-1</span>
+      <div class="module-title">物流管理行事曆收貨優化</div>
+      <div class="module-desc">預計數量預設帶入，門市只改異常品項</div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">L0-2</span>
+      <div class="module-title">當日進貨即時導入</div>
+      <div class="module-desc">當日完成入帳，避免盤點差異</div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">T1</span>
+      <div class="module-title">品號對應表</div>
+      <div class="module-desc">ext_prod_code_mapping 主資料</div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">T2</span>
+      <div class="module-title">基礎主資料同步</div>
+      <div class="module-desc">PDM + 門市主檔即時同步</div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">T3</span>
+      <div class="module-title">進貨單推送</div>
+      <div class="module-desc">驗收後依 useDeliveryType 判斷</div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">T4</span>
+      <div class="module-title">銷貨單+組合單批次</div>
+      <div class="module-desc">每日推送一般+員工餐兩張</div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">T5</span>
+      <div class="module-title">天心串接記錄</div>
+      <div class="module-desc">告警、重試、手動補發</div>
+    </div>
+  </div>
+</div>
+
+<!-- L0 -->
+<div class="section" id="L0">
+  <h2><span class="icon">🚚</span>模組 L0：物流與在途量</h2>
+
+  <h3>📅 L0-1：物流管理行事曆收貨作業優化</h3>
+  <table>
+    <tr><th width="30%">情況</th><th>操作方式</th></tr>
+    <tr><td>全數到貨的品項</td><td>系統自動帶入預計配送數量作為實際到貨數量，門市不需逐列輸入</td></tr>
+    <tr><td>有缺少或異常的品項</td><td>門市只需針對缺少或數量不符的品項修改實際到貨數量</td></tr>
+  </table>
+
+  <div class="alert alert-info">
+    <span class="ico">💡</span>
+    <div><strong>修改原因：</strong>減少門市每日收貨的操作負擔，符合 BK 門市實際作業習慣 — 貨品大多全數到貨，只有例外情況才需要修改數量。</div>
+  </div>
+
+  <h3>⏰ L0-2：當日進貨即時導入與入帳時效</h3>
+  <table>
+    <tr><th width="30%">規則</th><th>說明</th></tr>
+    <tr><td>當日入帳要求</td><td>門市收到貨品後，應在當日完成物流管理行事曆的收貨確認，確保入庫單日期與實際進貨日期一致</td></tr>
+    <tr><td>盤點前截止時間</td><td>月/週盤前，系統應提示門市確認當期所有進貨品項是否已完成入帳，避免盤點差異失準</td></tr>
+  </table>
+  <div class="alert alert-warn">
+    <span class="ico">📌</span>
+    <div><span class="badge badge-todo">待確認 #L02-01</span> 盤點前系統提示機制的觸發條件與通知方式（PM + BK 業務）</div>
+  </div>
+
+  <h3>🗺️ L0：門市在途量定義拆分</h3>
+  <table>
+    <tr><th width="20%">配送來源</th><th width="40%">在途量定義</th><th>判斷依據</th></tr>
+    <tr>
+      <td>🔵 MSS 倉配送（中央倉）</td>
+      <td>已產出 CSV 上傳至 SFTP，但門市尚未確認收貨</td>
+      <td>物流串接記錄已存在，但 <code>actual_arrival_date</code> 為空</td>
+    </tr>
+    <tr>
+      <td>🔴 廠商直送</td>
+      <td>已下採購單，廠商尚未送達門市</td>
+      <td>採購模組結轉驗收單明細的 <code>transit_qty</code></td>
+    </tr>
+  </table>
+
+  <h3>💰 天心進貨單數量的最終依據</h3>
+  <div class="mermaid">
+flowchart LR
+    A[門市確認收貨<br/>物流管理行事曆按儲存] --> B[建立 WHS 入庫單<br/>實際到貨數量]
+    B --> C[非同步推送<br/>天心進貨單]
+    C --> D{配送來源}
+    D -->|MSS 配送| E[配送方 = 總公司中央倉]
+    D -->|廠商直送| F[配送方 = 外部廠商]
+    E --> G[金額與數量皆以入庫單為準]
+    F --> G
+
+    style A fill:#fff3e0
+    style B fill:#e8f5e9
+    style C fill:#e3f2fd
+    style G fill:#fce4ec
+  </div>
+</div>
+
+<!-- T1 品號對應表 -->
+<div class="section" id="T1">
+  <h2><span class="icon">🗃️</span>模組 T1：品號對應表（新建主資料維護）</h2>
+
+  <h3>📋 新增資料表 <code>ext_prod_code_mapping</code></h3>
+  <table class="schema-table">
+    <tr><th>欄位</th><th>型別</th><th>說明</th></tr>
+    <tr><td><code>id</code></td><td>BIGINT</td><td>主鍵</td></tr>
+    <tr><td><code>erp_prod_code</code></td><td>VARCHAR(50)</td><td>力新 ERP 品號</td></tr>
+    <tr><td><code>tian_xin_prod_code</code></td><td>VARCHAR(50)</td><td>天心貨品代號（預設與力新相同，可人工覆寫）</td></tr>
+    <tr><td><code>prod_name</code></td><td>VARCHAR(200)</td><td>品名（冗餘存，方便查閱）</td></tr>
+    <tr><td><code>is_active</code></td><td>TINYINT(1)</td><td>是否啟用</td></tr>
+    <tr><td><code>sync_status</code></td><td>VARCHAR(10)</td><td><code>PENDING</code>、<code>SYNCED</code>、<code>FAILED</code></td></tr>
+    <tr><td><code>sync_time</code></td><td>DATETIME</td><td>最後成功同步時間</td></tr>
+    <tr><td><code>remark</code></td><td>VARCHAR(500)</td><td>備註（記錄不一致原因）</td></tr>
+  </table>
+
+  <h3>🔄 維護規則</h3>
+  <div class="module-grid">
+    <div class="module-card">
+      <span class="module-tag">新增</span>
+      <div class="module-title">食材/包材品號新增</div>
+      <div class="module-desc">自動建立對應表記錄<br/><code>tian_xin_prod_code</code> 預設帶入 <code>erp_prod_code</code></div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">停用</span>
+      <div class="module-title">食材/包材品號停用</div>
+      <div class="module-desc"><code>is_active</code> 改為 0<br/>觸發同步通知天心停用</div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">人工</span>
+      <div class="module-title">兩端代號不一致</div>
+      <div class="module-desc">由 IT 人工覆寫<br/><code>tian_xin_prod_code</code></div>
+    </div>
+  </div>
+</div>
+
+<!-- T2 基礎主資料 -->
+<div class="section" id="T2">
+  <h2><span class="icon">🔁</span>模組 T2：基礎主資料同步（PDM + 門市主檔）</h2>
+
+  <h3>⚡ 觸發點</h3>
+  <ul>
+    <li><strong>食材/包材品號新增或停用</strong>：在 PDM 食材維護 Service 末端異步觸發</li>
+    <li><strong>食材/包材品號對應關係變更</strong>：<code>ext_prod_code_mapping</code> 即時更新，並非同步觸發天心基礎主資料同步</li>
+    <li><strong>門市主檔異動</strong>：門市新增或停用時同步至天心部門主檔</li>
+  </ul>
+
+  <h3>🔄 推送流程</h3>
+  <div class="mermaid">
+flowchart TD
+    A[食材/包材主檔異動] --> B[更新 ext_prod_code_mapping]
+    B --> C[非同步觸發天心同步]
+    C --> D[查對應表取天心貨品代號]
+    D --> E[呼叫天心基礎主資料 API]
+    E --> F{結果}
+    F -->|成功| G[sync_status = SYNCED]
+    F -->|失敗| H[sync_status = FAILED<br/>寫入天心串接記錄 T5]
+
+    style A fill:#fff3e0
+    style E fill:#e3f2fd
+    style G fill:#e8f5e9
+    style H fill:#ffebee
+  </div>
+
+  <div class="alert alert-success">
+    <span class="ico">✅</span>
+    <div><strong>已確認：</strong>門市主檔由系統模組維護，觸發點位於系統模組的門市異動 Service。</div>
+  </div>
+</div>
+
+<!-- T3 進貨單 -->
+<div class="section" id="T3">
+  <h2><span class="icon">📦</span>模組 T3：進貨單推送（PMM 驗收確認）</h2>
+
+  <div class="alert alert-info">
+    <span class="ico">💡</span>
+    <div>對門市而言，<strong>不論貨物來源為何，在天心都是「進貨單」</strong>。各門市與總公司各有獨立統編，屬於不同法人，因此總倉配送到門市也是法人間的進貨行為。</div>
+  </div>
+
+  <h3>🚚 配送方判斷邏輯</h3>
+  <table>
+    <tr><th width="35%">進貨來源</th><th width="25%">天心單據類型</th><th>配送方</th></tr>
+    <tr><td>供應商直送到門市</td><td>進貨單</td><td>外部供應商</td></tr>
+    <tr><td>從總倉（MSS）物流配送到門市</td><td>進貨單</td><td>總公司（中央倉，獨立統編）</td></tr>
+  </table>
+
+  <h3>🔄 推送流程</h3>
+  <div class="mermaid">
+flowchart TD
+    A[驗收確認歸檔] --> B[processStockIn<br/>現有流程]
+    B --> C[非同步觸發天心進貨單推送]
+    C --> D[取驗收明細<br/>品號 / 入庫數量 / 倉庫代號]
+    D --> E[查廠商報價明細<br/>useDeliveryType]
+    E --> F{對應 pdm_logistics_type}
+    F -->|直送| G[配送方 = 外部供應商<br/>廠商代號]
+    F -->|週配/月配| H[配送方 = 總公司<br/>中央倉統編]
+    G --> I[查 ext_prod_code_mapping<br/>取天心貨品代號]
+    H --> I
+    I --> J[取 latestQuotePerKgL<br/>組裝金額]
+    J --> K[組裝天心進貨單<br/>含配送方與金額]
+    K --> L[呼叫天心 API 推送]
+    L --> M[寫入天心串接記錄 T5]
+
+    style A fill:#fff3e0
+    style L fill:#e3f2fd
+    style M fill:#f3e5f5
+  </div>
+
+  <h3>💵 金額來源</h3>
+  <div class="formula">
+    latestQuotePerKgL（NTD/單位）= latestQuotePerPack ÷ singlePackCount<br/>
+    <small style="color:#666">前端在兩欄皆有值時自動觸發後端計算並持久化</small>
+  </div>
+</div>
+
+<!-- T4 銷貨單 -->
+<div class="section" id="T4">
+  <h2><span class="icon">🛒</span>模組 T4：銷貨單 + 組合單每日推送</h2>
+
+  <h3>📅 每日推送內容</h3>
+  <p>每門市每日推送 <strong>兩張銷貨單</strong>：</p>
+  <div class="module-grid">
+    <div class="module-card">
+      <span class="module-tag">一般銷售</span>
+      <div class="module-title">一般銷售銷貨單</div>
+      <div class="module-desc">含各品項銷售數量 + 各品項組合單</div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">員工餐</span>
+      <div class="module-title">員工餐銷貨單</div>
+      <div class="module-desc">含員工餐品項數量 + 各品項組合單</div>
+    </div>
+  </div>
+
+  <h3>🧮 組合單（BOM）與套餐處理</h3>
+  <ul>
+    <li><strong>組合單產出：</strong>以單品代號查詢食材清單與標準用量，新增一支格式化輸出 API</li>
+    <li><strong>套餐處理：</strong>力新以單品展開後傳入，套餐僅作虛設代號（無金額、無 BOM），各子品項帶金額與各自的組合單</li>
+  </ul>
+
+  <h3>⚠️ 待確認議題</h3>
+  <div class="alert alert-danger">
+    <span class="ico">🚨</span>
+    <div>
+      <span class="badge badge-pri-high">最高</span><strong>T4-01：</strong>套餐銷售金額如何拆分到各子品項？此問題未解則天心端無法產出正確銷售金額與毛利。
+    </div>
+  </div>
+  <details>
+    <summary><span class="badge badge-pri-mid">高</span>T4-02：中繼 API 銷售資料粒度</summary>
+    中繼 API 的銷售資料粒度是否能到「門市 × 品項 × 數量」層級？
+  </details>
+  <details>
+    <summary><span class="badge badge-pri-mid">中</span>T4-03：每日推送排程時間點</summary>
+    每日推送排程時間點待確認。
+  </details>
+  <details>
+    <summary><span class="badge badge-pri-mid">中</span>T4-04：員工餐品項辨別標記</summary>
+    員工餐品項的辨別標記在哪裡維護？
+  </details>
+</div>
+
+<!-- T5 串接記錄 -->
+<div class="section" id="T5">
+  <h2><span class="icon">📜</span>模組 T5：天心串接記錄（新建模組）</h2>
+
+  <h3>🗃️ 新增資料表 <code>tian_xin_sync_head</code></h3>
+  <table class="schema-table">
+    <tr><th>欄位</th><th>說明</th></tr>
+    <tr><td><code>id</code></td><td>主鍵</td></tr>
+    <tr><td><code>sign_code</code></td><td>串接單號（前綴 <code>TX-</code>）</td></tr>
+    <tr><td><code>sync_type</code></td><td><code>PRODUCT</code>、<code>STOCK_IN</code>、<code>TRANSFER</code>、<code>SALE</code></td></tr>
+    <tr><td><code>source_sign_code</code></td><td>力新來源單號</td></tr>
+    <tr><td><code>tian_xin_sign_code</code></td><td>天心回傳單號（成功後填入）</td></tr>
+    <tr><td><code>store_id</code></td><td>門市 ID</td></tr>
+    <tr><td><code>sync_date</code></td><td>推送日期</td></tr>
+    <tr><td><code>status</code></td><td><code>PENDING</code>、<code>SUCCESS</code>、<code>FAILED</code>、<code>RETRYING</code></td></tr>
+    <tr><td><code>retry_count</code></td><td>重試次數</td></tr>
+    <tr><td><code>last_error</code></td><td>最後失敗的錯誤訊息</td></tr>
+    <tr><td><code>created_time</code></td><td>建立時間</td></tr>
+    <tr><td><code>synced_time</code></td><td>最後成功時間</td></tr>
+  </table>
+
+  <h3>🗃️ <code>tian_xin_sync_detail</code></h3>
+  <table class="schema-table">
+    <tr><th>欄位</th><th>說明</th></tr>
+    <tr><td><code>id</code></td><td>主鍵</td></tr>
+    <tr><td><code>parent_id</code></td><td>對應單頭 ID</td></tr>
+    <tr><td><code>erp_prod_code</code></td><td>力新品號</td></tr>
+    <tr><td><code>tian_xin_prod_code</code></td><td>天心貨品代號</td></tr>
+    <tr><td><code>quantity</code></td><td>數量</td></tr>
+    <tr><td><code>amount</code></td><td>金額（進貨單適用）</td></tr>
+    <tr><td><code>warehouse_code</code></td><td>倉庫代號</td></tr>
+  </table>
+
+  <h3>🔄 狀態機</h3>
+  <div class="mermaid">
+stateDiagram-v2
+    [*] --> PENDING: 觸發推送
+    PENDING --> SUCCESS: API 回傳成功
+    PENDING --> FAILED: API 失敗
+    FAILED --> RETRYING: 每小時自動重試
+    RETRYING --> SUCCESS: 重試成功
+    RETRYING --> FAILED: 重試失敗
+    FAILED --> [*]: 超過 3 次<br/>標記人工介入
+    SUCCESS --> [*]
+  </div>
+
+  <h3>🛠️ 新增後端功能</h3>
+  <div class="module-grid">
+    <div class="module-card">
+      <span class="module-tag">告警</span>
+      <div class="module-title">失敗主動告警</div>
+      <div class="module-desc">站內訊息，不能只有 log</div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">重試</span>
+      <div class="module-title">自動重試排程</div>
+      <div class="module-desc">每小時一次，超過 3 次人工介入</div>
+    </div>
+    <div class="module-card">
+      <span class="module-tag">補發</span>
+      <div class="module-title">手動補發端點</div>
+      <div class="module-desc"><code>POST /tian-xin/sync/resend?id=xxx</code></div>
+    </div>
+  </div>
+</div>
+
+<!-- 待確認 -->
+<div class="section" id="todo">
+  <h2><span class="icon">⚠️</span>第三部分：待確認事項彙整</h2>
+
+  <h3>📊 優先度分布</h3>
+  <div class="chart-container">
+    <canvas id="priorityChart" height="80"></canvas>
+  </div>
+
+  <h3>📋 詳細清單</h3>
+  <table>
+    <tr><th width="14%">編號</th><th width="34%">議題</th><th width="22%">責任方</th><th width="12%">優先度</th><th width="18%">影響項目</th></tr>
+    <tr><td><strong>BK3-02</strong></td><td>中繼端資料拆分時程</td><td>PM + 中繼</td><td><span class="badge badge-pri-mid">中</span></td><td>需求 3</td></tr>
+    <tr><td><strong>T4-01</strong></td><td>套餐銷售金額拆分規則</td><td>PM + 天心 + BK 業務</td><td><span class="badge badge-pri-high">最高</span></td><td>模組 T4</td></tr>
+    <tr><td><strong>T4-02</strong></td><td>中繼 API 銷售資料粒度</td><td>PM + 技術</td><td><span class="badge badge-pri-high">高</span></td><td>模組 T4</td></tr>
+    <tr><td><strong>T4-03</strong></td><td>每日推送排程時間點</td><td>PM + BK 業務</td><td><span class="badge badge-pri-mid">中</span></td><td>模組 T4</td></tr>
+    <tr><td><strong>T4-04</strong></td><td>員工餐品項辨別標記維護位置</td><td>PM + BK 業務</td><td><span class="badge badge-pri-mid">中</span></td><td>模組 T4</td></tr>
+  </table>
+</div>
+
+<div class="section" style="text-align:center; background: linear-gradient(135deg, #fafbfc, #fff); color: #888;">
+  <p>📄 整合變更說明 v2.3 | 撰寫日期 2026-05-26</p>
+  <p>本文件為 <strong>20260526_v2.2_變更後使用者情境說明.md</strong> 的技術依據</p>
+</div>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true },
+    mindmap: { useMaxWidth: true }
+  });
+
+  // BK Requirements doughnut chart
+  const reqCtx = document.getElementById('reqChart').getContext('2d');
+  new Chart(reqCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['需修改 (BE+FE)', '不修改', 'FE 補功能', 'BE 缺陷修復', '中繼協調'],
+      datasets: [{
+        data: [6, 2, 2, 1, 1],
+        backgroundColor: ['#d32f2f', '#9e9e9e', '#1976d2', '#7b1fa2', '#f57c00'],
+        borderWidth: 3,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 13 } } },
+        title: { display: true, text: 'BK 11 項需求處理方式分布', font: { size: 14 } }
+      }
+    }
+  });
+
+  // Priority bar chart
+  const priCtx = document.getElementById('priorityChart').getContext('2d');
+  new Chart(priCtx, {
+    type: 'bar',
+    data: {
+      labels: ['T4-01 套餐金額拆分', 'T4-02 銷售粒度', 'T4-03 推送時間', 'T4-04 員工餐標記', 'BK3-02 中繼拆分'],
+      datasets: [{
+        label: '優先度',
+        data: [10, 8, 5, 5, 5],
+        backgroundColor: ['#d32f2f', '#f57c00', '#fbc02d', '#fbc02d', '#fbc02d'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      indexAxis: 'y',
+      scales: { x: { beginAtZero: true, max: 10 } },
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: '待確認議題優先度評估（1-10）', font: { size: 14 } }
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
