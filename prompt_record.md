@@ -54,3 +54,22 @@ FeignClient 類：BurgerKingStoreClient
 
 檢查  OA 程式碼 針對 ERP 模組下 - controller 是否有遵守 MVC 原則，controller 絕不處理資料庫，商業邏輯，修正不符合地方
 
+----- 5/25 
+
+重構 erp bk , api/erp/whs/check-plan/page?pageNo=1&pageSize=20&processStatus=%E5%BE%85%E8%99%95%E7%90%86
+
+--- 5/28
+
+/tdd 測試 api/erp/pdm/packing-materials/update ，單據編號不會移除
+
+
+食材 api/erp/pdm/ingredient/update
+
+單品  api/erp/pdm/recipe/update 
+
+/tdd 單品維護作業 測試 api/erp/pdm/recipe/update  ，單據編號不會移除
+
+重構 erp bk , 修改 api/erp/pdm/packing-materials/create  ，會回應 id
+
+
+/tdd 測試 /api/erp/pdm/packing-materials/update   已經有主旨，不可清空
