@@ -73,3 +73,11 @@ FeignClient 類：BurgerKingStoreClient
 
 
 /tdd 測試 /api/erp/pdm/packing-materials/update   已經有主旨，不可清空
+
+
+
+/tdd 單品維護作業 測試 api/erp/pdm/recipe/update  ，營養成份含量 資料確實寫入
+
+
+這個promt造成ai誤判，測試erp,加上   ---- " 不是ERP , java , "  才正常
+/tdd  不是ERP , java , 是測試 oa api - api/erp/whs/stock/currentPage ，查詢時過濾 warehouse 可以發生作用
