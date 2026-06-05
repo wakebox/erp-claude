@@ -11,7 +11,7 @@
 # ERP backend code path
 /data/burgerking/erp-spring
 
-# ERO frontend code path
+# ERP frontend code path
 /data/burgerking/erp-kingmaker
 
 # myclaude 
