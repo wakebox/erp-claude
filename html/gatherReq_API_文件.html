@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>需求彙集 (gatherReq) API 技術文件 — ERP 後端對照 / OA 實作狀態</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1d212b; --border:#2a2f3a;
+    --txt:#e6e9ef; --muted:#9aa3b2; --accent:#ffb454; --accent2:#5cc8ff;
+    --green:#3ecf8e; --amber:#f5c451; --red:#ff6b6b; --purple:#b98bff;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;font-size:15px}
+  .wrap{display:flex;max-width:100%;}
+  /* sidebar */
+  nav.toc{position:sticky;top:0;align-self:flex-start;width:300px;min-width:300px;height:100vh;overflow-y:auto;background:var(--panel);border-right:1px solid var(--border);padding:18px 14px}
+  nav.toc h2{font-size:14px;color:var(--accent);margin:14px 0 6px;letter-spacing:.5px;text-transform:uppercase}
+  nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 8px;border-radius:6px;font-size:13.5px}
+  nav.toc a:hover{background:var(--panel2);color:var(--txt)}
+  nav.toc a.sub{padding-left:20px;font-size:12.5px}
+  main{flex:1;min-width:0;padding:32px 44px;max-width:1180px}
+  h1{font-size:30px;margin:0 0 4px;background:linear-gradient(90deg,#ffb454,#ff7a59);-webkit-background-clip:text;background-clip:text;color:transparent}
+  h2.sec{font-size:23px;margin:46px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--border);color:var(--accent2)}
+  h3{font-size:18px;margin:26px 0 8px;color:var(--accent)}
+  h4{font-size:15px;margin:18px 0 6px;color:var(--purple)}
+  p{color:#d4d9e2}
+  code{background:#11141a;border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;color:#ffd9a0}
+  pre{margin:10px 0;border-radius:10px;border:1px solid var(--border);overflow:auto;background:#0b0d12!important}
+  pre code{background:transparent;border:0;padding:16px;display:block;font-size:12.7px;line-height:1.55;color:inherit}
+  .lead{color:var(--muted);font-size:15.5px}
+  /* tables */
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.3px;background:var(--panel);border-radius:10px;overflow:hidden}
+  th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--accent);font-weight:600;white-space:nowrap}
+  tr:nth-child(even) td{background:#14171f}
+  td .path{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.2px;color:#9fe7ff}
+  .m{font-family:"SF Mono",Menlo,monospace;font-weight:700;font-size:11.5px;padding:2px 7px;border-radius:5px;color:#0b0d12}
+  .GET{background:#5cc8ff}.POST{background:#3ecf8e}.PUT{background:#f5c451}.DELETE{background:#ff6b6b}.FLOW{background:#b98bff}
+  /* badges */
+  .badge{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .ok{background:rgba(62,207,142,.16);color:var(--green);border:1px solid rgba(62,207,142,.5)}
+  .stub{background:rgba(245,196,81,.15);color:var(--amber);border:1px solid rgba(245,196,81,.5)}
+  .no{background:rgba(255,107,107,.14);color:var(--red);border:1px solid rgba(255,107,107,.5)}
+  /* dashboard cards */
+  .cards{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0}
+  .card{flex:1;min-width:150px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+  .card .n{font-size:34px;font-weight:800;line-height:1}
+  .card .l{color:var(--muted);font-size:13px;margin-top:6px}
+  .card.g .n{color:var(--green)}.card.a .n{color:var(--amber)}.card.r .n{color:var(--red)}.card.b .n{color:var(--accent2)}
+  /* callouts */
+  .note{border-left:4px solid var(--accent2);background:var(--panel2);padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+  .warn{border-left:4px solid var(--amber);background:rgba(245,196,81,.06);padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+  .danger{border-left:4px solid var(--red);background:rgba(255,107,107,.06);padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+  .formula{background:#0b0d12;border:1px dashed var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;font-family:"SF Mono",Menlo,monospace;font-size:13.5px;color:#ffd9a0;white-space:pre-wrap}
+  .mermaid{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin:14px 0;text-align:center}
+  details{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin:12px 0;padding:4px 16px}
+  summary{cursor:pointer;font-weight:600;color:var(--accent2);padding:8px 0}
+  .pagehead{background:linear-gradient(135deg,#1d212b,#14171f);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin:18px 0}
+  .pagehead .tag{font-size:12px;color:var(--muted)}
+  .kv{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .kv span{background:#11141a;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:12px;color:#cdd4df}
+  hr{border:0;border-top:1px solid var(--border);margin:30px 0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:10px 0}
+  a.up{color:var(--accent2)}
+  footer{color:var(--muted);font-size:12.5px;margin-top:50px;border-top:1px solid var(--border);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+  <h2>導覽</h2>
+  <a href="#overview">總覽 &amp; 摘要儀表板</a>
+  <a href="#arch">系統架構</a>
+  <a href="#matrix">API 總對照表 (OA 狀態)</a>
+  <h2>功能頁面</h2>
+  <a href="#p1">① 需求試算 / 需求預測排程</a>
+  <a href="#p1" class="sub">demand-forecast</a>
+  <a href="#p2">② 臨時需求試算</a>
+  <a href="#p2" class="sub">temp-req + recipe</a>
+  <a href="#p3">③ 原物料需求日曆</a>
+  <a href="#p3" class="sub">raw-material-demand-head</a>
+  <a href="#p4">④ 物流查詢作業</a>
+  <a href="#p4" class="sub">group-by-delivery-date</a>
+  <a href="#p5">⑤ 物流單查詢作業</a>
+  <a href="#p5" class="sub">raw-material-logistics</a>
+  <a href="#p6">⑥ 物流管理日曆</a>
+  <a href="#p6" class="sub">入庫單自動產生</a>
+  <h2>分析</h2>
+  <a href="#gap">OA 落差分析</a>
+  <a href="#er">整體資料模型 ER</a>
+</nav>
+
+<main>
+<h1>需求彙集 (gatherReq) API 技術文件</h1>
+<p class="lead">前端模組 <code>/gatherReq</code> 全部 API ▸ 對照 Spring Boot (kingmaker-module-pdm / whs) 後端商業邏輯 ▸ 標註 OA (Laravel) 實作狀態。<br>
+產生日期 2026-06-11 ｜ 來源：<code>erp-kingmaker</code> 前端、<code>erp-spring</code> 後端、<code>newprooa</code> OA。</p>
+
+<!-- ============ OVERVIEW ============ -->
+<h2 class="sec" id="overview">總覽 &amp; 摘要儀表板</h2>
+<p>「需求彙集 gatherReq」涵蓋 <b>6 個功能頁面</b>、共 <b>30 個獨立 API 端點</b>，橫跨需求預測 (試算) → 臨時需求 → 原物料需求日曆 → 物流查詢 → 物流管理 (入庫) 的完整供應鏈規劃流程。</p>
+<div class="cards">
+  <div class="card b"><div class="n">6</div><div class="l">功能頁面</div></div>
+  <div class="card b"><div class="n">30</div><div class="l">獨立 API 端點</div></div>
+  <div class="card g"><div class="n">25</div><div class="l">OA 已實作 ✅</div></div>
+  <div class="card a"><div class="n">2</div><div class="l">OA 空殼 / Stub ⚠️</div></div>
+  <div class="card r"><div class="n">3</div><div class="l">OA 未實作 ❌</div></div>
+</div>
+<div class="legend">
+  <span><span class="badge ok">✅ 已實作</span> 路由 + Controller + Service 皆完成，回傳真實資料</span>
+  <span><span class="badge stub">⚠️ 空殼</span> 路由存在但回傳空 <code>[]</code>，核心演算法未移植</span>
+  <span><span class="badge no">❌ 未實作</span> OA 無對應路由</span>
+</div>
+<div class="warn">
+  <b>關鍵落差：</b>OA 的 <code>product-recipe-analysis</code> 與 <code>calculate-projected-sales</code> 兩支「需求預測核心演算法」目前是 <span class="badge stub">⚠️ 空殼</span>（<code>return ['code'=&gt;0,'data'=&gt;[]]</code>）；而 <b>動態簽核</b>相關的 <code>todo-page</code> 與 <code>update-process-status</code> 在 OA <span class="badge no">❌ 完全沒有路由</span>。詳見 <a class="up" href="#gap">OA 落差分析</a>。
+</div>
+
+<!-- ============ ARCH ============ -->
+<h2 class="sec" id="arch">系統架構</h2>
+<p>前端 Vue (vben/ant-design) 透過 <code>requestClient</code> 呼叫 Spring Boot <code>admin-api</code>。Spring 後端再以 <b>OpenFeign</b> 中繼呼叫上游「漢堡王門店系統」(BurgerKingStoreClient) 取得門店/區域/銷售資料。OA (Laravel) 則是 ERP→OA 的對應移植目標。</p>
+<div class="mermaid">
+flowchart LR
+  subgraph FE["前端 erp-kingmaker (Vue3)"]
+    V["views/gatherReq/*"] --> API["api/gatherReq/*/index.ts<br/>requestClient"]
+  end
+  API -->|"admin-api /pdm/* /whs/*"| SB
+  subgraph SB["後端 erp-spring (Spring Boot)"]
+    C["Controller (admin)"] --> S["ServiceImpl<br/>(商業邏輯/演算法)"]
+    S --> M["Mapper (MyBatis)"]
+    M --> DB[("PostgreSQL<br/>pdm_* / crg_* / whs_*")]
+    S -.OpenFeign.-> FG["BurgerKingStoreClient"]
+  end
+  FG -.->|"門店/區域/已完成訂單銷售"| BK[("上游漢堡王 API<br/>61.218.209.215")]
+  SB -. 對應移植 .-> OA
+  subgraph OA["OA newprooa (Laravel11)"]
+    OAC["app/Http/Controllers/ERP/PDM·WHS"] --> OAS["Services/ERP/PDM"]
+    OAS --> OADB[("MySQL erp_* / pdm_*")]
+  end
+  style BK fill:#3a2a1a,stroke:#ffb454
+  style DB fill:#1a2a3a,stroke:#5cc8ff
+  style OADB fill:#1a3a2a,stroke:#3ecf8e
+</div>
+<div class="note">
+  路徑前綴對照：前端呼叫 <code>/pdm/...</code> → Spring <code>http://ERP/admin-api/pdm/...</code>（帶 <code>tenant-id:1</code>）→ OA <code>http://localhost/api/erp/pdm/...</code>。三系統 <code>CommonResult</code> 格式一致：<code>{code, data, msg}</code>，<code>code=0</code> 為成功。
+</div>
+
+<!-- ============ MATRIX ============ -->
+<h2 class="sec" id="matrix">API 總對照表 (OA 實作狀態)</h2>
+<table>
+<thead><tr><th>#</th><th>頁面</th><th>方法</th><th>路徑</th><th>用途</th><th>OA 狀態</th></tr></thead>
+<tbody>
+<tr><td>1</td><td rowspan="10">① 需求試算 /<br>需求預測排程</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/demand-forecast/page</span></td><td>需求預測分頁列表（依區域/門市/週別/狀態）</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>2</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/demand-forecast/todo-page</span></td><td>動態簽核待辦分頁</td><td><span class="badge no">❌ 未實作</span></td></tr>
+<tr><td>3</td><td><span class="m DELETE">DEL</span></td><td><span class="path">/pdm/demand-forecast/deleteBatch</span></td><td>批次刪除表頭(含明細)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>4</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/demand-forecast/detail/get-with-header</span></td><td>取表頭+結構化明細(門市→商品→食材)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>5</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/demand-forecast/detail/product-recipe-analysis</span></td><td><b>核心：</b>配方展開+銷售統計+安全庫存試算</td><td><span class="badge stub">⚠️ 空殼</span></td></tr>
+<tr><td>6</td><td><span class="m POST">POST</span></td><td><span class="path">/pdm/demand-forecast/detail/calculate-projected-sales</span></td><td><b>核心：</b>每日萬元平日/假日預測平均需求量</td><td><span class="badge stub">⚠️ 空殼</span></td></tr>
+<tr><td>7</td><td><span class="m POST">POST</span></td><td><span class="path">/pdm/demand-forecast/detail/create-with-details</span></td><td>建立表頭+明細(原子)+啟動簽核流程</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>8</td><td><span class="m PUT">PUT</span></td><td><span class="path">/pdm/demand-forecast/detail/update-with-details</span></td><td>更新表頭+明細(刪舊插新)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>9</td><td><span class="m PUT">PUT</span></td><td><span class="path">/pdm/demand-forecast/update-process-status</span></td><td>更新流程狀態(待處理→已歸檔)</td><td><span class="badge no">❌ 未實作</span></td></tr>
+<tr><td>10</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/demand-forecast/detail/bk/group-with-stores-inner</span></td><td>區域+門市(依使用者權限過濾)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+
+<tr><td>11</td><td rowspan="9">② 臨時需求試算</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/temp-req/page</span></td><td>臨時需求分頁列表</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>12</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/temp-req/todo-page</span></td><td>動態簽核待辦分頁</td><td><span class="badge no">❌ 未實作</span></td></tr>
+<tr><td>13</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/temp-req/get</span></td><td>取單筆+即時試算食材用量</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>14</td><td><span class="m POST">POST</span></td><td><span class="path">/pdm/temp-req/create</span></td><td>建立臨時需求(表頭+明細+簽核)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>15</td><td><span class="m PUT">PUT</span></td><td><span class="path">/pdm/temp-req/update</span></td><td>更新臨時需求</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>16</td><td><span class="m DELETE">DEL</span></td><td><span class="path">/pdm/temp-req/delete</span></td><td>刪除臨時需求</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>17</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/recipe/getSingleServingRecipe</span></td><td>取單品配方(食材+標準用量)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>18</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/recipe/allRecipe</span></td><td>所有單品列表</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>19</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/demand-forecast/detail/bk/group-with-stores-inner</span></td><td>區域+門市(共用#10)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+
+<tr><td>20</td><td rowspan="5">③ 原物料需求日曆</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/raw-material-demand-head/list</span></td><td>依區域/門市/日期區間查需求日清單</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>21</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/raw-material-demand-head/detail</span></td><td>指定需求日的食材明細(含廠商/物流)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>22</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/raw-material-demand-head/page</span></td><td>已存查詢條件(單據)分頁</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>23</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/raw-material-demand-head/get</span></td><td>取單筆查詢條件</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>24</td><td><span class="m POST">POST</span></td><td><span class="path">/pdm/raw-material-demand-head/create</span></td><td>建立需求行事曆(展開日期+食材+預計配送日)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+
+<tr><td>25</td><td rowspan="2">④ 物流查詢作業</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/raw-material-demand-head/query-group-by-delivery-date</span></td><td>依預計配送日分組(STRING_AGG 單號)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>26</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/raw-material-demand-head/query-details-by-delivery-date</span></td><td>下鑽：某配送日的食材明細(依品號彙總)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+
+<tr><td>27</td><td rowspan="2">⑤ 物流單查詢作業</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/raw-material-logistics/page</span></td><td>物流單表頭分頁</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>28</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/raw-material-logistics/raw-material-logistics-dtl/list-by-parent-id</span></td><td>物流單明細(LATERAL join 食材/廠商/門市)</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+
+<tr><td>29</td><td rowspan="3">⑥ 物流管理日曆</td><td><span class="m GET">GET</span></td><td><span class="path">/pdm/raw-material-demand-head/query-details-by-month</span></td><td>依月份查明細，按日期+配送模式分組</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>30</td><td><span class="m POST">POST</span></td><td><span class="path">/pdm/raw-material-demand-head/query-details-by-ids</span></td><td>依 ID 陣列彙總明細</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+<tr><td>31</td><td><span class="m POST">POST</span></td><td><span class="path">/whs/stock-record-head/create-stock-in-from-demand-details</span></td><td><b>跨模組：</b>由需求明細產生入庫單(WHS)+回填單號</td><td><span class="badge ok">✅ 已實作</span></td></tr>
+</tbody>
+</table>
+<p style="color:var(--muted);font-size:12.5px">※ #19 與 #10 為同一端點；#9 在頁面②亦被引用。去重後共 30 個獨立端點。</p>
+
+<hr>
+
+<!-- ==================== PAGE 1 ==================== -->
+<h2 class="sec" id="p1">① 需求試算 / 需求預測排程 (Demand Forecast)</h2>
+<div class="pagehead">
+  <div class="tag">前端路由</div>
+  <div><code>/gatherReq/reqCalculation/detail</code> ｜ <code>/gatherReq/demandForecastSchedule/detail</code></div>
+  <div class="kv"><span>Controller: DemandForecastController / DemandForecastDetailController</span><span>Service: DemandForecastServiceImpl</span><span>表: crg_demand_forecast (+_detail)</span></div>
+</div>
+
+<h3>功能說明</h3>
+<p>依「歷史銷售資料區間」與「需求週別」，把門市銷售量按 <b>每萬元營業額</b> 換算成<b>平日 / 假日</b>的平均食材需求量，再乘上配方標準用量與預測加成 (%)，產生一張可送簽核的「需求預測試算表」。表頭含週別、銷售資料區間、預測加成；明細按 門市→商品→食材 三層展開。</p>
+
+<h3>核心計算公式</h3>
+<div class="formula">avgSales        = sales / dayCount                       （平日或假日：總銷量 ÷ 天數）
+avgSalesPer10k  = avgSales × 10000 / orderAmount          （每萬元營業額平均銷量）
+projectedPer10k = avgSalesPer10k × standardQuantity       （乘配方標準數量 → 食材需求）
+最終預測         = projectedPer10k × forecastIncrementPercent （再乘預測加成%）
+
+零值保護：orderAmount ≤ 0、dayCount ≤ 0、standardQuantity ≤ 0 → 回傳 0
+四捨五入：中間運算 8 位、輸出 2 位 (HALF_UP)
+LONG(常溫)食材：庫存未低於安全庫存則跳過試算，前端顯示「判斷庫存」</div>
+
+<h3>商業邏輯重點</h3>
+<table>
+<thead><tr><th>端點</th><th>邏輯 (檔案:行)</th></tr></thead>
+<tbody>
+<tr><td><span class="path">create-with-details</span></td><td>DemandForecastServiceImpl:859-890｜複製表頭→ <code>generateSignCode("需求預測試算表")</code> → processStatus="待處理" → insert；明細設 parentId 後 <code>insertBatch</code>；若該表單流程開啟則 <code>createProcessInstanceIfFlowOpen</code> 並回填 processInstanceId。<code>@Transactional</code> 原子性。</td></tr>
+<tr><td><span class="path">calculate-projected-sales</span></td><td>:554-620｜以 parentId 抓既有明細為基準資料(優先 DB，fallback 前端值)；逐筆呼叫 <code>calculateAverageSalesPer10k</code>(631-649) 與 <code>calculateProjectedAveragePer10k</code>(664-677) 各算平日/假日。</td></tr>
+<tr><td><span class="path">product-recipe-analysis</span></td><td>:334-511｜① 取已完成訂單統計(Feign→BK) ② 批次查配方展開食材 ③ 預載 LONG 食材安全庫存(pdm_ingredient_specs)+現有庫存(whs_inventory) ④ 預載廠商報價 ⑤ 逐門市逐商品逐食材 <code>buildIngredientDetail</code>(682-822)：安全庫存警示 + 萬元預測 + 箱量換算。</td></tr>
+<tr><td><span class="path">page</span></td><td>:111-125｜由 SecurityContext 取 loginUserAreaId/StoreId，若使用者有區域權限但未帶 regionId 則自動補上 → <code>selectPageUnified</code>。</td></tr>
+<tr><td><span class="path">update-process-status</span></td><td>:224-233｜僅更新 process_status 欄位(不觸發歸檔業務邏輯)。</td></tr>
+</tbody>
+</table>
+
+<h3>關鍵程式碼</h3>
+<h4>每萬元平均需求量 (DemandForecastServiceImpl:631-649)</h4>
+<pre><code class="language-java">private BigDecimal calculateAverageSalesPer10k(Integer sales, BigDecimal orderAmount, Integer dayCount) {
+    BigDecimal validOrderAmount = orderAmount == null ? BigDecimal.ZERO : orderAmount;
+    BigDecimal validSales       = sales == null ? BigDecimal.ZERO : BigDecimal.valueOf(sales);
+    BigDecimal validDayCount    = dayCount == null ? BigDecimal.ZERO : BigDecimal.valueOf(dayCount);
+
+    if (validOrderAmount.compareTo(BigDecimal.ZERO) <= 0
+            || validDayCount.compareTo(BigDecimal.ZERO) <= 0) {
+        return BigDecimal.ZERO;
+    }
+    return validSales
+            .divide(validDayCount, 8, RoundingMode.HALF_UP)   // 平均每日
+            .multiply(new BigDecimal("10000"))                // ×萬元
+            .divide(validOrderAmount, 8, RoundingMode.HALF_UP);
+}</code></pre>
+
+<h4>建立表頭+明細並啟動簽核 (DemandForecastServiceImpl:859-890)</h4>
+<pre><code class="language-java">@Override
+public Long createDemandForecastWithDetails(DemandForecastWithDetailsCreateReqVO createReqVO) {
+    DemandForecastDO demandForecastDO = BeanUtil.copyProperties(createReqVO.getHeader(), DemandForecastDO.class);
+    String signCode = menuService.generateSignCode("需求預測試算表");
+    demandForecastDO.setSignCode(signCode);
+    demandForecastDO.setProcessStatus("待處理");
+    demandForecastMapper.insert(demandForecastDO);
+    Long headerId = demandForecastDO.getId();
+
+    if (createReqVO.getDetails() != null && !createReqVO.getDetails().isEmpty()) {
+        List<DemandForecastDetailDO> detailList = createReqVO.getDetails().stream().map(d -> {
+            DemandForecastDetailDO dto = BeanUtil.copyProperties(d, DemandForecastDetailDO.class);
+            dto.setParentId(headerId);
+            return dto;
+        }).collect(Collectors.toList());
+        demandForecastDetailMapper.insertBatch(detailList);
+    }
+
+    menuFlowProcessInstanceHelper
+        .createProcessInstanceIfFlowOpen(getLoginUserId(), FormPathUniqueEnum.DEMAND.getPath(), headerId)
+        .ifPresent(processInstanceId -> {
+            DemandForecastDO upd = new DemandForecastDO();
+            upd.setId(headerId);
+            upd.setProcessInstanceId(processInstanceId);
+            demandForecastMapper.updateById(upd);
+        });
+    return headerId;
+}</code></pre>
+
+<h3>資料模型</h3>
+<table>
+<thead><tr><th>crg_demand_forecast (表頭)</th><th>型別</th><th>說明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>BIGINT PK</td><td>主鍵</td></tr>
+<tr><td>sign_code</td><td>VARCHAR</td><td>簽核單號 (generateSignCode)</td></tr>
+<tr><td>store_region / demand_store</td><td>VARCHAR</td><td>門市區域 / 需求門市</td></tr>
+<tr><td>week_start_date / week_end_date</td><td>TIMESTAMP</td><td>需求週別 起/迄</td></tr>
+<tr><td>sales_start_date / sales_end_date</td><td>TIMESTAMP</td><td>歷史銷售資料 起/迄</td></tr>
+<tr><td>forecast_increment_percent</td><td>NUMERIC(6,2)</td><td>預測加成(%)</td></tr>
+<tr><td>process_status / process_instance_id</td><td>VARCHAR</td><td>流程狀態 / 流程實例ID</td></tr>
+<tr><td>region_id / store_id</td><td>INT</td><td>漢堡王區域ID / 門市ID(權限過濾)</td></tr>
+</tbody>
+</table>
+<details><summary>crg_demand_forecast_detail (明細) — 主要欄位</summary>
+<table>
+<thead><tr><th>欄位</th><th>說明</th></tr></thead>
+<tbody>
+<tr><td>parent_id</td><td>FK → 表頭 id</td></tr>
+<tr><td>product_id / product_name</td><td>商品ID / 名稱</td></tr>
+<tr><td>ingredient_id / ingredient_name / prod_code</td><td>食材ID / 名稱 / 品號</td></tr>
+<tr><td>standard_amount / standard_quantity</td><td>標準用量 / 標準數量</td></tr>
+<tr><td>weekday_sales / weekend_sales</td><td>平日 / 假日銷售</td></tr>
+<tr><td>weekday_count / holiday_count</td><td>平日天數 / 假日天數</td></tr>
+<tr><td>weekday_average_sales_per10k / holiday_average_sales_per10k</td><td>每日萬元平/假日平均需求量</td></tr>
+<tr><td>projected_weekday_average_sales_per10k / projected_holiday_…</td><td>每日萬元平/假日<b>預測</b>平均需求量</td></tr>
+</tbody>
+</table>
+</details>
+
+<h3>流程圖</h3>
+<div class="mermaid">
+flowchart TD
+  A["使用者填表頭<br/>區域/門市/週別/銷售區間/加成%"] --> B["GET bk/group-with-stores-inner<br/>(依權限取門市)"]
+  B --> C["POST create-with-details<br/>建表頭(待處理)+啟動簽核"]
+  C --> D["GET detail/get-with-header<br/>載入表頭+明細"]
+  D --> E["GET product-recipe-analysis<br/>配方展開+銷售統計+安全庫存"]
+  E --> F["POST calculate-projected-sales<br/>算每日萬元平/假日預測量"]
+  F --> G["PUT update-with-details<br/>存最終明細"]
+  G --> H{processStatus<br/>= 已歸檔?}
+  H -- 是 --> I["觸發歸檔(產生原物料需求)"]
+  H -- 否 --> J["GET todo-page 進入簽核待辦"]
+  style E fill:#3a3015,stroke:#f5c451
+  style F fill:#3a3015,stroke:#f5c451
+</div>
+<div class="warn">圖中 <b>黃色節點 (E、F)</b> 即 OA 目前的 <span class="badge stub">空殼</span> 端點：OA 可建檔/存檔，但無法產出預測數字。</div>
+
+<hr>
+
+<!-- ==================== PAGE 2 ==================== -->
+<h2 class="sec" id="p2">② 臨時需求試算 (Temporary Requirement)</h2>
+<div class="pagehead">
+  <div class="tag">前端路由</div>
+  <div><code>/gatherReq/temporaryCalculation/detail</code></div>
+  <div class="kv"><span>Controller: TempReqController / PdmRecipeController</span><span>Service: TempReqServiceImpl</span><span>表: crg_temp_req (+_detail) / pdm_single_serving_recipe</span></div>
+</div>
+
+<h3>功能說明</h3>
+<p>門市臨時加單時，選擇單品 (recipe) 並輸入「申請臨時需求量 appliTempNum」，系統依<b>單品配方 (pdm_single_serving_recipe)</b> 的每份標準用量，即時試算每項食材應備數量。與需求預測不同，臨時需求是<b>直接量×配方</b>的簡單展開，不涉及銷售統計。</p>
+
+<h3>核心計算公式</h3>
+<div class="formula">tempReqQuantity = standardQuantity × appliTempNum          （標準數量 × 申請臨時需求量，四捨五入2位）
+tempReqFinalNum = tempReqUnit (若 &gt; 0) 否則 tempReqQuantity   （有手動覆寫值則優先）</div>
+
+<h3>商業邏輯重點</h3>
+<table>
+<thead><tr><th>端點</th><th>邏輯 (檔案:行)</th></tr></thead>
+<tbody>
+<tr><td><span class="path">create</span></td><td>TempReqServiceImpl:68-90｜insert 表頭(generateSignCode, processStatus="待處理") → <code>createTempReqDetailList</code>(230-255) 把 productId/ingredientId 映射成品號後 insertBatch → 開啟簽核流程。</td></tr>
+<tr><td><span class="path">get</span> (最複雜)</td><td>:135-193｜抓單品(selectSingleProductInf)+食材(selectIngredientInfo)，逐商品逐食材套用公式即時試算 tempReqQuantity/FinalNum，按商品分組回傳 TempReqDetailRecipeDTO。</td></tr>
+<tr><td><span class="path">getSingleServingRecipe</span></td><td>PdmRecipeServiceImpl:152-155｜SQL join pdm_single_serving_recipe × pdm_ingredient_specs，回每食材 standard_amount(=standardQuantity)。</td></tr>
+<tr><td><span class="path">todo-page</span></td><td>:209-220｜由 MenuFlowProcessInstanceHelper 取目前使用者待辦的 processInstanceIds，無則回空頁，否則設 taskIds 後委派 getTempReqPage。</td></tr>
+</tbody>
+</table>
+
+<h3>關鍵程式碼</h3>
+<h4>臨時需求試算 (TempReqServiceImpl:164-189)</h4>
+<pre><code class="language-java">// 申請臨時需求數量
+Integer appliTempNum = tempReqDetailDO.getAppliTempNum();
+for (TempReqDetailDTO dto : tempReqDetailDTOList) {
+    BigDecimal standardQuantity = dto.getStandardQuantity();  // 標準數量
+    if (standardQuantity != null && standardQuantity.compareTo(BigDecimal.ZERO) > 0) {
+        BigDecimal tempReqQuantity = standardQuantity
+                .multiply(new BigDecimal(appliTempNum))
+                .setScale(2, BigDecimal.ROUND_HALF_UP);       // 臨時需求計數
+        dto.setTempReqQuantity(tempReqQuantity);
+    }
+    // 臨時需求最終值：有手填單位量優先，否則用計數
+    BigDecimal finalNum = (dto.getTempReqUnit() != null && dto.getTempReqUnit().compareTo(BigDecimal.ZERO) > 0)
+            ? dto.getTempReqUnit() : dto.getTempReqQuantity();
+    dto.setTempReqFinalNum(finalNum);
+}</code></pre>
+
+<h4>單品配方 SQL (PdmSingleServingRecipeMapper.xml)</h4>
+<pre><code class="language-xml">SELECT psc.recipe_id, psc.ingredient_id,
+       psc.standard_amount,
+       psc.standard_amount AS standardQuantity,
+       pis.name
+FROM pdm_single_serving_recipe psc
+  INNER JOIN pdm_ingredient_specs pis
+    ON psc.ingredient_id = pis.id AND psc.deleted = 0 AND pis.deleted = 0
+WHERE psc.recipe_id = #{recipeId}</code></pre>
+
+<h3>資料模型</h3>
+<table>
+<thead><tr><th>表</th><th>角色</th><th>關鍵欄位</th></tr></thead>
+<tbody>
+<tr><td>crg_temp_req</td><td>臨時需求表頭</td><td>sign_code, demand_store, region_id/store_id, week_start/end_date, process_status, process_instance_id</td></tr>
+<tr><td>crg_temp_req_detail</td><td>明細(每食材一列)</td><td>parent_id, product_id, appli_temp_num, temp_req_quantity, temp_req_final_num, prod_code, ingredient_id, ing_prod_code</td></tr>
+<tr><td>pdm_recipe</td><td>單品主檔</td><td>id, product_code, display_name, recipe_product_id(對應BK單品)</td></tr>
+<tr><td>pdm_single_serving_recipe</td><td>單品配方明細</td><td>recipe_id, ingredient_id, standard_amount(標準用量)</td></tr>
+<tr><td>pdm_ingredient_specs</td><td>食材規格主檔</td><td>id, name, prod_code, unit</td></tr>
+</tbody>
+</table>
+
+<h3>流程圖</h3>
+<div class="mermaid">
+flowchart TD
+  A["選區域/門市<br/>GET bk/group-with-stores-inner"] --> B["GET allRecipe 取所有單品"]
+  B --> C["選單品 + 輸入 appliTempNum"]
+  C --> D["GET getSingleServingRecipe?recipeId<br/>載入配方食材+標準用量"]
+  D --> E["前端即時試算<br/>tempReqQuantity = 標準用量 × 申請量"]
+  E --> F["POST temp-req/create<br/>(表頭+明細+簽核)"]
+  F --> G["GET temp-req/get?id<br/>(後端重算回傳展開結果)"]
+  G --> H["GET todo-page → 簽核 → 已歸檔"]
+</div>
+
+<hr>
+
+<!-- ==================== PAGE 3 ==================== -->
+<h2 class="sec" id="p3">③ 原物料需求日曆 (Material Requirement Calendar)</h2>
+<div class="pagehead">
+  <div class="tag">前端路由</div>
+  <div><code>/gatherReq/materialRequirementCalendar</code> (list / detail)</div>
+  <div class="kv"><span>Controller: RawMaterialDemandHeadController</span><span>Service: RawMaterialDemandHeadServiceImpl</span><span>表: pdm_raw_material_demand_head / _date_list / _detail</span></div>
+</div>
+
+<h3>功能說明</h3>
+<p>把「需求預測」與「臨時需求」兩種來源的單據，依區域/門市與日期區間<b>逐日彙整</b>成原物料需求，並依各食材廠商的<b>物流週期 (週配/月配，如 "1,5")</b> 計算<b>預計配送日</b>。資料採 三層結構：表頭(查詢條件) → 需求日清單 → 食材明細。</p>
+
+<h3>商業邏輯重點</h3>
+<table>
+<thead><tr><th>端點</th><th>邏輯 (檔案:行)</th></tr></thead>
+<tbody>
+<tr><td><span class="path">create</span></td><td>RawMaterialDemandHeadServiceImpl:71-81 → <code>createRawMaterialDemandDateListList</code>(115-231)：逐日查 demand_forecast + temp_req 找關聯單號；storeId 為空時用 <code>BurgerKingStoreClient.getGroupWithStoresInnerByGroupId</code> 展開區域全門市。明細(234-405)合併需求量+臨時量，查 pmm_vendor_quote_maintenance 取廠商，算預計配送日。</td></tr>
+<tr><td><span class="path">list</span></td><td>:657-767｜有 headId 取既存需求日；無則即時查 demandForecast/tempReq mapper 合併回 RawMaterialDemandDateListVO(demandRelationDoc, tempRelationDoc, expectAmount)。</td></tr>
+<tr><td><span class="path">detail</span></td><td>:850-969｜由 demandDateId 或單號取食材明細，<code>jointVendorMaterialDetail</code> 依 prod_code 查廠商報價(process_status='已歸檔' 且報價有效期內、use_store_region_id=storeId)，補配送模式/週期。</td></tr>
+<tr><td>預計配送日</td><td>:413-634｜依 (cycleType, logisticsCycle) 分組；週配掃過去7天找最近符合星期、月配掃過去2月找最近符合日，若早於今日則往後推下一次。</td></tr>
+</tbody>
+</table>
+
+<h3>關鍵程式碼</h3>
+<h4>週配物流日計算 (RawMaterialDemandHeadServiceImpl:532-556)</h4>
+<pre><code class="language-java">private static LocalDateTime calculatePreviousWeekLogisticsDate(LocalDateTime targetDate, String logisticsCycle) {
+    List<DayOfWeek> daysOfWeek = Arrays.stream(logisticsCycle.split(","))
+        .map(String::trim).map(Integer::parseInt).map(DayOfWeek::of)
+        .sorted(Comparator.comparingInt(DayOfWeek::getValue).reversed())
+        .collect(Collectors.toList());
+    LocalDateTime currentDate = targetDate;
+    for (int i = 1; i <= 7; i++) {
+        LocalDateTime candidate = currentDate.minusDays(i);
+        if (daysOfWeek.contains(candidate.getDayOfWeek())) {
+            return candidate.with(LocalTime.MIN);
+        }
+    }
+    throw new IllegalStateException("No previous logistics date found for " + logisticsCycle);
+}</code></pre>
+
+<h3>資料模型</h3>
+<table>
+<thead><tr><th>表</th><th>角色</th><th>關鍵欄位</th></tr></thead>
+<tbody>
+<tr><td>pdm_raw_material_demand_head</td><td>需求行事曆表頭</td><td>region_id, store_id, category/subcategory, start_date/end_date</td></tr>
+<tr><td>pdm_raw_material_demand_date_list</td><td>需求日清單</td><td>head_id, demand_date, demand_relation_doc(需求預測單號), temp_relation_doc(臨時單號), expect_amount(萬元)</td></tr>
+<tr><td>pdm_raw_material_demand_detail</td><td>食材明細</td><td>demand_date_id, prod_code, demand_amount, mfr_id, expect_delivery_date, actual_arrival_date/amount, stock_sign_code(入庫單號)</td></tr>
+</tbody>
+</table>
+<div class="mermaid">
+erDiagram
+  RAW_HEAD ||--o{ DATE_LIST : "head_id"
+  DATE_LIST ||--o{ DETAIL : "demand_date_id"
+  RAW_HEAD {
+    bigint id PK
+    int region_id
+    int store_id
+    timestamp start_date
+    timestamp end_date
+  }
+  DATE_LIST {
+    bigint head_id FK
+    timestamp demand_date
+    varchar demand_relation_doc
+    varchar temp_relation_doc
+    decimal expect_amount
+  }
+  DETAIL {
+    bigint demand_date_id FK
+    varchar prod_code
+    decimal demand_amount
+    timestamp expect_delivery_date
+    varchar stock_sign_code
+  }
+</div>
+
+<h3>流程圖</h3>
+<div class="mermaid">
+flowchart LR
+  A["選區域/門市/日期區間"] --> B["GET /list 逐日彙整需求"]
+  B --> C["顯示日曆：每日需求量+關聯單號"]
+  C --> D["點某日 → GET /detail"]
+  D --> E["顯示食材明細<br/>(廠商/配送模式/預計配送日)"]
+  F["POST /create"] -.儲存查詢條件單據.-> G["GET /page · /get 重載"]
+</div>
+
+<hr>
+
+<!-- ==================== PAGE 4 ==================== -->
+<h2 class="sec" id="p4">④ 物流查詢作業 (Logistics Query — by Delivery Date)</h2>
+<div class="pagehead">
+  <div class="tag">前端 API</div>
+  <div><code>api/gatherReq/logisticsQuery/index.ts</code></div>
+  <div class="kv"><span>Controller: RawMaterialDemandHeadController</span><span>Service: RawMaterialDemandHeadOtherServiceImpl</span><span>表: pdm_raw_material_demand_detail</span></div>
+</div>
+
+<h3>功能說明</h3>
+<p>站在<b>「什麼時候會到什麼貨」</b>的角度，把原物料需求明細依<b>預計配送日 (expect_delivery_date)</b> 分組(主表)，點選某日再下鑽看當日各食材彙總(明細)。與頁面③同表，但聚合維度從「需求日」改為「配送日」。</p>
+
+<h3>商業邏輯重點</h3>
+<ul>
+<li><b>query-group-by-delivery-date</b> (RawMaterialDemandHeadOtherServiceImpl:154 → Mapper.xml:177-206)：以 <code>expect_delivery_date</code> 分組，<code>STRING_AGG(DISTINCT …)</code> 串接所有需求/臨時單號，依區域過濾、可選門市與日期區間。</li>
+<li><b>query-details-by-delivery-date</b> (:159-179 → Mapper.xml:217-268)：依 區域+精確配送日(+單號清單) 過濾，<code>GROUP BY prod_code</code> 並 <code>SUM(demand_amount)</code> 彙總，join 食材名/物流模式/廠商名。</li>
+</ul>
+
+<h4>分組 SQL (RawMaterialDemandDetailMapper.xml:177-206)</h4>
+<pre><code class="language-xml">SELECT rmdd.region_id AS regionId,
+       rmdd.expect_delivery_date AS expectDeliveryDate,
+       MIN(rmdd.demand_store) AS demandStore,
+       MIN(rmdd.store_id)     AS storeId,
+       STRING_AGG(DISTINCT rmdd.demand_relation_doc, ',') AS demandRelationDoc,
+       STRING_AGG(DISTINCT rmdd.temp_relation_doc, ',')   AS tempRelationDoc
+FROM pdm_raw_material_demand_detail rmdd
+WHERE rmdd.deleted = 0 AND rmdd.region_id = #{regionId}
+  <if test="storeId != null"> AND rmdd.store_id = #{storeId} </if>
+  AND rmdd.expect_delivery_date IS NOT NULL
+  <if test="startDate != null"> AND rmdd.expect_delivery_date &gt;= #{startDate} </if>
+  <if test="endDate != null">   AND rmdd.expect_delivery_date &lt;= #{endDate}   </if>
+GROUP BY rmdd.region_id, rmdd.expect_delivery_date
+ORDER BY rmdd.expect_delivery_date</code></pre>
+
+<h3>流程圖</h3>
+<div class="mermaid">
+flowchart TD
+  A["選區域(+門市+日期區間)"] --> B["GET query-group-by-delivery-date"]
+  B --> C["時間軸：每個配送日一張卡<br/>(門市+單號彙總)"]
+  C --> D["點配送日卡 → GET query-details-by-delivery-date"]
+  D --> E["食材明細表<br/>品號彙總數量+廠商+配送模式"]
+</div>
+
+<hr>
+
+<!-- ==================== PAGE 5 ==================== -->
+<h2 class="sec" id="p5">⑤ 物流單查詢作業 (Raw Material Logistics Order)</h2>
+<div class="pagehead">
+  <div class="tag">前端路由</div>
+  <div><code>/gatherReq/logisticsOrderQuery</code> (list / detail)</div>
+  <div class="kv"><span>Controller: RawMaterialLogisticsController</span><span>Service: RawMaterialLogisticsServiceImpl</span><span>表: pdm_raw_material_logistics (+_dtl)</span></div>
+</div>
+
+<h3>功能說明</h3>
+<p>查詢已產生的<b>物流單 (出貨批次)</b>：表頭記錄一張出貨單(配送模式、配送廠商、出貨日)，明細為該批次各食材到店資料。明細查詢以多重 <code>LEFT JOIN LATERAL</code> 補上食材名/廠商名/門市名/區域名等顯示欄位。</p>
+
+<h3>商業邏輯重點</h3>
+<ul>
+<li><b>page</b> (Controller:80 → ServiceImpl:87 → Mapper:20)：<code>LambdaQueryWrapperX.eqIfPresent</code> 動態條件(signCode/deliveryMode/deliveryMfrId/shippingDate/createTime)，依 id 倒序。</li>
+<li><b>dtlListByParentId</b> (Controller:106 → ServiceImpl:100 → Mapper.xml:12-55)：依 parentId 查明細並 LATERAL join 補名稱。Head→Dtl 為 1:N，刪除表頭時連帶刪明細；更新採「刪舊插新」。</li>
+</ul>
+
+<h4>明細關聯查詢 (RawMaterialLogisticsDtlMapper.xml:12-55)</h4>
+<pre><code class="language-xml">SELECT dtl.id, dtl.parent_id, dtl.delivery_mode, dtl.prod_code,
+       dtl.material_product_id, dtl.mfr_id, dtl.actual_arrival_amount,
+       dtl.material_type, dtl.store_code, dtl.store_id,
+       dtl.demand_relation_doc, dtl.temp_relation_doc, dtl.region_id, dtl.shipping_date,
+       ing.name AS ingredientName, vendor.mfr_name AS mfrName,
+       store.name AS storeName, region_store.name AS regionName
+FROM pdm_raw_material_logistics_dtl dtl
+LEFT JOIN pdm_ingredient_specs ing ON dtl.prod_code = ing.prod_code AND ing.deleted = 0
+LEFT JOIN LATERAL (SELECT mfr_name FROM pmm_vendor_quote_maintenance
+                   WHERE mfr_id = dtl.mfr_id AND deleted = 0 LIMIT 1) vendor ON true
+LEFT JOIN LATERAL (SELECT name FROM system_store
+                   WHERE store_id = dtl.store_id AND deleted = 0 LIMIT 1) store ON true
+LEFT JOIN LATERAL (SELECT name FROM system_store
+                   WHERE area = dtl.region_id AND deleted = 0 LIMIT 1) region_store ON true
+WHERE dtl.parent_id = #{parentId} AND dtl.deleted = 0</code></pre>
+
+<h3>資料模型</h3>
+<table>
+<thead><tr><th>表</th><th>關鍵欄位</th></tr></thead>
+<tbody>
+<tr><td>pdm_raw_material_logistics (表頭)</td><td>sign_code(單據編號), delivery_mode(配送模式), delivery_mfr_id(配送廠商), shipping_date(出貨日)</td></tr>
+<tr><td>pdm_raw_material_logistics_dtl (明細)</td><td>parent_id, prod_code, material_product_id(BK原料id), mfr_id, actual_arrival_amount(實際到店量), store_id, demand_relation_doc, temp_relation_doc</td></tr>
+</tbody>
+</table>
+
+<h3>流程圖</h3>
+<div class="mermaid">
+flowchart LR
+  A["列表頁 GET /page<br/>(動態條件+id倒序)"] --> B["點某列 取得 id"]
+  B --> C["跳明細頁 ?parentId=id"]
+  C --> D["GET dtl/list-by-parent-id<br/>LATERAL join 補名稱"]
+  D --> E["明細表(不分頁)<br/>食材/廠商/門市/到店量"]
+</div>
+
+<hr>
+
+<!-- ==================== PAGE 6 ==================== -->
+<h2 class="sec" id="p6">⑥ 物流管理日曆 (Logistics Management Calendar → 入庫)</h2>
+<div class="pagehead">
+  <div class="tag">前端 API</div>
+  <div><code>api/gatherReq/logisticsManagementCalendar/index.ts</code></div>
+  <div class="kv"><span>Controller: RawMaterialDemandHeadController + StockRecordHeadController(WHS)</span><span>跨模組 pdm → whs</span><span>表: pdm_raw_material_demand_detail → whs_stock_record_head / whs_stock_record</span></div>
+</div>
+
+<h3>功能說明</h3>
+<p>以月曆呈現某區域/門市的原物料需求(依日期+配送模式分組)，物流人員選取明細、填入<b>實際到店時間與數量</b>後，一鍵<b>由需求明細自動產生入庫單 (WHS 入庫作業)</b>，並把入庫單號回填到需求明細，完成跨模組稽核串接。</p>
+
+<h3>商業邏輯重點</h3>
+<table>
+<thead><tr><th>端點</th><th>邏輯 (檔案:行)</th></tr></thead>
+<tbody>
+<tr><td><span class="path">query-details-by-month</span></td><td>RawMaterialDemandHeadOtherServiceImpl:100-143｜查該月明細(join 食材/物流/廠商，依配送日+模式排序)，兩層分組 DateGroup → DeliveryModeGroup → details。</td></tr>
+<tr><td><span class="path">query-details-by-ids</span></td><td>:146-151｜依 ID 陣列彙總，GROUP BY prodCode、SUM(demand/actual amount)，回 stockSignCode 供前端判斷是否已入庫。</td></tr>
+<tr><td><span class="path">create-stock-in-from-demand-details</span></td><td>StockRecordHeadServiceImpl:164-196｜逐筆抓需求明細回填實際量/日 → 建 <b>1 張</b> whs_stock_record_head(processStatus=已歸檔, stockType=1入庫, inboundTime=預計配送日) → 逐筆建 whs_stock_record 並 <code>batchProcessStock</code> 更新庫存 → <b>比例分攤</b>(247-291)把實際量按需求量比例分配回各明細，並回填 stock_sign_code。</td></tr>
+</tbody>
+</table>
+
+<h3>關鍵程式碼</h3>
+<h4>由需求明細建立入庫單頭 (StockRecordHeadServiceImpl:299-321)</h4>
+<pre><code class="language-java">private StockRecordHeadDO createStockRecordHeadFromDemand(List<RawMaterialDemandDetailDO> detailList) {
+    RawMaterialDemandDetailDO first = detailList.get(0);
+    StockRecordHeadDO head = StockRecordHeadDO.builder()
+        .signCode(menuService.generateSignCode("入庫作業管理"))
+        .processStatus("已歸檔")
+        .stockReason("SW07")                 // 驗收入庫
+        .sourceSignCode(first.getDemandRelationDoc() + first.getTempRelationDoc())
+        .stockType(1)                        // 入庫
+        .inboundTime(first.getExpectDeliveryDate())
+        .subject("物流管理行事历入库")
+        .remark("由物流管理行事历自动生成")
+        .area(Long.valueOf(first.getRegionId()))
+        .warehouse(first.getStoreId().toString())
+        .warehouseType("FH").warehouseTypeName("食材倉")
+        .warehouseName(first.getDemandStore())
+        .build();
+    stockRecordHeadMapper.insert(head);
+    return head;
+}</code></pre>
+
+<h4>實際到店量比例分攤 (StockRecordHeadServiceImpl:247-291)</h4>
+<pre><code class="language-java">for (int i = 0; i < relatedDetails.size(); i++) {
+    RawMaterialDemandDetailDO d = relatedDetails.get(i);
+    BigDecimal allocated;
+    if (i == relatedDetails.size() - 1) {                 // 最後一筆用餘額避免精度誤差
+        allocated = totalActualAmount.subtract(allocatedSum).setScale(2, BigDecimal.ROUND_HALF_UP);
+    } else if (totalDemandAmount.compareTo(BigDecimal.ZERO) > 0) {
+        allocated = d.getDemandAmount()
+            .divide(totalDemandAmount, 2, BigDecimal.ROUND_HALF_UP)   // 需求佔比
+            .multiply(totalActualAmount).setScale(2, BigDecimal.ROUND_HALF_UP);
+        allocatedSum = allocatedSum.add(allocated);
+    } else { allocated = BigDecimal.ZERO.setScale(2); }
+    d.setActualArrivalAmount(allocated);
+    d.setActualArrivalDate(actualArrivalDate);
+    d.setStockSignCode(stockSignCode);                    // 回填入庫單號
+    rawMaterialDemandDetailMapper.updateById(d);
+}</code></pre>
+
+<h3>跨模組資料流</h3>
+<div class="mermaid">
+flowchart TD
+  A["選月份/區域<br/>GET query-details-by-month"] --> B["月曆：日期×配送模式<br/>藍點=配送 紅點=直送廠商"]
+  B --> C["點某日某模式 → POST query-details-by-ids"]
+  C --> D["明細表：填實際到店時間+數量<br/>(過濾已入庫/數量≤0)"]
+  D --> E["POST create-stock-in-from-demand-details"]
+  subgraph WHS["WHS 模組(交易)"]
+    E --> F["建 1×whs_stock_record_head<br/>(已歸檔/入庫/SW07)"]
+    F --> G["逐筆建 whs_stock_record<br/>+ batchProcessStock 更新庫存"]
+    G --> H["比例分攤回 pdm_..._detail<br/>回填 actual_amount/date/stock_sign_code"]
+  end
+  H --> I["前端重整：顯示已入庫單號"]
+  style WHS fill:#13241a,stroke:#3ecf8e
+</div>
+<div class="note"><b>稽核串接：</b><code>whs_stock_record_head.sign_code</code> ↔ <code>pdm_raw_material_demand_detail.stock_sign_code</code>，形成 PDM 需求 → WHS 入庫的雙向追溯。</div>
+
+<hr>
+
+<!-- ==================== GAP ==================== -->
+<h2 class="sec" id="gap">OA 落差分析</h2>
+<p>以 OA <code>routes/module/erp.php</code> + <code>Controllers/ERP/PDM·WHS</code> 為準，gatherReq 30 個端點中：</p>
+<table>
+<thead><tr><th>狀態</th><th>端點</th><th>說明 / 影響</th></tr></thead>
+<tbody>
+<tr><td><span class="badge stub">⚠️ 空殼</span></td><td><span class="path">/pdm/demand-forecast/detail/product-recipe-analysis</span></td><td>OA 回 <code>['code'=&gt;0,'data'=&gt;[]]</code>（DemandForecastDetailController.php:62）。配方展開+銷售統計+安全庫存試算<b>未移植</b>。</td></tr>
+<tr><td><span class="badge stub">⚠️ 空殼</span></td><td><span class="path">/pdm/demand-forecast/detail/calculate-projected-sales</span></td><td>OA 回空 <code>[]</code>（:67）。每萬元平/假日預測量演算法<b>未移植</b> → OA 端建得了單但算不出預測數字。</td></tr>
+<tr><td><span class="badge no">❌ 未實作</span></td><td><span class="path">/pdm/demand-forecast/todo-page</span></td><td>OA erp.php 無此路由 → 需求預測<b>動態簽核待辦</b>不可用。</td></tr>
+<tr><td><span class="badge no">❌ 未實作</span></td><td><span class="path">/pdm/temp-req/todo-page</span></td><td>OA 無此路由 → 臨時需求<b>簽核待辦</b>不可用。</td></tr>
+<tr><td><span class="badge no">❌ 未實作</span></td><td><span class="path">/pdm/demand-forecast/update-process-status</span></td><td>OA 無此路由 → 無法單獨更新流程狀態(待處理↔已歸檔)。頁面①②皆引用。</td></tr>
+</tbody>
+</table>
+<div class="danger">
+<b>共通主題 = 「需求預測演算法 + 動態簽核」尚未落地 OA。</b><br>
+OA 已完成所有 <b>CRUD / 查詢 / 入庫</b>(頁面③④⑤⑥幾乎 100% 對應)，缺口集中在頁面①需求預測的<b>數學核心</b>(2 支空殼)與<b>簽核流程</b>(3 支缺路由)。建議優先補：① 把 Spring <code>DemandForecastServiceImpl</code> 的 <code>calculateAverageSalesPer10k / buildIngredientDetail</code> 演算法移植到 OA <code>DemandForecastService.php</code>；② 接上 OA 既有的動態簽核(getPageByFlow → todo-page)機制。
+</div>
+
+<!-- ==================== ER ==================== -->
+<h2 class="sec" id="er">整體資料模型 ER</h2>
+<div class="mermaid">
+erDiagram
+  DEMAND_FORECAST ||--o{ DF_DETAIL : "parent_id"
+  TEMP_REQ ||--o{ TR_DETAIL : "parent_id"
+  RECIPE ||--o{ SS_RECIPE : "recipe_id"
+  SS_RECIPE }o--|| INGREDIENT : "ingredient_id"
+  TR_DETAIL }o--|| RECIPE : "product_id"
+  RM_HEAD ||--o{ RM_DATE : "head_id"
+  RM_DATE ||--o{ RM_DETAIL : "demand_date_id"
+  RM_DETAIL }o--|| STOCK_HEAD : "stock_sign_code↔sign_code"
+  STOCK_HEAD ||--o{ STOCK_REC : "record_id"
+  DEMAND_FORECAST { bigint id PK }
+  DF_DETAIL { bigint parent_id FK }
+  TEMP_REQ { int id PK }
+  TR_DETAIL { int parent_id FK }
+  RECIPE { bigint id PK }
+  SS_RECIPE { bigint recipe_id FK }
+  INGREDIENT { bigint id PK }
+  RM_HEAD { bigint id PK }
+  RM_DATE { bigint head_id FK }
+  RM_DETAIL { bigint demand_date_id FK }
+  STOCK_HEAD { bigint id PK }
+  STOCK_REC { bigint record_id FK }
+</div>
+<p style="color:var(--muted);font-size:12.5px">需求預測/臨時需求 → 原物料需求日曆(逐日彙整) → 物流查詢(配送日) → 物流單 → 入庫(WHS)。臨時需求與需求預測的單號(demand_relation_doc / temp_relation_doc)是串起 RM_DETAIL 的鍵。</p>
+
+<footer>
+  本文件由前端 <code>api/gatherReq/*</code> 反查 Spring <code>erp-spring</code> 後端原始碼與 OA <code>newprooa</code> 路由/Controller 比對產生。<br>
+  程式碼節錄之 <code>檔案:行號</code> 對應產出當下版本，若後端調整請以實際原始碼為準。
+</footer>
+</main>
+</div>
+
+<script>
+  hljs.highlightAll();
+  mermaid.initialize({startOnLoad:true, theme:'dark', themeVariables:{
+    primaryColor:'#1d212b', primaryTextColor:'#e6e9ef', primaryBorderColor:'#5cc8ff',
+    lineColor:'#9aa3b2', fontSize:'13px'
+  }});
+</script>
+</body>
+</html>
