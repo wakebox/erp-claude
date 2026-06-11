@@ -1,0 +1,210 @@
+{
+  "info": {
+    "name": "BurgerKing Upstream API",
+    "description": "漢堡王中繼 API（上游資料來源）— 基於 erp-claude/html/bk-upstream-api-docs.html 自動產生。\n\n## 使用方式\n1. 設定 Collection Variables：`bk_username`、`bk_password`、`bk_base_url`\n2. 先執行「Auth - Login」，會自動把回傳的 token 寫入 `bk_token`\n3. 其他 API 會自動帶入 `Authorization: Bearer {{bk_token}}`\n\n上游主機：61.218.209.215:80",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "bk-upstream-api-collection"
+  },
+  "variable": [
+    { "key": "bk_base_url", "value": "http://61.218.209.215:80", "type": "string" },
+    { "key": "bk_username", "value": "", "type": "string" },
+    { "key": "bk_password", "value": "", "type": "string" },
+    { "key": "bk_token", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{bk_token}}", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login（取得 JWT）",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{bk_username}}\",\n  \"password\": \"{{bk_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{bk_base_url}}/api/api/burgerking/admin/auth/login",
+              "host": ["{{bk_base_url}}"],
+              "path": ["api", "api", "burgerking", "admin", "auth", "login"]
+            },
+            "description": "上游登入端點。注意 path 含兩層 /api/api，與 BurgerKingTokenManager 中 login-path 設定一致。\n\n回應格式（依序嘗試）：\n- data.token / data.accessToken / data.access_token\n- 根層 token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  const token = (json && json.data && (json.data.token || json.data.accessToken || json.data.access_token)) || json.token;",
+                  "  if (token) {",
+                  "    const bearer = token.startsWith('Bearer ') ? token.substring(7) : token;",
+                  "    pm.collectionVariables.set('bk_token', bearer);",
+                  "    console.log('bk_token saved');",
+                  "  } else {",
+                  "    console.warn('No token field found in login response');",
+                  "  }",
+                  "} catch (e) {",
+                  "  console.error('Failed to parse login response: ' + e.message);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Order",
+      "item": [
+        {
+          "name": "已完成訂單統計（核心）— completed/filter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bk_base_url}}/api/burgerking/admin/order/completed/filter?groupAreaId=1&startTime=2026-04-01 00:00:00&endTime=2026-04-30 23:59:59",
+              "host": ["{{bk_base_url}}"],
+              "path": ["api", "burgerking", "admin", "order", "completed", "filter"],
+              "query": [
+                { "key": "groupAreaId", "value": "1", "description": "門店分組區域 ID（必填）" },
+                { "key": "startTime", "value": "2026-04-01 00:00:00", "description": "開始時間 yyyy-MM-dd HH:mm:ss（必填）" },
+                { "key": "endTime", "value": "2026-04-30 23:59:59", "description": "結束時間 yyyy-MM-dd HH:mm:ss（必填）" },
+                { "key": "storeId", "value": "", "description": "門店 ID（選填，不傳則統計區域下所有門店）", "disabled": true }
+              ]
+            },
+            "description": "按區域 + 時間範圍取已完成訂單銷量，已含平日/假日拆分。\n\n回傳：List<StoreSalesStatisticsVO>（每門店含 List<ProductSalesStatisticsVO>）"
+          }
+        },
+        {
+          "name": "日維度商品銷量 — daily/product-sales",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bk_base_url}}/api/burgerking/admin/order/daily/product-sales?groupAreaId=1&date=2026-04-15 00:00:00",
+              "host": ["{{bk_base_url}}"],
+              "path": ["api", "burgerking", "admin", "order", "daily", "product-sales"],
+              "query": [
+                { "key": "groupAreaId", "value": "1", "description": "門店分組區域 ID（必填）" },
+                { "key": "storeId", "value": "", "description": "門店 ID（選填）", "disabled": true },
+                { "key": "date", "value": "2026-04-15 00:00:00", "description": "查詢日期 yyyy-MM-dd HH:mm:ss（必填）" }
+              ]
+            },
+            "description": "指定日期的商品銷量統計。\n\n回傳：List<DailyProductSalesVO>{ productId, productName, salesCount }"
+          }
+        },
+        {
+          "name": "近 12 個月銷量 — nearTwelveMonths",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bk_base_url}}/api/burgerking/admin/order/completed/nearTwelveMonths?groupAreaId=1",
+              "host": ["{{bk_base_url}}"],
+              "path": ["api", "burgerking", "admin", "order", "completed", "nearTwelveMonths"],
+              "query": [
+                { "key": "groupAreaId", "value": "1", "description": "門店分組區域 ID" },
+                { "key": "storeId", "value": "", "description": "門店 ID（選填）", "disabled": true }
+              ]
+            },
+            "description": "近 12 個月的商品銷量統計。\n\n回傳：List<ProductSalesStatisticsVO>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Area Group",
+      "item": [
+        {
+          "name": "全部區域+門店三層結構（核心）— all-areas-with-stores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bk_base_url}}/api/burgerking/admin/area-group/all-areas-with-stores",
+              "host": ["{{bk_base_url}}"],
+              "path": ["api", "burgerking", "admin", "area-group", "all-areas-with-stores"]
+            },
+            "description": "無請求參數，返回完整三層結構：區域組 → 區域 → 門店。\n\n回傳：List<AreaGroupHierarchyVO>"
+          }
+        },
+        {
+          "name": "單一區域組門店 — one-areas-with-stores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bk_base_url}}/api/burgerking/admin/area-group/one-areas-with-stores?groupAreaId=1",
+              "host": ["{{bk_base_url}}"],
+              "path": ["api", "burgerking", "admin", "area-group", "one-areas-with-stores"],
+              "query": [
+                { "key": "groupAreaId", "value": "1", "description": "區域組 ID" }
+              ]
+            },
+            "description": "查詢單一區域組的門店（含門店代碼）。\n\n回傳：List<AreaStoreVO>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Store",
+      "item": [
+        {
+          "name": "區域+門店基礎資訊（核心）— group-with-stores/inner",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bk_base_url}}/api/burgerking/admin/store/group-with-stores/inner",
+              "host": ["{{bk_base_url}}"],
+              "path": ["api", "burgerking", "admin", "store", "group-with-stores", "inner"]
+            },
+            "description": "返回區域及其門店基礎資訊（兩層）。是 ERP 中最頻繁使用的門店清單來源。\n\n回傳：List<GroupWithStoresInnerVO>（含 storeCode、address、phone）"
+          }
+        },
+        {
+          "name": "指定區域下的門店列表 — group-with-stores/inner/group-id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bk_base_url}}/api/burgerking/admin/store/group-with-stores/inner/group-id?groupAreaId=1",
+              "host": ["{{bk_base_url}}"],
+              "path": ["api", "burgerking", "admin", "store", "group-with-stores", "inner", "group-id"],
+              "query": [
+                { "key": "groupAreaId", "value": "1", "description": "區域組 ID" }
+              ]
+            },
+            "description": "查詢指定區域下的門店列表。\n\n回傳：List<GroupAndStoreVO>"
+          }
+        },
+        {
+          "name": "含地理位置的門店清單 — all-with-location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bk_base_url}}/api/burgerking/admin/store/all-with-location",
+              "host": ["{{bk_base_url}}"],
+              "path": ["api", "burgerking", "admin", "store", "all-with-location"]
+            },
+            "description": "含地理位置的門店列表。\n\n回傳：原始 JSON 字串（String raw）"
+          }
+        }
+      ]
+    }
+  ]
+}
