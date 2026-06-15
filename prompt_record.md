@@ -81,3 +81,25 @@ FeignClient 類：BurgerKingStoreClient
 
 這個promt造成ai誤判，測試erp,加上   ---- " 不是ERP , java , "  才正常
 /tdd  不是ERP , java , 是測試 oa api - api/erp/whs/stock/currentPage ，查詢時過濾 warehouse 可以發生作用
+
+
+# 6/15
+
+---
+
+根據 前端/pmm/ ，整理出所有api，可以參考後端，產生html file,要有OA是否有實作的選項，盡量將所有資料，配合節錄文章，code，流程圖，model 圖，表格，商業邏輯說明，顯示出來或加強解釋
+
+---
+
+@pmm-api-doc.html ,重構 erp bk ,  請購
+
+---
+
+/tdd api/erp/pmm/quote/page 日期需要過濾在範圍內
+
+--
+
+@pmm-api-doc.html ,重構 erp bk ,  採購單 PMT
+
+
+@pmm-api-doc.html ,重構 erp bk , 結轉驗收

@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMM 採購物料管理 — API 全覽 & OA 實作對照</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a2230; --panel2:#222d3d; --border:#2c3a4f;
+    --text:#e6edf3; --muted:#9bb0c9; --accent:#ff8c1a; --accent2:#4fa3ff;
+    --green:#3fb950; --yellow:#d29922; --red:#f85149; --chip:#2d3b50;
+    --get:#4fa3ff; --post:#3fb950; --put:#d29922; --delete:#f85149;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.65;font-size:15px}
+  header.top{background:linear-gradient(135deg,#7a2e00,#3a1d00);padding:30px 40px;border-bottom:3px solid var(--accent)}
+  header.top h1{margin:0;font-size:28px}
+  header.top p{margin:6px 0 0;color:#ffd9b0}
+  .wrap{display:flex;gap:0;align-items:flex-start}
+  nav.side{position:sticky;top:0;height:100vh;overflow:auto;min-width:230px;background:var(--panel);
+    border-right:1px solid var(--border);padding:18px 0}
+  nav.side a{display:block;padding:9px 22px;color:var(--muted);text-decoration:none;font-size:14px;border-left:3px solid transparent}
+  nav.side a:hover{background:var(--panel2);color:var(--text)}
+  nav.side a.head{color:var(--accent);font-weight:700;font-size:12px;letter-spacing:1px;margin-top:10px;text-transform:uppercase;pointer-events:none}
+  main{flex:1;padding:28px 40px;max-width:1200px}
+  section{margin-bottom:46px;scroll-margin-top:20px}
+  h2{font-size:23px;border-bottom:2px solid var(--accent);padding-bottom:8px;margin-top:0}
+  h3{font-size:18px;color:var(--accent2);margin-top:28px}
+  h4{font-size:15px;color:var(--accent);margin:18px 0 8px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:22px 26px;margin-bottom:22px}
+  .mod-title{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .mod-code{background:var(--accent);color:#000;font-weight:800;padding:3px 12px;border-radius:6px;font-size:15px}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--accent);font-weight:600}
+  tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+  code{background:#0c1320;padding:2px 6px;border-radius:4px;font-family:"JetBrains Mono",Consolas,monospace;font-size:12.5px;color:#ffd9a0}
+  pre{background:#0a0f18;border:1px solid var(--border);border-radius:8px;padding:14px 16px;overflow:auto;font-size:12.5px}
+  pre code{background:none;padding:0;color:#d6e3f0}
+  .badge{padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap}
+  .b-yes{background:rgba(63,185,80,.18);color:var(--green);border:1px solid var(--green)}
+  .b-part{background:rgba(210,153,34,.18);color:var(--yellow);border:1px solid var(--yellow)}
+  .b-no{background:rgba(248,81,73,.18);color:var(--red);border:1px solid var(--red)}
+  .m{font-weight:700;padding:1px 8px;border-radius:4px;font-size:11px;color:#000}
+  .m-get{background:var(--get)} .m-post{background:var(--post)} .m-put{background:var(--put)} .m-delete{background:var(--delete);color:#fff}
+  .filterbar{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .filterbar label{font-weight:600;color:var(--accent)}
+  select{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 12px;font-size:14px}
+  .note{background:rgba(79,163,255,.08);border-left:4px solid var(--accent2);padding:10px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+  .warn{background:rgba(248,81,73,.08);border-left:4px solid var(--red);padding:10px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+  .biz{background:rgba(255,140,26,.06);border-left:4px solid var(--accent);padding:12px 18px;border-radius:0 8px 8px 0;margin:12px 0}
+  .biz ol,.biz ul{margin:6px 0 6px 18px;padding:0}
+  .biz li{margin:4px 0}
+  .mermaid{background:#0a0f18;border:1px solid var(--border);border-radius:8px;padding:18px;text-align:center;margin:14px 0}
+  .pill{display:inline-block;background:var(--chip);padding:2px 9px;border-radius:5px;font-size:12px;margin:2px;color:var(--muted)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:900px){.grid2{grid-template-columns:1fr}nav.side{display:none}}
+  .stat{display:inline-flex;flex-direction:column;align-items:center;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 22px;margin:6px}
+  .stat .n{font-size:26px;font-weight:800}
+  .stat .l{font-size:12px;color:var(--muted)}
+  .hidden{display:none!important}
+  .toc-summary td a{color:var(--accent2);text-decoration:none}
+  .small{font-size:12px;color:var(--muted)}
+  details{margin:10px 0}
+  summary{cursor:pointer;color:var(--accent2);font-weight:600;padding:6px 0}
+  footer{padding:26px 40px;color:var(--muted);border-top:1px solid var(--border);font-size:13px}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>🍔 PMM 採購物料管理模組 — API 全覽 &amp; OA 實作對照</h1>
+  <p>來源：前端 <code>erp-kingmaker / apps/burger-king/src/api/pmm</code> ｜ 後端 <code>erp-spring / kingmaker-module-pmm</code> ｜ OA <code>/data/newprooa</code></p>
+</header>
+
+<div class="wrap">
+<nav class="side">
+  <a class="head">總覽</a>
+  <a href="#overview">採購流程總覽</a>
+  <a href="#summary">模組總表 &amp; OA 對照</a>
+  <a class="head">7 大模組</a>
+  <a href="#prm">PRM 請購</a>
+  <a href="#pbp">PBP 比價/報價</a>
+  <a href="#pmt">PMT 採購單</a>
+  <a href="#irc">IRC 結轉驗收</a>
+  <a href="#pam">PAM 驗收確認</a>
+  <a href="#vdm">VDM 廠商資料維護</a>
+  <a href="#vqm">VQM 廠商報價維護</a>
+  <a class="head">附錄</a>
+  <a href="#common">共通設計樣式</a>
+  <a href="#findings">技術備註 / 風險</a>
+</nav>
+
+<main>
+
+<!-- ========== 篩選器 ========== -->
+<div class="filterbar">
+  <label>🔎 OA 實作狀態篩選：</label>
+  <select id="oaFilter" onchange="applyFilter()">
+    <option value="all">全部顯示</option>
+    <option value="yes">✅ 已實作</option>
+    <option value="part">⚠️ 部分實作 / 透過上游 API</option>
+    <option value="no">❌ 未實作</option>
+  </select>
+  <span class="small">（篩選會即時隱藏/顯示下方各模組卡片）</span>
+</div>
+
+<!-- ========== 總覽 ========== -->
+<section id="overview">
+  <h2>採購流程總覽</h2>
+  <p>PMM（Procurement / Material Management，採購物料管理）涵蓋「採購主鏈」與兩張側支主檔。完整資料流如下：</p>
+  <div class="mermaid">
+flowchart LR
+    PRM["PRM 請購<br/>pmm/pur-req"] -->|簽核通過<br/>自動生成| PBP["PBP 比價/報價<br/>pmm/quote"]
+    PBP -->|歸檔·選定廠商<br/>依廠商分單| PMT["PMT 採購單<br/>pmm/pur-order"]
+    PMT -->|歸檔<br/>自動生成| IRC["IRC 結轉驗收<br/>pmm/pur-forward"]
+    IRC -->|transform<br/>結轉| PAM["PAM 驗收確認<br/>pmm/pur-acceptance"]
+    PAM -->|歸檔<br/>自動入庫 SW05| STK["庫存<br/>stock-record"]
+    VDM["VDM 廠商資料<br/>pmm/vdm"] -.提供廠商主檔.-> PMT
+    VQM["VQM 廠商報價<br/>pmm/vqm"] -.提供報價/單價.-> PBP
+    VQM -.提供報價.-> PMT
+  </div>
+  <div class="note"><b>簽核驅動全鏈：</b>每個模組的簽核流程在 <code>APPROVE</code> 事件時統一把單據設為「已歸檔」，並連動觸發下游動作（請購→報價、報價→採購單、採購單→結轉、結轉→驗收、驗收→入庫）。<code>REJECT</code>/<code>CANCEL</code> 分支多為預留尚未實作。</div>
+
+  <div style="text-align:center;margin-top:18px">
+    <div class="stat"><span class="n">7</span><span class="l">前端 API 模組</span></div>
+    <div class="stat"><span class="n">7</span><span class="l">後端 Controller</span></div>
+    <div class="stat"><span class="n" style="color:var(--green)">6</span><span class="l">OA 完整實作 (PRM/PBP/PMT/IRC/PAM/VDM)</span></div>
+    <div class="stat"><span class="n" style="color:var(--yellow)">1</span><span class="l">OA 部分實作 (VQM)</span></div>
+    <div class="stat"><span class="n" style="color:var(--red)">0</span><span class="l">OA 未實作</span></div>
+  </div>
+</section>
+
+<!-- ========== 模組總表 ========== -->
+<section id="summary">
+  <h2>模組總表 &amp; OA 實作對照</h2>
+  <table class="toc-summary">
+    <thead><tr><th>代號</th><th>名稱</th><th>後端路徑前綴</th><th>前端 API 檔</th><th>端點數</th><th>OA 實作狀態</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#prm">PRM</a></td><td>請購</td><td><code>/pmm/pur-req</code></td><td>prm/index.ts</td><td>9</td><td><span class="badge b-yes">✅ 已實作（OA 重構完成）</span></td></tr>
+      <tr><td><a href="#pbp">PBP</a></td><td>比價 / 報價管理</td><td><code>/pmm/quote</code></td><td>pbp/index.ts</td><td>9</td><td><span class="badge b-yes">✅ 已實作（OA 重構完成）</span></td></tr>
+      <tr><td><a href="#pmt">PMT</a></td><td>採購單</td><td><code>/pmm/pur-order</code></td><td>pmt/index.ts</td><td>8</td><td><span class="badge b-yes">✅ 已實作（OA 重構完成）</span></td></tr>
+      <tr><td><a href="#irc">IRC</a></td><td>結轉驗收</td><td><code>/pmm/pur-forward</code></td><td>irc/index.ts</td><td>9</td><td><span class="badge b-yes">✅ 已實作（OA 重構完成）</span></td></tr>
+      <tr><td><a href="#pam">PAM</a></td><td>驗收確認</td><td><code>/pmm/pur-acceptance</code></td><td>pam/index.ts</td><td>9</td><td><span class="badge b-yes">✅ 已實作（OA 重構完成）</span></td></tr>
+      <tr><td><a href="#vdm">VDM</a></td><td>廠商資料維護</td><td><code>/pmm/vdm</code></td><td>vdm/index.ts</td><td>13</td><td><span class="badge b-yes">✅ 已實作（OA 重構完成）</span></td></tr>
+      <tr><td><a href="#vqm">VQM</a></td><td>廠商報價維護</td><td><code>/pmm/vqm</code></td><td>vqm/index.ts</td><td>17</td><td><span class="badge b-part">⚠️ 部分（唯讀查詢）</span></td></tr>
+    </tbody>
+  </table>
+  <div class="warn"><b>OA 對照重點：</b>OA 權限種子檔 <code>erp_super_admin_permissions.json</code> 已鏡像全套 PMM 權限字串（<code>pmm:pur-req</code>、<code>pmm:quote</code>、<code>pmm:pur-order</code>、<code>pmm:pur-forward</code>、<code>pmm:pur-acceptance</code>、<code>pmm:mfr-basic-final</code>、<code>pmm:vendor-quote-maintenance</code>），但<b>僅為權限佔位</b>。<b>PMM 採購模組 7 支已全數在 OA 落地</b>：PRM 請購、PBP 比價/報價、PMT 採購單、IRC 結轉驗收、PAM 驗收確認、VDM 廠商資料維護 六個模組<b>完整 CRUD 重構完成</b>（已端對端測試），VQM 廠商報價維護維持唯讀查詢（部分）。
+  <b>整條採購主鏈 PRM→PBP→PMT→IRC→PAM→入庫 自動串接全部打通</b>：請購歸檔→生成報價；報價歸檔→依廠商分組生成採購單（並從 VDM 取計稅方式算稅額）；採購單歸檔→生成結轉驗收單；結轉 transform→生成驗收確認單並結算數量；驗收確認歸檔→自動入庫(SW05)並累加庫存。OA 的上游中繼站 <code>BurgerKingClient</code> 仍<b>沒有呼叫 BK ERP PMM API 的方法</b>，皆為 OA 自建實作。</div>
+</section>
+
+<!-- ====================================================== PRM ====================================================== -->
+<section id="prm" class="mod" data-oa="yes">
+  <div class="card">
+  <div class="mod-title"><span class="mod-code">PRM</span><h2 style="border:none;margin:0">請購 <span class="small">/pmm/pur-req</span></h2><span class="badge b-yes">OA ✅ 已實作（重構完成）</span></div>
+  <p>採購主鏈的起點。建立請購單（含明細），簽核通過歸檔後<b>自動生成報價單(PBP)</b>。附帶庫存查詢與請購量試算。</p>
+
+  <div class="note"><b>🟢 OA 重構實作（2026-06-15 完成，已端對端測試）：</b>
+    <ul style="margin:6px 0 0 18px">
+      <li>Migration：<code>2026_06_15_000000_create_erp_pmm_pur_req_tables.php</code> → 建 <code>erp_pmm_pur_req</code> + <code>erp_pmm_pur_req_detail</code>（含示範資料）</li>
+      <li>Model：<code>app/Models/ERP/PMM/PmmPurReq.php</code>、<code>PmmPurReqDetail.php</code>（欄位中文註解）</li>
+      <li>Repository：<code>app/Repositories/ERP/PMM/PurReqDetailRepository.php</code>（單頭/明細資料存取）</li>
+      <li>Service：<code>app/Services/ERP/PMM/PurReqService.php</code>（商業邏輯：產單號、歸檔守衛、明細先刪後建、庫存試算、歸檔生成報價之防禦性略過）</li>
+      <li>Controller：<code>app/Http/Controllers/ERP/PMM/PurReqController.php</code>（薄控制器）</li>
+      <li>Route：<code>routes/module/erp.php</code> → <code>/api/erp/pmm/pur-req/*</code>（8 個端點，<code>auth:api</code>）</li>
+    </ul>
+    <span class="small">已測試：page / todo-page / get / create / update（含歸檔守衛擋修改、首次歸檔觸發生成報價單）/ delete / pur-req-detail/list-by-pur-req-id / stock-current-page / stock-list-by-prod-code。
+    <b>更新：PBP 模組落地後，PRM 歸檔自動生成報價單(PBP)已打通</b>（委派 <code>QuoteService::generateFromPurReq</code>，reqSignCode 冪等保護），不再只是 log 略過。</span>
+  </div>
+
+  <h4>端點一覽</h4>
+  <table>
+    <thead><tr><th>方法</th><th>路徑</th><th>前端函式</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-req/todo-page</code></td><td>getListPage</td><td>簽核待辦分頁（前端預設打 todo-page）</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-req/page</code></td><td>getPrmPageByFlow*</td><td>一般分頁查詢</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-req/get?id=</code></td><td>getItemDetail</td><td>取得單筆（含明細）</td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/pur-req/create</code></td><td>createItem</td><td>建立請購單</td></tr>
+      <tr><td><span class="m m-put">PUT</span></td><td><code>/pmm/pur-req/update</code></td><td>updateItem</td><td>更新；首次歸檔時生成報價單</td></tr>
+      <tr><td><span class="m m-delete">DEL</span></td><td><code>/pmm/pur-req/delete?id=</code></td><td>deleteById</td><td>刪除（含明細）</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-req/stock-current-page</code></td><td>getCurrentStockByProdCode</td><td>依品號+地點查庫存並試算請購量</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-req/stock-list-by-prod-code</code></td><td>getStockDetailListByProdCode</td><td>依品號查各地點庫存明細</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-req/pur-req-detail/list-by-pur-req-id</code></td><td>—</td><td>依單頭 id 取明細</td></tr>
+    </tbody>
+  </table>
+  <p class="small">* <code>getPrmPageByFlow(params, isTodo)</code> 透過 <code>getPageByFlow</code> 依「簽核開關」自動切換 <code>/page</code> 與 <code>/todo-page</code>。</p>
+
+  <h4>商業邏輯</h4>
+  <div class="biz">
+    <ul>
+      <li><b>create：</b><code>generateSignCode("請購單管理")</code> 產編號；<code>processStatus = PENDING_PROCESS</code>；明細批次插入；若簽核開啟則啟動 <code>PURCHASE_REQUISITION</code> 流程。</li>
+      <li><b>update（狀態觸發）：</b>已歸檔且無流程不可改；明細採「先全刪後重建」。若本次 <code>processStatus="已歸檔"</code> 且舊值非已歸檔（首次歸檔）→ 呼叫 <code>createQuoteFromPurReq(id)</code> <b>自動生成報價單(PBP)</b>。</li>
+      <li><b>createQuoteFromPurReq：</b>以 <code>reqSignCode</code> 做冪等保護（一張請購只生成一張報價）；逐筆轉 <code>QuoteDetailDO</code>（遞增 reqItem、帶來源單號）並啟 <code>QUOTATION</code> 流程。</li>
+      <li><b>請購量試算公式：</b><code>standardQuantity = (safeStock − 目前庫存量) × weightFactor</code>（三值皆非 null 才計算）。</li>
+    </ul>
+  </div>
+
+  <h4>主要 Model 欄位（中文）</h4>
+  <div class="grid2">
+    <div>
+      <p class="small"><b>PurReqDO</b> — <code>pmm_pur_req</code>（單頭）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>signCode</td><td>單據編號</td></tr>
+        <tr><td>reqReason</td><td>請購原因</td></tr>
+        <tr><td>warehouse / warehouseName</td><td>交貨地點代號 / 名稱</td></tr>
+        <tr><td>reqDate</td><td>需求日期</td></tr>
+        <tr><td>subject</td><td>主旨</td></tr>
+        <tr><td>weightFactor</td><td>加權係數</td></tr>
+        <tr><td>processStatus / processInstanceId</td><td>流程狀態 / 流程實例 ID</td></tr>
+      </table>
+    </div>
+    <div>
+      <p class="small"><b>PurReqDetailDO</b> — <code>pmm_pur_req_detail</code>（明細）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>purReqId</td><td>所屬請購單</td></tr>
+        <tr><td>prodCode</td><td>品號（食材）</td></tr>
+        <tr><td>currentStockNum</td><td>目前庫存量</td></tr>
+        <tr><td>safeStock</td><td>安全存量</td></tr>
+        <tr><td>standardQuantity</td><td>請購計數</td></tr>
+        <tr><td>unit</td><td>單位</td></tr>
+        <tr><td>remark / warehouseId</td><td>需求備註 / 倉庫表 id</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <details>
+    <summary>📄 前端程式碼節錄（prm/index.ts）</summary>
+<pre><code>/** 查询分页（預設打 todo-page） */
+export async function getListPage(params: PageParam) {
+  return requestClient.get&lt;PageResult&lt;prmApi.Item&gt;&gt;('/pmm/pur-req/todo-page', { params });
+}
+/** PRM 列表（根據是否開啟簽核切換 /page 與 /todo-page） */
+export function getPrmPageByFlow(params, isTodo) {
+  return getPageByFlow('/pmm/pur-req', params, isTodo);
+}
+/** 根據食材查庫存量（含請購量試算） */
+export async function getCurrentStockByProdCode(params) {
+  return requestClient.get(
+    `/pmm/pur-req/stock-current-page?prodCode=${params.prodCode}&warehouse=${params.warehouse}&weightFactor=${params.weightFactor}`);
+}</code></pre>
+  </details>
+
+  <h4>流程圖</h4>
+  <div class="mermaid">
+flowchart LR
+    A[建立請購單<br/>PENDING_PROCESS] --> B{簽核開啟?}
+    B -->|是| C[啟動 PURCHASE_REQUISITION 流程]
+    B -->|否| D[直接存檔]
+    C -->|APPROVE| E[設為 已歸檔]
+    E --> F[createQuoteFromPurReq<br/>自動生成 PBP 報價單]
+  </div>
+  </div>
+</section>
+
+<!-- ====================================================== PBP ====================================================== -->
+<section id="pbp" class="mod" data-oa="yes">
+  <div class="card">
+  <div class="mod-title"><span class="mod-code">PBP</span><h2 style="border:none;margin:0">比價 / 報價管理 <span class="small">/pmm/quote</span></h2><span class="badge b-yes">OA ✅ 已實作（重構完成）</span></div>
+  <p>承接請購單，比較各廠商報價、選定供應商。歸檔時轉「採購中」並<b>依廠商分單自動生成採購單(PMT)</b>。</p>
+
+  <div class="note"><b>🟢 OA 重構實作（2026-06-15 完成，已端對端測試）：</b>
+    <ul style="margin:6px 0 0 18px">
+      <li>Migration：<code>2026_06_15_000100_create_erp_pmm_quote_tables.php</code> → 建 <code>erp_pmm_quote</code> + <code>erp_pmm_quote_detail</code>（含示範資料）</li>
+      <li>Model：<code>app/Models/ERP/PMM/PmmQuote.php</code>、<code>PmmQuoteDetail.php</code>（欄位中文註解）</li>
+      <li>Repository：<code>app/Repositories/ERP/PMM/QuoteDetailRepository.php</code>（含 get 明細的食材/分類/單位/廠商報價豐富化 join）</li>
+      <li>Service：<code>app/Services/ERP/PMM/QuoteService.php</code>（歸檔守衛、預設廠商必填校驗、歸檔轉採購中 status=2、生成採購單防禦略過、<b>generateFromPurReq 供 PRM 串接</b>）</li>
+      <li>Controller：<code>app/Http/Controllers/ERP/PMM/QuoteController.php</code>（薄控制器）</li>
+      <li>Route：<code>routes/module/erp.php</code> → <code>/api/erp/pmm/quote/*</code>（8 端點，<code>auth:api</code>）</li>
+    </ul>
+    <span class="small">已測試：page / todo-page / get（豐富化明細補品名/單位/分類/廠商）/ create / update（歸檔守衛、預設廠商必填、status 轉 2）/ delete / quote-detail/list-by-quote-id / getOrderHisList。
+    <b>PRM→PBP 串接已打通</b>：請購單首次歸檔自動依 reqSignCode 冪等生成報價單（項次/品號量/來源單號正確帶入）。
+    <b>更新：PBP→PMT 串接亦已打通</b>——報價單歸檔（明細帶預設廠商）依廠商分組自動生成採購單(PMT)，金額/數量計算正確；<code>getOrderHisList</code> 已串回真實採購歷史。export-excel 為純匯出（前端未使用），本次未實作。</span>
+  </div>
+
+  <h4>端點一覽</h4>
+  <table>
+    <thead><tr><th>方法</th><th>路徑</th><th>前端函式</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/quote/page</code></td><td>getQuotePage / getPbpPageByFlow</td><td>分頁查詢（可切 todo-page）</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/quote/get?id=</code></td><td>getQuoteDetail</td><td>取得單筆（含明細）</td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/quote/create</code></td><td>createItem</td><td>建立報價單</td></tr>
+      <tr><td><span class="m m-put">PUT</span></td><td><code>/pmm/quote/update</code></td><td>updateItem</td><td>更新；歸檔轉採購並生成採購單</td></tr>
+      <tr><td><span class="m m-delete">DEL</span></td><td><code>/pmm/quote/delete?id=</code></td><td>deleteById</td><td>刪除（含明細）</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/quote/getOrderHisList</code></td><td>getOrderHisList</td><td>依品號取採購歷史供比價</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/quote/export-excel</code></td><td>—</td><td>匯出 Excel</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/quote/todo-page</code></td><td>getPbpPageByFlow</td><td>簽核待辦分頁</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/quote/quote-detail/list-by-quote-id</code></td><td>—</td><td>依報價單 id 取明細</td></tr>
+    </tbody>
+  </table>
+
+  <h4>商業邏輯</h4>
+  <div class="biz">
+    <ul>
+      <li><b>update 校驗：</b>歸檔時逐筆檢查 <code>defaultSupplier</code>（選定廠商）不可為空，否則拋 <code>QUOTE_DEFAULT_NOT_EXISTS</code>。歸檔時單頭/明細 <code>status="2"</code>（採購中）。</li>
+      <li><b>generateNewPurOrder（核心：轉採購 + 金額計算）：</b>依 <code>mfrId</code> <b>分組，每廠商各開一張採購單</b>。逐筆計算：
+        <ul>
+          <li>採購數量 <code>purQty = purQuantity ÷ singlePackCount</code>（<code>ROUND_UP</code>，不足一箱進一箱）</li>
+          <li>行金額 <code>lineAmount = purQty × unitPrice</code>（每箱價，scale 3 HALF_UP）</li>
+          <li>稅額依 <code>taxType</code>：<code>"0"</code>（營業稅）→ <code>totalAmount = untaxedAmount × 1.05</code>；其餘 → <code>totalAmount = untaxedAmount</code>；<code>taxAmount = totalAmount − untaxedAmount</code></li>
+          <li>每張採購單啟 <code>PURCHASING</code> 流程</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <h4>主要 Model 欄位（中文）</h4>
+  <div class="grid2">
+    <div>
+      <p class="small"><b>QuoteDO</b> — <code>pmm_quote</code>（單頭）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>signCode</td><td>單據編號</td></tr>
+        <tr><td>reqReason</td><td>請購原因</td></tr>
+        <tr><td>warehouse / warehouseName</td><td>交貨地點</td></tr>
+        <tr><td>reqDate</td><td>需求日期</td></tr>
+        <tr><td>reqSignCode</td><td>來源請購單號</td></tr>
+        <tr><td>status</td><td>狀態（2=採購中）</td></tr>
+      </table>
+    </div>
+    <div>
+      <p class="small"><b>QuoteDetailDO</b> — <code>pmm_quote_detail</code>（明細）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>prodCode</td><td>品號</td></tr>
+        <tr><td>standardQuantity / totalStandardQuantity</td><td>請購量 / 總採購計數</td></tr>
+        <tr><td>defaultSupplier</td><td>預設/選定廠商（歸檔必填）</td></tr>
+        <tr><td>latestQuotePerPack</td><td>最新報價（NTD/包裝=每箱）</td></tr>
+        <tr><td>latestQuotePerKgL</td><td>最新報價（NTD/單位）</td></tr>
+        <tr><td>reqItem / reqSignCode</td><td>請購項次 / 請購單號</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <details>
+    <summary>📄 前端程式碼節錄（pbp/index.ts）</summary>
+<pre><code>/** 報價管理分頁 */
+export async function getQuotePage(params) {
+  return requestClient.get('/pmm/quote/page', { params });
+}
+/** 採購歷史記錄（供比價） */
+export async function getOrderHisList(params: { prodCode: string }) {
+  return requestClient.get('/pmm/quote/getOrderHisList', { params });
+}</code></pre>
+  </details>
+
+  <h4>流程圖</h4>
+  <div class="mermaid">
+flowchart LR
+    A[報價單<br/>來自 PRM] --> B[填報價·選定 defaultSupplier]
+    B --> C{歸檔?}
+    C -->|是| D[校驗 defaultSupplier 必填]
+    D --> E[依 mfrId 分組<br/>每廠商開一張採購單]
+    E --> F[計算 purQty/lineAmount/稅額]
+    F --> G[生成 PMT 採購單<br/>啟 PURCHASING 流程]
+  </div>
+  </div>
+</section>
+
+<!-- ====================================================== PMT ====================================================== -->
+<section id="pmt" class="mod" data-oa="yes">
+  <div class="card">
+  <div class="mod-title"><span class="mod-code">PMT</span><h2 style="border:none;margin:0">採購單 <span class="small">/pmm/pur-order</span></h2><span class="badge b-yes">OA ✅ 已實作（重構完成）</span></div>
+  <p>正式採購訂單。歸檔後<b>自動生成結轉驗收單(IRC)</b>。查詢時會補付款方式與真實廠商代號。</p>
+
+  <div class="note"><b>🟢 OA 重構實作（2026-06-15 完成，已端對端測試）：</b>
+    <ul style="margin:6px 0 0 18px">
+      <li>Migration：<code>2026_06_15_000200_create_erp_pmm_pur_order_tables.php</code> → 建 <code>erp_pmm_pur_order</code> + <code>erp_pmm_pur_order_detail</code>（含示範資料）</li>
+      <li>Model：<code>PmmPurOrder.php</code>、<code>PmmPurOrderDetail.php</code>（欄位中文註解）</li>
+      <li>Repository：<code>PurOrderDetailRepository.php</code>（含 get 明細的食材/單位/廠商報價豐富化 join）</li>
+      <li>Service：<code>PurOrderService.php</code>（歸檔守衛、mfrId→mfrCode 補值、createTime 區間過濾、生成結轉驗收防禦略過）</li>
+      <li>Controller：<code>PurOrderController.php</code>（薄控制器）</li>
+      <li>Route：<code>routes/module/erp.php</code> → <code>/api/erp/pmm/pur-order/*</code>（7 端點，<code>auth:api</code>；export-excel 純匯出未實作）</li>
+    </ul>
+    <span class="small">已測試：page（mfrId→mfrCode 補 MFR002）/ todo-page / get（明細豐富化 + 付款欄位待 VDM）/ create / update（歸檔守衛）/ delete / pur-order-detail/list-by-pur-order-id。
+    <b>PBP→PMT 串接已打通</b>：報價單歸檔（明細帶預設廠商）依廠商分組自動生成採購單，<code>purQty=ceil(採購計數/每箱數)</code>、<code>lineAmount=purQty×單價</code>、未稅/含稅金額計算正確（實測 ceil(100/20)=5、5×150=750）。
+    <b>Quote.getOrderHisList 也已串回真實採購歷史</b>。
+    <b>更新：PMT→IRC 串接亦已打通</b>——採購單歸檔依採購單號冪等生成結轉驗收單(IRC)。
+    付款方式/條件來自 VDM 交易表（未建）暫留空、稅額因無 VDM taxType 暫以未稅=含稅計。</span>
+  </div>
+
+  <h4>端點一覽</h4>
+  <table>
+    <thead><tr><th>方法</th><th>路徑</th><th>前端函式</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-order/page</code></td><td>getPurOrderListPage / getPmtPageByFlow</td><td>分頁（mfrId 轉 mfrCode）</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-order/get?id=</code></td><td>getItemDetail</td><td>單筆（含明細/付款/食材名）</td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/pur-order/create</code></td><td>createItem</td><td>建立採購單</td></tr>
+      <tr><td><span class="m m-put">PUT</span></td><td><code>/pmm/pur-order/update</code></td><td>updateItem</td><td>更新；首次歸檔觸發結轉驗收單</td></tr>
+      <tr><td><span class="m m-delete">DEL</span></td><td><code>/pmm/pur-order/delete?id=</code></td><td>deleteById</td><td>刪除（含明細）</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-order/todo-page</code></td><td>getPmtPageByFlow</td><td>簽核待辦分頁</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-order/export-excel</code></td><td>—</td><td>匯出「採購申請單.xls」</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-order/pur-order-detail/list-by-pur-order-id</code></td><td>—</td><td>依採購單 id 取明細</td></tr>
+    </tbody>
+  </table>
+
+  <h4>商業邏輯</h4>
+  <div class="biz">
+    <ul>
+      <li><b>create：</b>建立階段<b>不在 Java 端算金額/稅額</b>（金額計算已在上游 <code>Quote.generateNewPurOrder</code> 完成），VO 直接落地；啟 <code>PURCHASING</code> 流程。</li>
+      <li><b>update（狀態觸發）：</b><code>processStatus="已歸檔"</code> 且舊值非已歸檔 → 呼叫 <code>generateForward(id)</code> 自動產生結轉驗收單(IRC)，以 <code>orderSignCode</code> 查重避免重複建立。</li>
+      <li><b>查詢補值：</b>依 <code>paymentId</code> 補付款方式/條件，依 <code>mfrId</code> 查 VQM 補真實 <code>mfrCode</code>。</li>
+    </ul>
+  </div>
+
+  <h4>主要 Model 欄位（中文）</h4>
+  <div class="grid2">
+    <div>
+      <p class="small"><b>PurOrderDO</b> — <code>pmm_pur_order</code>（單頭）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>signCode</td><td>單據編號</td></tr>
+        <tr><td>purchaseDate</td><td>採購日期</td></tr>
+        <tr><td>quoteSignCode</td><td>比價來源單號</td></tr>
+        <tr><td>mfrId / mfrName</td><td>廠商代號(實為 vqm 主鍵) / 名稱</td></tr>
+        <tr><td>untaxedAmount / taxType / taxAmount / totalAmount</td><td>未稅 / 計稅方式 / 稅額 / 含稅總額</td></tr>
+        <tr><td>paymentId</td><td>付款代碼</td></tr>
+        <tr><td>cycle / cycleMultiplier / cycleDay</td><td>週期 / 乘數 / 屬日</td></tr>
+        <tr><td>deliveryCost</td><td>運費</td></tr>
+      </table>
+    </div>
+    <div>
+      <p class="small"><b>PurOrderDetailDO</b> — <code>pmm_pur_order_detail</code>（明細）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>reqSignCode / reqItem</td><td>請購來源單號 / 項次</td></tr>
+        <tr><td>prodCode</td><td>品號</td></tr>
+        <tr><td>purQuantity / purQuantityUnit</td><td>採購計數 / 單位</td></tr>
+        <tr><td>unitPrice</td><td>單價（每箱）</td></tr>
+        <tr><td>purQty</td><td>採購數量（箱數）</td></tr>
+        <tr><td>lineAmount</td><td>明細小計</td></tr>
+        <tr><td>expectedDeliveryDate</td><td>預定交期</td></tr>
+        <tr><td>mfrUnit / warehouse</td><td>廠商單位 / 交貨倉</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h4>流程圖</h4>
+  <div class="mermaid">
+flowchart LR
+    A[採購單<br/>來自 PBP] --> B{歸檔?}
+    B -->|是| C[generateForward<br/>以 orderSignCode 查重]
+    C --> D[生成 IRC 結轉驗收單<br/>啟 PUR_FORWARD 流程]
+  </div>
+  </div>
+</section>
+
+<!-- ====================================================== IRC ====================================================== -->
+<section id="irc" class="mod" data-oa="yes">
+  <div class="card">
+  <div class="mod-title"><span class="mod-code">IRC</span><h2 style="border:none;margin:0">結轉驗收 <span class="small">/pmm/pur-forward</span></h2><span class="badge b-yes">OA ✅ 已實作（重構完成）</span></div>
+  <p>在採購單與驗收單之間的中繼。透過 <code>transformPurForwardToAcceptance</code> 將在途/已驗收量結算，<b>生成驗收確認待處理單(PAM)</b>。</p>
+
+  <div class="note"><b>🟢 OA 重構實作（2026-06-15 完成，已端對端測試）：</b>
+    <ul style="margin:6px 0 0 18px">
+      <li>Migration：<code>2026_06_15_000300_create_erp_pmm_pur_forward_tables.php</code> → 建 <code>erp_pmm_pur_forward</code> + <code>erp_pmm_pur_forward_detail</code>（含示範資料）</li>
+      <li>Model：<code>PmmPurForward.php</code>、<code>PmmPurForwardDetail.php</code>（欄位中文註解）</li>
+      <li>Repository：<code>PurForwardDetailRepository.php</code>（含 get 單頭/明細的廠商代號+食材+單位豐富化 join）</li>
+      <li>Service：<code>PurForwardService.php</code>（歸檔守衛、全強制結案→驗收狀態2、transform 生成驗收防禦略過、<b>generateFromPurOrder 供 PMT 串接</b>）</li>
+      <li>Controller：<code>PurForwardController.php</code>（薄控制器）</li>
+      <li>Route：<code>routes/module/erp.php</code> → <code>/api/erp/pmm/pur-forward/*</code>（8 端點含 transformPurForwardToAcceptance，<code>auth:api</code>；export-excel ERP 本身也空，未實作）</li>
+    </ul>
+    <span class="small">已測試：page（mfrId→mfrCode 補 MFR002）/ todo-page / get（明細豐富化）/ create / update（歸檔守衛、全強制結案→單頭 acceptanceStatus=2）/ delete / detail-list / transformPurForwardToAcceptance。
+    <b>PMT→IRC 串接已打通</b>：採購單歸檔依採購單號冪等生成結轉驗收單（明細 transitQty 預設=採購數量，來源單號帶入），冪等驗證通過。
+    <b>更新：IRC→PAM 串接亦已打通</b>——<code>transformPurForwardToAcceptance</code> 依本次驗收量生成驗收確認單(PAM)並結算在途/已驗收量、設驗收狀態。</span>
+  </div>
+
+  <h4>端點一覽</h4>
+  <table>
+    <thead><tr><th>方法</th><th>路徑</th><th>前端函式</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-forward/page</code></td><td>getPurForwardListPage / getPurForwardPageByFlow</td><td>分頁查詢</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-forward/get?id=</code></td><td>getPurForwardItemDetail</td><td>單筆（含明細）</td></tr>
+      <tr><td><span class="m m-put">PUT</span></td><td><code>/pmm/pur-forward/update</code></td><td>updateItem</td><td>更新（含明細重建）</td></tr>
+      <tr><td><span class="m m-put">PUT</span></td><td><code>/pmm/pur-forward/transformPurForwardToAcceptance?id=</code></td><td>transferToIncomingAcceptance</td><td><b>結轉生成驗收確認單</b></td></tr>
+      <tr><td><span class="m m-delete">DEL</span></td><td><code>/pmm/pur-forward/delete?id=</code></td><td>deleteById</td><td>刪除（含明細）</td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/pur-forward/create</code></td><td>—</td><td>建立結轉驗收單</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-forward/todo-page</code></td><td>getPurForwardPageByFlow</td><td>簽核待辦分頁</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-forward/export-excel</code></td><td>—</td><td>匯出 Excel（目前匯出空內容⚠️）</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/bhm/customer-data/page</code></td><td>getCustomerListPage</td><td>客戶資料分頁（跨模組）</td></tr>
+    </tbody>
+  </table>
+
+  <h4>商業邏輯</h4>
+  <div class="biz">
+    <b>transformPurForwardToAcceptance（結轉核心，@Transactional）：</b>
+    <ol>
+      <li>建立 <code>PurAcceptanceDO</code>（<code>generateSignCode("驗收確認作業")</code>、帶廠商/倉別、<code>forwardSignCode</code> 記來源、<code>processStatus="待處理"</code>）。</li>
+      <li>逐筆明細：
+        <ul>
+          <li><b>無本次驗收量</b>（<code>inspectedQty≤0</code>）→ 僅比較 <code>purQty</code> vs <code>approvedQty</code> 設驗收狀態，不產生驗收明細。</li>
+          <li><b>有驗收量</b> → 建 <code>PurAcceptanceDetailDO</code>；<code>transitQty −= inspectedQty</code>、<code>approvedQty = purQty − transitQty</code>；依 <code>purQty</code> vs <code>approvedQty</code> 設狀態（2 已關閉 / 1 驗收中 / 0）；<code>inspectedQty</code> 清 0。</li>
+        </ul>
+      </li>
+      <li>批次插驗收明細 + 更新結轉明細；全部關閉則單頭 <code>acceptanceStatus="2"</code>；對新驗收單啟 <code>PUR_ACCEPTANCE</code> 流程。</li>
+    </ol>
+    <span class="small">update 時若所有明細 <code>forceClosed=="1"</code>（強制結案）則單頭 <code>acceptanceStatus="2"</code>（已關閉）。</span>
+  </div>
+
+  <h4>主要 Model 欄位（中文）</h4>
+  <div class="grid2">
+    <div>
+      <p class="small"><b>PurForwardDO</b> — <code>pmm_pur_forward</code>（單頭）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>signCode</td><td>單據編號</td></tr>
+        <tr><td>mfrId / mfrName</td><td>廠商代號 / 名稱</td></tr>
+        <tr><td>expectedStartDate / expectedEndDate</td><td>預定交期起 / 訖</td></tr>
+        <tr><td>reqSignCode / orderSignCode</td><td>請購單號 / 採購單號</td></tr>
+        <tr><td>acceptanceStatus</td><td>驗收狀態（2=已關閉）</td></tr>
+        <tr><td>attribute</td><td>屬性</td></tr>
+      </table>
+    </div>
+    <div>
+      <p class="small"><b>PurForwardDetailDO</b> — <code>pmm_pur_forward_detail</code>（明細）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>prodCode</td><td>品號</td></tr>
+        <tr><td>purQty</td><td>採購數量</td></tr>
+        <tr><td>approvedQty / unapprovedQty</td><td>已驗收 / 未驗收</td></tr>
+        <tr><td>transitQty</td><td>在途</td></tr>
+        <tr><td>inspectedQty</td><td>本次驗收</td></tr>
+        <tr><td>forceClosed / forceClosedReason</td><td>強制結案("1") / 理由</td></tr>
+        <tr><td>acceptanceStatus</td><td>狀態</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <details>
+    <summary>📄 前端程式碼節錄（irc/index.ts）</summary>
+<pre><code>/** 觸發結轉驗收 */
+export async function transferToIncomingAcceptance(id: number) {
+  return requestClient.put(
+    '/pmm/pur-forward/transformPurForwardToAcceptance?id=' + id);
+}</code></pre>
+  </details>
+
+  <h4>結轉流程圖</h4>
+  <div class="mermaid">
+flowchart TD
+    A[結轉驗收單明細] --> B{inspectedQty &gt; 0 ?}
+    B -->|否| C[僅比較 purQty vs approvedQty<br/>設狀態·不產明細]
+    B -->|是| D[建驗收明細<br/>transitQty -= inspectedQty<br/>approvedQty = purQty - transitQty]
+    D --> E[依 purQty vs approvedQty<br/>設 2已關閉/1驗收中/0]
+    C --> F[生成 PAM 驗收確認單<br/>待處理 + PUR_ACCEPTANCE 流程]
+    E --> F
+  </div>
+  </div>
+</section>
+
+<!-- ====================================================== PAM ====================================================== -->
+<section id="pam" class="mod" data-oa="yes">
+  <div class="card">
+  <div class="mod-title"><span class="mod-code">PAM</span><h2 style="border:none;margin:0">驗收確認 <span class="small">/pmm/pur-acceptance</span></h2><span class="badge b-yes">OA ✅ 已實作（重構完成）</span></div>
+  <p>採購主鏈的終點。歸檔時<b>自動觸發入庫</b>（建立入庫單並更新庫存）。</p>
+
+  <div class="note"><b>🟢 OA 重構實作（2026-06-15 完成，已端對端測試）：</b>
+    <ul style="margin:6px 0 0 18px">
+      <li>Migration：<code>2026_06_15_000400_create_erp_pmm_pur_acceptance_tables.php</code> → 建 <code>erp_pmm_pur_acceptance</code> + <code>erp_pmm_pur_acceptance_detail</code>（含示範資料）</li>
+      <li>Model：<code>PmmPurAcceptance.php</code>、<code>PmmPurAcceptanceDetail.php</code>（中文註解）</li>
+      <li>Repository：<code>PurAcceptanceDetailRepository.php</code>（含 get 明細的食材/倉庫/廠商報價豐富化 join）</li>
+      <li>Service：<code>PurAcceptanceService.php</code>（歸檔守衛、mfrId→mfrCode/mfrName 補值、<b>歸檔自動入庫 SW05</b>、generateFromForward 供 IRC 串接）</li>
+      <li>Controller：<code>PurAcceptanceController.php</code>（薄控制器）</li>
+      <li>Route：<code>/api/erp/pmm/pur-acceptance/*</code>（8 端點含 vendor-quote-dropdown，<code>auth:api</code>）</li>
+      <li>另於 WHS <code>StockInService</code> 新增可複用 <code>createInboundAndProcess()</code>，封裝入庫單建立 + <code>erp_whs_stock</code> 庫存累加</li>
+    </ul>
+    <span class="small">已測試：page（mfrCode→MFR002）/ todo-page / get（明細豐富化）/ create / update（歸檔守衛）/ delete / detail-list / vendor-quote-dropdown。
+    <b>歸檔自動入庫已打通</b>：驗收單歸檔 → 建 SW05 入庫單並累加庫存（實測庫存 0→7、入庫單 SI260615001 生成）。
+    <b>IRC→PAM transform 串接已打通</b>：結轉驗收單 transform 依本次驗收量生成驗收確認單，並結算在途/已驗收量（實測 transitQty 12-10=2、approvedQty=10、狀態=驗收中、本次驗收量清 0）。</span>
+  </div>
+
+  <h4>端點一覽</h4>
+  <table>
+    <thead><tr><th>方法</th><th>路徑</th><th>前端函式</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-acceptance/page</code></td><td>getAcceptanceListPage / getAcceptancePageByFlow</td><td>分頁查詢</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-acceptance/get?id=</code></td><td>getAcceptanceDetail</td><td>單筆（含明細/廠商/食材名）</td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/pur-acceptance/create</code></td><td>createAcceptance</td><td>建立驗收確認單</td></tr>
+      <tr><td><span class="m m-put">PUT</span></td><td><code>/pmm/pur-acceptance/update</code></td><td>updateAcceptance</td><td>更新；歸檔時觸發入庫</td></tr>
+      <tr><td><span class="m m-delete">DEL</span></td><td><code>/pmm/pur-acceptance/delete?id=</code></td><td>deleteItem</td><td>刪除（含明細）</td></tr>
+      <tr><td><span class="m m-delete">DEL</span></td><td><code>/pmm/pur-acceptance/delete</code></td><td>deleteByIds</td><td>批量刪除</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-acceptance/todo-page</code></td><td>getAcceptancePageByFlow</td><td>簽核待辦分頁</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-acceptance/export-excel</code></td><td>—</td><td>匯出「驗收確認單.xls」</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/pur-acceptance/vendor-quote-dropdown</code></td><td>—</td><td>廠商報價維護下拉</td></tr>
+    </tbody>
+  </table>
+
+  <h4>商業邏輯</h4>
+  <div class="biz">
+    <b>processStockIn（自動入庫，updatePurAcceptance 在 <code>processStatus=已歸檔</code> 時觸發）：</b>
+    <ol>
+      <li><code>selectStockInData(id)</code> 取驗收/明細/倉庫資訊。</li>
+      <li><b>建入庫單頭</b> <code>StockRecordHeadDO</code>：硬編碼 <code>stockReason="SW05"</code>、<code>stockType=1</code>、<code>processStatus=ARCHIVED</code>、<code>signCode=generateSignCode("入庫作業管理")</code>、<code>inboundTime=now()</code>、<code>remark="由驗收單自動生成"</code>。</li>
+      <li><b>建入庫明細</b>：每筆 <code>standardQuantity = invNumChange = stockQty</code>。</li>
+      <li><code>batchProcessStockRecords</code> <b>實際更新庫存</b>。</li>
+    </ol>
+  </div>
+
+  <h4>主要 Model 欄位（中文）</h4>
+  <div class="grid2">
+    <div>
+      <p class="small"><b>PurAcceptanceDO</b> — <code>pmm_pur_acceptance</code>（單頭）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>signCode</td><td>單據編號</td></tr>
+        <tr><td>mfrId / mfrName</td><td>廠商代號 / 名稱</td></tr>
+        <tr><td>warehouse / warehouseName</td><td>倉別</td></tr>
+        <tr><td>forwardSignCode</td><td>來源結轉驗收單號</td></tr>
+        <tr><td>acceptDate</td><td>驗收日期</td></tr>
+        <tr><td>subject</td><td>主旨</td></tr>
+      </table>
+    </div>
+    <div>
+      <p class="small"><b>PurAcceptanceDetailDO</b> — <code>pmm_pur_acceptance_detail</code>（明細）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>orderSignCode</td><td>採購單號</td></tr>
+        <tr><td>prodCode</td><td>品號</td></tr>
+        <tr><td>inspectedQty</td><td>本次驗收量</td></tr>
+        <tr><td>stockQty</td><td>入庫數量</td></tr>
+        <tr><td>shortageQty</td><td>短缺數量</td></tr>
+        <tr><td>warehouseId</td><td>倉庫 ID</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="note"><b>OA 易混淆功能：</b>OA 的 <code>ERP/WHS/StockInController::createStockInFromDemandDetails</code> 來源是 PDM 原物料需求明細、stock_reason 為 <code>SW07 驗收入庫</code>，屬「需求→倉儲入庫」，<b>不是</b>本模組的採購驗收確認。</div>
+
+  <h4>入庫流程圖</h4>
+  <div class="mermaid">
+flowchart LR
+    A[驗收確認單] --> B{歸檔?}
+    B -->|是| C[selectStockInData]
+    C --> D[建入庫單頭<br/>SW05 / type=1]
+    D --> E[建入庫明細<br/>stockQty]
+    E --> F[batchProcessStockRecords<br/>更新庫存]
+  </div>
+  </div>
+</section>
+
+<!-- ====================================================== VDM ====================================================== -->
+<section id="vdm" class="mod" data-oa="yes">
+  <div class="card">
+  <div class="mod-title"><span class="mod-code">VDM</span><h2 style="border:none;margin:0">廠商資料維護 <span class="small">/pmm/vdm</span></h2><span class="badge b-yes">OA ✅ 已實作（重構完成）</span></div>
+  <p>廠商主檔（master data）。1 主表 + 3 子表（聯絡 Lcn / 交易 Trd / 收款銀行 Rcb）。含 Excel 匯入匯出。</p>
+
+  <div class="note"><b>🟢 OA 重構實作（2026-06-15 完成，已端對端測試）：</b>
+    <ul style="margin:6px 0 0 18px">
+      <li>Migration：<code>2026_06_15_000500_create_erp_pmm_mfr_basic_tables.php</code> → 建主表 <code>erp_pmm_mfr_basic_final</code> + 3 子表 <code>_lcn_/_trd_/_rcb_final</code>（含示範資料）</li>
+      <li>Model：<code>PmmMfrBasicFinal.php</code> + <code>PmmMfrBasicLcnFinal/TrdFinal/RcbFinal.php</code>（欄位中文註解）</li>
+      <li>Repository：<code>VendorMaintenanceRepository.php</code>（主表 + 3 子表統一存取）</li>
+      <li>Service：<code>VendorMaintenanceService.php</code>（廠商代號重複檢查、歸檔守衛、子表先全刪後重建、公司群/付款代碼/單號下拉、付款交易查詢）</li>
+      <li>Controller：<code>VendorMaintenanceController.php</code>（薄控制器）</li>
+      <li>Route：<code>/api/erp/pmm/vdm/*</code>（11 端點；Excel export/import 為二進位匯入匯出，本次未實作）</li>
+    </ul>
+    <span class="small">已測試：page（主表+3子表組裝）/ todo-page / get/{id} / create（廠商代號重複→400）/ update/{id}（歸檔守衛）/ update-status / delete（批次）/ company-groups / pay-codes / sign-codes / payment-and-trd。
+    <b>VDM→PBP→PMT 稅率串接已打通</b>：採購單自動生成時，依廠商代號(mfrId)從 VDM 主檔取計稅方式 tax，營業稅(0)→含稅=未稅×1.05（實測 未稅300→稅額15→含稅315）。</span>
+  </div>
+
+  <h4>端點一覽</h4>
+  <table>
+    <thead><tr><th>方法</th><th>路徑</th><th>前端函式</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vdm/page</code></td><td>getListPage / getVdmPageByFlow</td><td>主表分頁（含子表組裝）</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vdm/get/{id}</code></td><td>getVdmDetailAPi</td><td>單筆完整資料</td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/vdm/create</code></td><td>createVdm</td><td>建廠商主表 + 3 子表</td></tr>
+      <tr><td><span class="m m-put">PUT</span></td><td><code>/pmm/vdm/update/{id}</code></td><td>updateVdm</td><td>更新主表 + 重建子表</td></tr>
+      <tr><td><span class="m m-put">PUT</span></td><td><code>/pmm/vdm/update-status/{id}/{processStatus}</code></td><td>updateVdmStatus</td><td>變更單據狀態</td></tr>
+      <tr><td><span class="m m-delete">DEL</span></td><td><code>/pmm/vdm/delete</code></td><td>deleteListVdm</td><td>批次軟刪</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vdm/company-groups</code></td><td>getVdmCompanyGroups</td><td>公司群下拉</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vdm/pay-codes</code></td><td>getVdmPayCodes</td><td>付款代碼下拉（⚠️目前寫死）</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vdm/sign-codes</code></td><td>—</td><td>單據編號列表</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vdm/payment-and-trd/{mfrId}</code></td><td>—</td><td>依廠商取付款方式+交易資料</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vdm/export</code></td><td>getVdmTemplate</td><td>匯出 4-sheet 匯入模板</td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/vdm/import</code></td><td>importVdmData</td><td>匯入廠商 Excel</td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/bhm/payment-method/page</code></td><td>paymentMethodList</td><td>付款方式分頁（跨模組）</td></tr>
+    </tbody>
+  </table>
+
+  <h4>商業邏輯</h4>
+  <div class="biz">
+    <ul>
+      <li><b>create：</b><code>existsByMfrId</code> 檢查廠商代號不重複；<code>generateSignCode("廠商資料維護作業")</code>；插主表後建 3 子表；啟 <code>VENDOR</code> 流程。</li>
+      <li><b>update：</b>已歸檔不可改；<code>selectIdByMfrId</code> 檢查 mfrId 未被他筆佔用；3 子表「刪舊插新」。</li>
+      <li><b>Excel 匯入（@Transactional）：</b>EasyExcel 讀 4 sheet（主/聯絡/收款/交易），註冊多個 Converter；逐表驗證（主表必填：代號/簡稱/類別/全名/計稅）；依 mfrId 分組，存在則更新否則建立。</li>
+    </ul>
+  </div>
+
+  <h4>主要 Model 欄位（中文）</h4>
+  <div class="grid2">
+    <div>
+      <p class="small"><b>PmmMfrBasicFinalDO</b> — <code>pmm_mfr_basic_final</code>（主表）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>mfrId / mfrAbrname / mfrName</td><td>廠商代號 / 簡稱 / 全名</td></tr>
+        <tr><td>mfrType</td><td>類別（0 供應商 / 1 一般行政）</td></tr>
+        <tr><td>isControlled / isHeadOffice</td><td>管制廠商 / 總公司</td></tr>
+        <tr><td>taxIdNo / tax</td><td>統編 / 計稅（0營業稅 1零稅率 2免稅）</td></tr>
+        <tr><td>tel / fax / boss</td><td>電話 / 傳真 / 負責人</td></tr>
+        <tr><td>companyGroup / address / supplies</td><td>公司群 / 地址 / 供應物品</td></tr>
+        <tr><td>paymentDate / moneyType</td><td>結賬日 / 幣別</td></tr>
+      </table>
+    </div>
+    <div>
+      <p class="small"><b>3 子表（以 mfrBasicId 關聯）</b></p>
+      <table>
+        <tr><th>子表</th><th>主要欄位</th></tr>
+        <tr><td>Lcn 聯絡</td><td>contactPerson 聯絡人 / telPhone / email / isDefault</td></tr>
+        <tr><td>Rcb 收款銀行</td><td>bankId / bankName / bankAcct 帳號 / bankAcctHolderName / isDefault</td></tr>
+        <tr><td>Trd 交易</td><td>payId / payMeth 付款方式 / payTerm 條件 / cycle 週期 / cycleDay 屬日 / status</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h4>Model 關聯圖</h4>
+  <div class="mermaid">
+erDiagram
+    PmmMfrBasicFinal ||--o{ PmmMfrBasicLcnFinal : "聯絡 1:N"
+    PmmMfrBasicFinal ||--o{ PmmMfrBasicTrdFinal : "交易 1:N"
+    PmmMfrBasicFinal ||--o{ PmmMfrBasicRcbFinal : "收款銀行 1:N"
+    PmmMfrBasicFinal {
+        string mfrId "廠商代號"
+        string mfrName "廠商全名"
+        int mfrType "類別"
+        string taxIdNo "統編"
+    }
+  </div>
+  <div class="warn"><b>OA 證據：</b><code>VendorQuoteMaintenanceService::getMfrTableIdMap()</code> 注解明言「OA 尚無廠商基礎資料表」，並用 <code>hasTable('erp_pmm_mfr_basic')</code> 防呆 → 確認廠商 master 表與功能皆未建置。</div>
+  </div>
+</section>
+
+<!-- ====================================================== VQM ====================================================== -->
+<section id="vqm" class="mod" data-oa="part">
+  <div class="card">
+  <div class="mod-title"><span class="mod-code">VQM</span><h2 style="border:none;margin:0">廠商報價維護 <span class="small">/pmm/vqm</span></h2><span class="badge b-part">OA ⚠️ 部分實作（唯讀查詢）</span></div>
+  <p>廠商報價主檔，提供比價/採購的報價與單價來源。含多組報價自動計算公式與 Excel 匯入匯出。</p>
+
+  <h4>端點一覽</h4>
+  <table>
+    <thead><tr><th>方法</th><th>路徑</th><th>前端函式</th><th>用途</th><th>OA</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vqm/page</code></td><td>getListPage / getVqmPageByFlow</td><td>分頁查詢</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vqm/get/{id}</code></td><td>getVqmDetailAPi</td><td>單筆詳情</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/vqm/create</code></td><td>createVqm</td><td>建報價主表+明細</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-put">PUT</span></td><td><code>/pmm/vqm/update/{id}</code></td><td>updateVqm</td><td>更新主+子表</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-delete">DEL</span></td><td><code>/pmm/vqm/delete</code></td><td>deleteVqm</td><td>批次軟刪</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-delete">DEL</span></td><td><code>/pmm/vqm/deleteList?ids=</code></td><td>deleteListVqm</td><td>依 ids 批次刪除</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vqm/vendor-quote-by-product-page</code></td><td>getListPageForProduct</td><td><b>依品號查報價</b></td><td><span class="badge b-yes">✅</span></td></tr>
+      <tr><td><span class="m m-put">PUT</span></td><td><code>/pmm/vqm/update-status/{id}</code></td><td>updateVqmStatus</td><td>變更狀態</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vqm/basic-mfr-ids</code></td><td>getBasicMfrIds</td><td>廠商資料中的廠商代號</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/vqm/calculate-unit-quote</code></td><td>calculateUnitQuote</td><td>算[最新報價 NTD/kg.l]</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/vqm/calculate-single-count-quote</code></td><td>calculateSingleCountQuote</td><td>算[單一計數報價 NTD]</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/vqm/calculate-single-count-measure</code></td><td>calculateSingleCountMeasure</td><td>算[單一計數計量 g,ml]</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vqm/sign-codes</code></td><td>signCode</td><td>單據編號列表</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-post">POST</span></td><td><code>/pmm/vqm/import</code></td><td>importVqmData</td><td>匯入報價 Excel</td><td><span class="badge b-no">❌</span></td></tr>
+      <tr><td><span class="m m-get">GET</span></td><td><code>/pmm/vqm/get-import-template</code></td><td>getVqmTemplate</td><td>匯出雙 sheet 模板</td><td><span class="badge b-no">❌</span></td></tr>
+    </tbody>
+  </table>
+
+  <h4>商業邏輯</h4>
+  <div class="biz">
+    <b>報價自動計算（核心公式）：</b>
+    <ul>
+      <li><code>calculateUnitQuote</code> = <code>latestQuotePerPack / singlePackCount</code>（scale 2 HALF_UP，⚠️未檢查除零）</li>
+      <li><code>calculateSingleCountQuote</code> = 同公式，但有 <code>singlePackCount==0</code> 除零防呆</li>
+      <li><code>calculateSingleCountMeasure</code> = <code>(singlePackQuantity × ratio) / singlePackCount</code>，ratio 由單位換算表（g→ml）取得，皆無則拋 <code>UNIT_CONVERSION_RATIO_NOT_FOUND</code></li>
+      <li><b>getVendorQuoteByProdCode（供包材貨源，OA 已實作此查詢）：</b>先取規格（優先食材，無則包材），目前僅啟用傳統牌價 <code>pricingType="0"</code>。</li>
+      <li><b>Excel 匯入：</b>讀雙 sheet；<b>匯入即歸檔</b>（與其他模組不同）；換算 <code>latestQuotePerKgL</code>，用門市/物流反查補欄位。</li>
+    </ul>
+  </div>
+
+  <h4>主要 Model 欄位（中文）</h4>
+  <div class="grid2">
+    <div>
+      <p class="small"><b>PmmVendorQuoteMaintenanceDO</b>（主表）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>signCode</td><td>單據編號</td></tr>
+        <tr><td>mfrId / mfrName</td><td>廠商代號 / 名稱</td></tr>
+        <tr><td>subject / moneyType</td><td>主旨 / 幣別</td></tr>
+        <tr><td>quoteEffectDateSt / quoteEffectDateEd</td><td>報價有效起 / 訖</td></tr>
+      </table>
+    </div>
+    <div>
+      <p class="small"><b>...DetailDO</b>（明細）</p>
+      <table>
+        <tr><th>欄位</th><th>中文意義</th></tr>
+        <tr><td>prodCode / mfrProductName</td><td>品號 / 廠商品名</td></tr>
+        <tr><td>latestQuotePerPack</td><td>最新報價（NTD/包裝）</td></tr>
+        <tr><td>latestQuotePerKgL</td><td>最新報價（NTD/單位）</td></tr>
+        <tr><td>singlePackCount / singlePackCountUnit</td><td>單一包裝量 / 單位</td></tr>
+        <tr><td>useStoreRegionId / useDeliveryType</td><td>適用門市 / 預設物流類型</td></tr>
+        <tr><td>moq / beforePurchaseDate</td><td>最小報價數 / 採購前置日</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <details>
+    <summary>📄 前端程式碼節錄（vqm/index.ts）</summary>
+<pre><code>/** 根據品號查報價（OA 已實作此查詢） */
+export async function getListPageForProduct(params: PageParam) {
+  return requestClient.get('/pmm/vqm/vendor-quote-by-product-page', { params });
+}
+/** 自動計算更新[最新報價(NTD-kg.l)] */
+export async function calculateUnitQuote(data) {
+  return requestClient.post('/pmm/vqm/calculate-unit-quote', data);
+}</code></pre>
+  </details>
+
+  <div class="note"><b>OA 對應實作：</b>
+    <ul style="margin:6px 0 0 18px">
+      <li>Controller：<code>app/Http/Controllers/ERP/PMM/VqmController.php</code> → 單一方法 <code>vendorQuoteByProductPage</code></li>
+      <li>Service：<code>app/Services/ERP/PMM/VendorQuoteMaintenanceService.php</code> → <code>getVendorQuoteByProdCode</code></li>
+      <li>Route：<code>routes/module/erp.php</code> → <code>GET /api/erp/pmm/vqm/vendor-quote-by-product-page</code></li>
+      <li>Migration：<code>2026_05_28_101456_create_erp_pmm_vendor_quote_tables.php</code>（建主表 + 明細表並 seed）</li>
+    </ul>
+    <span class="small">限制：僅「依品號查詢報價明細」一個唯讀 GET（供 PDM 包材維護「貨源明細」取資料），<b>無新增/修改/刪除/送審</b>，故為部分實作。</span>
+  </div>
+  </div>
+</section>
+
+<!-- ====================================================== 共通 ====================================================== -->
+<section id="common">
+  <h2>共通設計樣式（7 模組一致）</h2>
+  <div class="card">
+    <ul>
+      <li>單頭/明細皆繼承 <code>BaseDO</code>（creator / createTime / updater / updateTime / deleted / tenantId）。</li>
+      <li>明細更新一律採「<b>先全刪後重建</b>」策略，重建前 <code>setId(null).setUpdater(null).setUpdateTime(null)</code>。</li>
+      <li>「<b>已歸檔且無 processInstanceId</b>」一律禁止再編輯（拋 <code>*_ARCHIVED_CANNOT_UPDATE</code>）。</li>
+      <li>皆用 <code>menuFlowProcessInstanceHelper.createProcessInstanceIfFlowOpen(...)</code> 啟動 Flowable 流程；<code>listProcessInstanceIdsForAssigneeTodoPage(...)</code> 做待辦分頁。</li>
+      <li>皆有 <code>*StatusListener extends BpmProcessInstanceStatusEventListener</code>，<code>getProcessDefinitionKey</code> 由 <code>menuService.getMenuByFlowpath(path).getFlowKey()</code> 動態取得；<code>APPROVE</code> 觸發歸檔並連動下游、<code>REJECT</code>/<code>CANCEL</code> 多為預留。</li>
+      <li>前端統一以 <code>getPageByFlow(path, params, isTodo)</code> 依簽核開關自動切換 <code>/page</code> 與 <code>/todo-page</code>。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ====================================================== 風險 ====================================================== -->
+<section id="findings">
+  <h2>技術備註 / 風險</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>#</th><th>項目</th><th>說明</th><th>風險</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>@RequestParam 尾端空格</td><td>多處參數名含尾端空格（<code>"purReqId "</code>、<code>"quoteId "</code>、<code>"purAcceptanceId "</code>、<code>"purForwardId "</code>）</td><td>前端傳參可能對不上</td></tr>
+        <tr><td>2</td><td>calculateUnitQuote 缺除零檢查</td><td><code>singlePackCount=0</code> 時 ArithmeticException 風險（同模組 calculateSingleCountQuote 有防呆）</td><td>例外</td></tr>
+        <tr><td>3</td><td>IRC export-excel 匯出空內容</td><td>list 寫死 <code>new ArrayList&lt;&gt;()</code></td><td>功能未完成</td></tr>
+        <tr><td>4</td><td>VDM getPayCodes 寫死測試資料</td><td>B01001 現金、B01002 T/T，尚未接 DB</td><td>假資料</td></tr>
+        <tr><td>5</td><td>PAM 入庫硬編碼</td><td><code>stockReason="SW05"</code>、<code>stockType=1</code></td><td>魔術字串</td></tr>
+        <tr><td>6</td><td>VQM 匯入即歸檔</td><td><code>processStatus=ARCHIVED</code>，與其他模組「建立=待處理」不同</td><td>行為不一致</td></tr>
+        <tr><td>7</td><td>REJECT/CANCEL 未實作</td><td>各 Listener 的退回分支普遍為預留空白</td><td>流程不可逆</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>OA 補實作建議（若要對齊）</h3>
+  <div class="card">
+    <ol>
+      <li>OA 權限種子已備齊全套 <code>pmm:*</code> 字串，但僅 VQM 有實體；其餘 6 模組需自建 controller/service/model/migration，或在 <code>BurgerKingClient</code> 增加中繼方法代理 BK ERP API。</li>
+      <li>VDM 廠商 master（<code>erp_pmm_mfr_basic</code>）尚未建表，是 VQM 之外的相依前提，應優先補齊。</li>
+      <li>VQM 目前只有唯讀查詢，若 OA 要做完整報價維護，需補 create/update/delete/送審與計算端點。</li>
+    </ol>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>
+  本文件由前端 <code>erp-kingmaker</code>、後端 <code>erp-spring/kingmaker-module-pmm</code> 程式碼與 OA <code>/data/newprooa</code> 對照分析自動產生。OA 實作狀態以 2026 年程式碼快照為準，欄位/路徑請以原始碼為最終依據。
+</footer>
+
+<script>
+  mermaid.initialize({startOnLoad:true,theme:'dark',themeVariables:{
+    primaryColor:'#222d3d',primaryTextColor:'#e6edf3',primaryBorderColor:'#ff8c1a',
+    lineColor:'#9bb0c9',fontSize:'13px'}});
+
+  function applyFilter(){
+    const v = document.getElementById('oaFilter').value;
+    document.querySelectorAll('section.mod').forEach(s=>{
+      const oa = s.getAttribute('data-oa');
+      s.classList.toggle('hidden', v!=='all' && oa!==v);
+    });
+  }
+</script>
+</body>
+</html>
